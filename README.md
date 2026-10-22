@@ -19,6 +19,7 @@ Then open http://localhost:4321.
 | `npm run dev` | Local dev server with live reload |
 | `npm run build` | Builds the static site into `dist/` |
 | `npm run preview` | Serves the built site |
+| `npm run svg` | Optimizes every SVG in `public/images` |
 
 Review pages (not linked from the site):
 
@@ -76,6 +77,10 @@ with a link to the Figma node.
 - **One block = one file = one branch / pull request.** Put the Figma node link
   in a comment at the top of the file.
 - **Order:** static desktop → responsive → motion → WebGL & CMS.
+- **Graphics are SVG only.** Logos, icons, stamps and all micrographics are
+  SVG, never PNG/JPG. Export from Figma with text outlined, then run
+  `npm run svg` to optimize (SVGO, see `svgo.config.mjs`). Compare against the
+  original at 4× zoom before committing. Photos and video stay raster.
 - **WebGL and video** areas use `WebGLSlot` / `VideoSlot` so the layout never
   waits for 3D or video files.
 

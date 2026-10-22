@@ -5,6 +5,7 @@
  *   footer (1441): ハローロボ wordmark graphic, Terms / logo / Privacy (Body)
  */
 import RoboLogo from '../icons/RoboLogo.astro';
+import FooterWordmark from './FooterWordmark.astro';
 import { mainNav, studio } from '../../data/site';
 ---
 <footer class="footer theme-dark">
@@ -27,15 +28,7 @@ import { mainNav, studio } from '../../data/site';
   </div>
 
   <div class="footer__bottom container">
-    <img
-      class="footer__wordmark"
-      src="/images/shell/footer-wordmark.png"
-      alt="ハローロボ — Hello Robo"
-      width="1648"
-      height="1020"
-      loading="lazy"
-      decoding="async"
-    />
+    <FooterWordmark />
     <div class="footer__legal t-body">
       <a href="/terms">Terms of use</a>
       <RoboLogo width={121} class="footer__logo" />
@@ -66,10 +59,6 @@ import { mainNav, studio } from '../../data/site';
   .footer__bottom {
     padding-top: 89px;
     padding-bottom: 115px;
-  }
-  .footer__wordmark {
-    width: 100%;
-    height: auto;
   }
   .footer__legal {
     margin-top: 167px;
