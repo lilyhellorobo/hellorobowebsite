@@ -1,0 +1,61 @@
+---
+/**
+ * Episode — Hero
+ * Figma: "Frame 2147232960" (10105:2720), 1728×1002, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-2720
+ */
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  episode: CollectionEntry<'episodes'>;
+}
+const { data } = Astro.props.episode;
+const art = data.poster ?? data.cover;
+---
+<section class="episode-hero theme-dark container">
+  <div class="episode-hero__text">
+    <h1 class="episode-hero__title t-h1">{data.title}</h1>
+    <p class="episode-hero__guest t-body">{data.guestLine}</p>
+    <img class="episode-hero__badge" src="/images/radio/badge-episode.svg" alt="" width="210" height="212" />
+  </div>
+  <div class="episode-hero__poster">
+    {art && <Image src={art} alt={`${data.title} poster`} widths={[680, 1360]} sizes="(min-width: 1728px) 680px, 40vw" loading="eager" />}
+  </div>
+</section>
+
+<style>
+  .episode-hero {
+    display: grid;
+    grid-template-columns: 1fr 680px;
+    padding-top: var(--space-40);
+  }
+  .episode-hero__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: var(--space-40);
+  }
+  .episode-hero__title {
+    width: 956px;
+    max-width: 100%;
+  }
+  .episode-hero__guest {
+    width: 553px;
+    max-width: 100%;
+    margin-top: 30px;
+  }
+  .episode-hero__badge {
+    margin-top: auto;
+  }
+  .episode-hero__poster {
+    aspect-ratio: 680 / 962;
+    background: var(--color-ink);
+    overflow: hidden;
+  }
+  .episode-hero__poster :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

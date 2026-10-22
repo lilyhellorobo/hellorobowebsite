@@ -49,12 +49,20 @@ const positions = defineCollection({
 
 const episodes = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/episodes' }),
-  schema: z.object({
-    number: z.number(),
+  schema: ({ image }) => z.object({
+    title: z.string(),
+    number: z.number().optional(),
     guest: z.string(),
     guestLine: z.string(),
     description: z.string(),
     portfolioUrl: z.string().optional(),
+    /** 16:9-ish cover used in "All of the episodes" */
+    cover: image().optional(),
+    /** Tall poster used on the episode page */
+    poster: image().optional(),
+    /** Show in the "All of the episodes" list */
+    listed: z.boolean().default(true),
+    order: z.number().default(0),
   }),
 });
 

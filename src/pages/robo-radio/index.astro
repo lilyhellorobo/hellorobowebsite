@@ -1,13 +1,19 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BlockPlaceholder from '../../components/ui/BlockPlaceholder.astro';
+import RadioTV from '../../blocks/radio/RadioTV.astro';
+import RadioIntro from '../../blocks/radio/RadioIntro.astro';
+import RadioClips from '../../blocks/radio/RadioClips.astro';
+import RadioCollage from '../../blocks/radio/RadioCollage.astro';
+import RadioInvite from '../../blocks/radio/RadioInvite.astro';
+import RadioEpisodes from '../../blocks/radio/RadioEpisodes.astro';
+import RadioGuests from '../../blocks/radio/RadioGuests.astro';
 ---
 <BaseLayout title={'Robo Radio'} headerVariant="light">
-  <BlockPlaceholder name="TV hero" node="10105:275" height={983} kind="webgl" tone="dark" />
-  <BlockPlaceholder name="Intro" node="10105:306" height={1098} kind="static" tone="light" />
-  <BlockPlaceholder name="Clips" node="10105:432" height={977} kind="cms" tone="light" />
-  <BlockPlaceholder name="Poster collage" node="10105:481" height={2826} kind="cms" tone="dark" />
-  <BlockPlaceholder name="Invite" node="10105:971" height={730} kind="static" tone="dark" />
-  <BlockPlaceholder name="All episodes" node="10105:985" height={2694} kind="cms" tone="dark" />
-  <BlockPlaceholder name="Guests" node="10105:1064" height={1091} kind="static" tone="dark" />
+  <RadioTV variant="hero" />
+  <RadioIntro />
+  <RadioClips />
+  <RadioCollage />
+  <RadioInvite />
+  <RadioEpisodes />
+  <RadioGuests />
 </BaseLayout>
