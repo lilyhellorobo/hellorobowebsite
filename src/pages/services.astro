@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ServicesHero from '../blocks/services/ServicesHero.astro';
+import ServicesDevice from '../blocks/services/ServicesDevice.astro';
+import ServiceBlock from '../blocks/services/ServiceBlock.astro';
+import ServicesBuilding from '../blocks/services/ServicesBuilding.astro';
+import branding from '../assets/services/branding.png';
+import interfaceImg from '../assets/services/interface.png';
+import video from '../assets/services/video.png';
+---
+<BaseLayout title={'Services'} prefooter="building">
+  <ServicesHero />
+  <ServicesDevice />
+  <ServiceBlock
+    title="Through branding"
+    services={['Robot Brand Identity', 'Brand Strategy & Positioning', 'Robot Naming & Nomenclature', 'Motion Identity', 'Tone of Voice']}
+    image={branding}
+    imageAlt="Robot brand identity — subscriber stats on a rounded display"
+    stamp={{ src: '/images/services/stamp-branding.svg', w: 134, h: 137, x: 469, y: 179 }}
+  />
+  <ServiceBlock
+    title="Through interface"
+    services={['HRI Design', 'Robot Management UI', 'Fleet Management UI', 'Operator Dashboard', 'Observability Interface']}
+    image={interfaceImg}
+    imageAlt="Fleet operator app showing incident reports"
+    stamp={{ src: '/images/services/stamp-interface.svg', w: 120, h: 107, x: 457, y: 199 }}
+  />
+  <ServiceBlock
+    title="Through video production"
+    services={['Robot Cinematic Videos', 'Product Launch Films', 'Brand Films', 'Product Demos', 'Founder Stories', 'Pilot Case Studies']}
+    image={video}
+    imageAlt="Aerial view of a solar field build site"
+    stamp={{ src: '/images/services/stamp-video.svg', w: 121, h: 72, x: 586, y: 215 }}
+  />
+  <ServicesBuilding />
+</BaseLayout>

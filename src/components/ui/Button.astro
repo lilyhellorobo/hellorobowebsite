@@ -1,0 +1,75 @@
+---
+/**
+ * Button — Figma "button" (e.g. "Learn more" 10093:1424, "Pull up a chair" 10105:971).
+ * 60px tall, padding 20/16, label in the Button text style, icon on the right.
+ * Also used for "Get in touch" (variant="dark"|"light", icon="corners").
+ */
+import Icon from '../icons/Icon.astro';
+
+interface Props {
+  href?: string;
+  variant?: 'dark' | 'light';
+  /** "small" = the 145×50 VIEW button on the project scroller */
+  size?: 'default' | 'small';
+  icon?: 'hex' | 'hex-pin' | 'corners' | 'arrow' | 'none';
+  type?: 'button' | 'submit';
+  class?: string;
+  [key: string]: unknown;
+}
+const { href, variant = 'dark', size = 'default', icon = 'hex', type = 'button', class: className, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+<Tag
+  class:list={['button', `button--${variant}`, `button--${size}`, 't-button', className]}
+  href={href}
+  type={href ? undefined : type}
+  {...rest}
+>
+  <span class="button__label"><slot /></span>
+  {icon !== 'none' && <Icon name={icon} class="button__icon" />}
+</Tag>
+
+<style>
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-24);
+    min-height: var(--button-height);
+    min-width: calc(263 * var(--px));
+    padding: var(--space-12) var(--space-16) var(--space-12) var(--space-16);
+    border-radius: var(--radius-ui);
+    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .button--dark {
+    background: var(--color-black);
+    color: var(--color-white);
+  }
+  .button--light {
+    background: var(--color-white);
+    color: var(--color-black);
+  }
+  .button--small {
+    min-width: calc(145 * var(--px));
+    min-height: calc(50 * var(--px));
+    gap: var(--space-32);
+  }
+  .button__icon {
+    flex: none;
+  }
+  /* Mobile "VIEW" (Figma 88×36, calc(12 * var(--px)) label, calc(16 * var(--px)) icon) */
+  @media (max-width: 767px) {
+    .button--small {
+      min-width: 88px;
+      min-height: 36px;
+      gap: var(--space-16);
+      padding: var(--space-6) var(--space-12);
+      font-size: var(--type-body2-size-mobile);
+    }
+    .button--small :global(.button__icon) {
+      width: 16px;
+      height: 16px;
+    }
+  }
+</style>

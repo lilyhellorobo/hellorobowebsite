@@ -1,0 +1,51 @@
+---
+/**
+ * BaseLayout — the shell every page shares:
+ * Get in touch (top right) · page content · pre-footer CTA · footer · nav pill.
+ */
+import '../styles/global.css';
+import GetInTouch from '../components/global/GetInTouch.astro';
+import NavPill from '../components/global/NavPill.astro';
+import PreFooterCTA from '../components/global/PreFooterCTA.astro';
+import Footer from '../components/global/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Color of the Get in touch button: white on pages that open on black */
+  headerVariant?: 'dark' | 'light' | 'grey';
+  /** Pre-footer copy variant, or false to hide it */
+  prefooter?: 'conversation' | 'building' | false;
+  /** Adds the back button to the nav pill */
+  back?: string;
+  footer?: boolean;
+}
+const {
+  title,
+  description = 'Hello Robo designs the human side of robotics.',
+  headerVariant = 'dark',
+  prefooter = 'conversation',
+  back,
+  footer = true,
+} = Astro.props;
+const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to your robot' : `${title} — Hello Robo`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="preload" href="/fonts/AllianceNo2-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <GetInTouch variant={headerVariant} />
+    <main>
+      <slot />
+    </main>
+    {prefooter && <PreFooterCTA variant={prefooter} />}
+    {footer && <Footer />}
+    <NavPill back={back} />
+  </body>
+</html>

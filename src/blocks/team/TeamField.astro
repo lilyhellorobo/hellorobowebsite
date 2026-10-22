@@ -1,0 +1,212 @@
+---
+/**
+ * Team — Object field + person cards
+ * Figma: "team" (10104:170, 1728×1117) and "card" (10104:555, 819×1037) ×9
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10104-170
+ * The field is marked "3d web gl": the poster includes the objects and their labels.
+ * Each object is a link to #<person>; the card opens with :target (no JS yet).
+ */
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+import field from '../../assets/team/team-field.png';
+
+const people = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
+
+// Object hit areas in the 1728×1117 frame
+const objects: Record<string, { label: string; x: number; y: number; w: number; h: number }> = {
+  hello_robo: { label: 'hello_robo.OBJ', x: 681, y: 315, w: 334, h: 334 },
+  inner_calm_02: { label: 'INNER_CALM_02.OBJ', x: 266, y: 131, w: 250, h: 291 },
+  bright_ideas_01: { label: 'BRIGHT_IDEAS_01.OBJ', x: -97, y: -105, w: 250, h: 291 },
+  bite_first_05: { label: 'BITE_FIRST_05.OBJ', x: -125, y: 413, w: 250, h: 291 },
+  tiny_obsession_12: { label: 'TINY_OBSESSION_12.OBJ', x: 621, y: -174, w: 250, h: 291 },
+  seriously_playful: { label: 'SERIOUSLY_PLAYFUL.OBJ', x: 1207, y: 549, w: 250, h: 291 },
+  good_chaos_13: { label: 'GOOD_CHAOS_13.OBJ', x: 1559, y: 320, w: 250, h: 291 },
+  nuts_about_details_03: { label: 'NUTS_ABOUT_DETAILS_03.OBJ', x: 1087, y: 96, w: 250, h: 291 },
+  cat_mode_active: { label: 'CAT_MODE_ACTIVE.OBJ', x: 1418, y: -142, w: 250, h: 291 },
+};
+const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+---
+<section class="team-field" aria-label="The team">
+  <div class="team-field__canvas">
+  <WebGLSlot name="team-field" class="team-field__scene">
+    <Image src={field} alt="" widths={[1728, 3456]} sizes="100vw" loading="eager" />
+  </WebGLSlot>
+
+  <ul class="team-field__objects">
+    {people.map((p) => {
+      const o = objects[p.data.object];
+      return o ? (
+        <li style={`left:${pct(o.x, 1728)};top:${pct(o.y, 1117)};width:${pct(o.w, 1728)};height:${pct(o.h, 1117)}`}>
+          <a class="team-field__hit" href={`#${p.id}`} aria-label={`${p.data.name}, ${p.data.role} (${o.label})`}></a>
+        </li>
+      ) : null;
+    })}
+  </ul>
+  </div>
+
+  {people.map((p) => (
+    <article class="team-card" id={p.id} aria-label={p.data.name}>
+      <a class="team-card__close" href="#" aria-label="Close">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M17.6719 14.3303L25.6023 6.3999" stroke="currentColor" stroke-width="1.28" />
+          <path d="M6.42578 25.574L14.3562 17.6436" stroke="currentColor" stroke-width="1.28" />
+          <path d="M6.39844 6.3999L25.5984 25.5999" stroke="currentColor" stroke-width="1.28" />
+        </svg>
+      </a>
+      <header class="team-card__names">
+        <p class="team-card__ja t-h3" lang="ja">{p.data.nameJa}</p>
+        <h2 class="t-h2">{p.data.name}</h2>
+      </header>
+      <figure class="team-card__photo">
+        <Image src={p.data.photo} alt={p.data.name} widths={[369, 738]} sizes="369px" loading="lazy" />
+        <figcaption class="t-body">{p.data.role}</figcaption>
+      </figure>
+      <blockquote class="team-card__quote t-body">
+        {p.data.quote.split('\n').map((line) => <p>{line}</p>)}
+      </blockquote>
+    </article>
+  ))}
+</section>
+
+<style>
+  .team-field {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-grey-200);
+  }
+  .team-field__canvas {
+    position: relative;
+    aspect-ratio: 1728 / 1117;
+  }
+  .team-field :global(.team-field__scene) {
+    position: absolute;
+    inset: 0;
+  }
+  .team-field :global(.team-field__scene img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .team-field__objects li {
+    position: absolute;
+  }
+  .team-field__hit {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+  .team-field__hit:focus-visible {
+    outline-offset: calc(-8 * var(--px));
+  }
+
+  /* Card: 819×1037 white panel, calc(40 * var(--px)) from the top and right of the viewport */
+  .team-card {
+    display: none;
+    position: fixed;
+    top: var(--space-40);
+    right: var(--page-margin);
+    z-index: var(--z-overlay);
+    width: calc(819 * var(--px));
+    max-width: calc(100vw - 2 * var(--page-margin));
+    min-height: min(calc(1037 * var(--px)), calc(100vh - calc(80 * var(--px))));
+    max-height: calc(100vh - calc(80 * var(--px)));
+    overflow-y: auto;
+    padding: var(--space-40);
+    background: var(--color-white);
+    color: var(--color-black);
+    grid-template-columns: calc(314 * var(--px)) 1fr;
+    grid-template-rows: auto 1fr auto;
+    column-gap: calc(56 * var(--px));
+  }
+  .team-card:target {
+    display: grid;
+  }
+  .team-card__close {
+    grid-column: 1;
+    grid-row: 1;
+    width: calc(32 * var(--px));
+    height: calc(32 * var(--px));
+  }
+  .team-card__names {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    margin-top: calc(72 * var(--px));
+  }
+  .team-card__ja {
+    color: var(--color-orange);
+    margin-bottom: calc(20 * var(--px));
+  }
+  .team-card__photo {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    width: calc(369 * var(--px));
+  }
+  .team-card__photo :global(img) {
+    width: calc(369 * var(--px));
+    height: auto;
+    aspect-ratio: 369 / 499;
+    object-fit: cover;
+  }
+  .team-card__photo figcaption {
+    margin-top: var(--space-20);
+  }
+  .team-card__quote {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: calc(739 * var(--px));
+    max-width: 100%;
+    margin-top: var(--space-40);
+    display: grid;
+    gap: calc(24 * var(--px));
+  }
+
+  /* ── Mobile: the field fills the screen height and pans sideways (same hit areas);
+     the card becomes a full-screen sheet above the nav pill ── */
+  @media (max-width: 767px) {
+    .team-field {
+      height: 100svh;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .team-field__canvas {
+      height: 100%;
+      width: auto;
+    }
+    .team-card {
+      top: var(--page-margin);
+      left: var(--page-margin);
+      right: var(--page-margin);
+      bottom: 96px;
+      width: auto;
+      max-width: none;
+      min-height: 0;
+      max-height: none;
+      padding: var(--space-20);
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+    }
+    .team-card__close,
+    .team-card__names,
+    .team-card__photo,
+    .team-card__quote {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .team-card__names {
+      margin-top: var(--space-24);
+    }
+    .team-card__photo {
+      width: 100%;
+      margin-top: var(--space-24);
+    }
+    .team-card__photo :global(img) {
+      width: 100%;
+    }
+    .team-card__quote {
+      margin-top: var(--space-24);
+      gap: var(--space-16);
+    }
+  }
+</style>

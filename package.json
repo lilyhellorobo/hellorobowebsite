@@ -1,0 +1,19 @@
+{
+  "name": "hellorobowebsite",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "svg": "svgo -r -f public/images --config svgo.config.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.4.2"
+  },
+  "devDependencies": {
+    "svgo": "^4.1.0"
+  }
+}

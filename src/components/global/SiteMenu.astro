@@ -1,0 +1,289 @@
+---
+/**
+ * Site menu overlay — Figma "1.1 menu d" (10194:165), 1728×1000
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10194-165
+ *
+ * Blurred backdrop (black 20% + 100px blur) and a 1094-wide block centred above
+ * the nav pill: links panel (541×837) | Let's talk bar, photo card, Say hello card.
+ * Opened/closed by NavPill (html[data-menu="open"]). The reveal is a simple
+ * fade + rise for now; the motion step replaces it.
+ */
+import { Image } from 'astro:assets';
+import Icon from '../icons/Icon.astro';
+import RoboLogo from '../icons/RoboLogo.astro';
+import { mainNav, socials } from '../../data/site';
+import photo from '../../assets/menu/menu-photo.png';
+import robot from '../../assets/menu/menu-robot.png';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
+---
+<div id="site-menu" class="site-menu" aria-hidden="true" inert>
+  <div class="site-menu__backdrop" data-menu-backdrop></div>
+
+  <div class="site-menu__grid" role="dialog" aria-modal="true" aria-label="Menu">
+    <section class="site-menu__panel site-menu__links">
+      <div class="site-menu__head">
+        <RoboLogo width={82} />
+        <p class="site-menu__ja t-body" lang="ja">私たちはHello Roboです。</p>
+      </div>
+      <ul class="site-menu__list">
+        {mainNav.map((item) => (
+          <li>
+            <a class:list={['site-menu__link', 't-h3', { 'is-active': isActive(item.href) }]} href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+              <span>{item.label}</span>
+              <svg class="site-menu__arrow" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <path d="M6 20h27M23 10l10 10-10 10" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <div class="site-menu__side">
+      <a class="site-menu__talk" href="/contact">
+        <span class="t-button">Let’s talk</span>
+        <Icon name="corners" />
+      </a>
+      <div class="site-menu__panel site-menu__photo">
+        <Image src={photo} alt="The Hello Robo studio" widths={[541, 1082]} sizes="(min-width: 1728px) 541px, 32vw" loading="lazy" />
+      </div>
+      <section class="site-menu__panel site-menu__hello">
+        <Image class="site-menu__robot" src={robot} alt="" widths={[541, 1082]} sizes="(min-width: 1728px) 541px, 32vw" loading="lazy" />
+        <img class="site-menu__micro" src="/images/menu/menu-micrographic.svg" alt="" width="380" height="224" loading="lazy" />
+        <p class="site-menu__hello-title t-body">Say hello</p>
+        <ul class="site-menu__socials t-body">
+          {socials.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<style>
+  .site-menu {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-nav) - 1);
+    visibility: hidden;
+    pointer-events: none;
+    transition: visibility 0s linear 0.5s;
+  }
+  :global(html[data-menu='open']) .site-menu {
+    visibility: visible;
+    pointer-events: auto;
+    transition: none;
+  }
+  /* Figma: black 20% + background blur 100 */
+  .site-menu__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.2);
+    backdrop-filter: blur(calc(100 * var(--px)));
+    -webkit-backdrop-filter: blur(calc(100 * var(--px)));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  :global(html[data-menu='open']) .site-menu__backdrop {
+    opacity: 1;
+  }
+
+  /* 1094 wide, centred; bottom edge 12 above the nav pill; 837 tall (less if the window is short) */
+  .site-menu__grid {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--space-40) + var(--nav-height) + var(--space-12));
+    width: calc(1094 * var(--px));
+    height: min(calc(837 * var(--px)), calc(100vh - var(--space-40) - var(--nav-height) - var(--space-12) - var(--space-24)));
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+  }
+  .site-menu__panel {
+    position: relative;
+    border-radius: calc(4 * var(--px));
+    overflow: hidden;
+  }
+
+  /* Placeholder reveal: panels fade and rise in, staggered */
+  .site-menu__links,
+  .site-menu__talk,
+  .site-menu__photo,
+  .site-menu__hello {
+    opacity: 0;
+    transform: translateY(calc(24 * var(--px)));
+    transition:
+      opacity 0.35s ease,
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  :global(html[data-menu='open']) :is(.site-menu__links, .site-menu__talk, .site-menu__photo, .site-menu__hello) {
+    opacity: 1;
+    transform: none;
+  }
+  :global(html[data-menu='open']) .site-menu__links { transition-delay: 0.1s; }
+  :global(html[data-menu='open']) .site-menu__talk { transition-delay: 0.15s; }
+  :global(html[data-menu='open']) .site-menu__photo { transition-delay: 0.2s; }
+  :global(html[data-menu='open']) .site-menu__hello { transition-delay: 0.25s; }
+
+  /* ── Links panel ─────────────────────────────── */
+  .site-menu__links {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-grey-50);
+    padding: var(--space-16);
+  }
+  .site-menu__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .site-menu__ja {
+    width: calc(144 * var(--px));
+    margin: calc(4 * var(--px)) calc(4 * var(--px)) 0 0;
+    color: var(--color-orange);
+  }
+  /* Rows: 58 text + 32 / rule / 32; the list sits at the bottom of the panel */
+  .site-menu__list {
+    margin-top: auto;
+    margin-bottom: var(--space-16);
+  }
+  .site-menu__list li + li {
+    margin-top: var(--space-32);
+    padding-top: var(--space-32);
+    border-top: var(--line-width) solid rgb(0 0 0 / 0.1);
+  }
+  .site-menu__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--color-grey-350);
+    transition: color 0.2s ease;
+  }
+  .site-menu__link.is-active,
+  .site-menu__link:hover,
+  .site-menu__link:focus-visible {
+    color: var(--color-black);
+  }
+  .site-menu__arrow {
+    width: calc(40 * var(--px));
+    height: calc(40 * var(--px));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .site-menu__link.is-active .site-menu__arrow,
+  .site-menu__link:hover .site-menu__arrow,
+  .site-menu__link:focus-visible .site-menu__arrow {
+    opacity: 1;
+  }
+
+  /* ── Right column: Let's talk 64 · photo 337 · Say hello 412 (12 gaps) ── */
+  .site-menu__side {
+    display: grid;
+    grid-template-rows: auto 337fr 412fr;
+    gap: var(--gutter);
+    min-height: 0;
+  }
+  .site-menu__talk {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: max(44px, calc(64 * var(--px)));
+    padding: 0 var(--space-16) 0 var(--space-24);
+    background: var(--color-black);
+    color: var(--color-white);
+    border-radius: var(--radius-ui);
+  }
+  .site-menu__photo,
+  .site-menu__hello {
+    min-height: 0;
+    background: var(--color-white);
+  }
+  .site-menu__photo :global(img),
+  .site-menu :global(.site-menu__robot) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Micrographic 380×224 at (154, -7) on the card */
+  .site-menu__micro {
+    position: absolute;
+    left: calc(154 / 541 * 100%);
+    top: calc(-7 * var(--px));
+    width: calc(380 / 541 * 100%);
+    height: auto;
+  }
+  .site-menu__hello-title {
+    position: absolute;
+    left: var(--space-16);
+    top: var(--space-16);
+  }
+  .site-menu__socials {
+    position: absolute;
+    left: var(--space-16);
+    bottom: var(--space-16);
+    display: grid;
+    gap: var(--space-24);
+  }
+  .site-menu__socials a:hover {
+    color: var(--color-orange);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-menu__links,
+    .site-menu__talk,
+    .site-menu__photo,
+    .site-menu__hello {
+      transform: none;
+    }
+  }
+
+  /* ── Mobile (basic until the mobile menu is built from Figma "menu" 10112:25477):
+     Let's talk + links + Say hello stacked above the nav pill ── */
+  @media (max-width: 767px) {
+    .site-menu__grid {
+      left: var(--page-margin);
+      right: var(--page-margin);
+      top: var(--page-margin);
+      bottom: calc(var(--space-20) + var(--nav-height) + 8px);
+      width: auto;
+      height: auto;
+      transform: none;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr;
+      gap: 8px;
+    }
+    .site-menu__links {
+      grid-row: 2;
+    }
+    .site-menu__side {
+      display: contents;
+    }
+    .site-menu__talk {
+      grid-row: 1;
+    }
+    .site-menu__photo {
+      display: none;
+    }
+    .site-menu__hello {
+      grid-row: 3;
+    }
+    .site-menu__head {
+      display: none;
+    }
+    .site-menu__list li + li {
+      margin-top: 12px;
+      padding-top: 12px;
+    }
+    .site-menu__link {
+      font-size: 20px;
+    }
+    .site-menu__arrow {
+      width: 24px;
+      height: 24px;
+    }
+  }
+</style>

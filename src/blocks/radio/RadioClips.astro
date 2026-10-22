@@ -1,0 +1,113 @@
+---
+/**
+ * Robo Radio — Clips ("Conversations in the field / Humanoids")
+ * Figma: "3 clips" (10105:432), 1730×977
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-432
+ * Clips are videos in the design (with a hover and a poster state); stills for now.
+ * TODO (CMS): clips per topic.
+ */
+import { Image } from 'astro:assets';
+import Divider from '../../components/ui/Divider.astro';
+import clip1 from '../../assets/radio/clip-1.png';
+import clip2 from '../../assets/radio/clip-2.png';
+
+const clips = [
+  { image: clip1, caption: 'Jason Kline about humanoid design' },
+  { image: clip2, caption: 'Jason Kline about humanoid design' },
+];
+---
+<section class="radio-clips container">
+  <Divider accent class="radio-clips__rule" />
+  <div class="radio-clips__grid">
+    <div class="radio-clips__text">
+      <p class="t-body">Conversations in the field</p>
+      <h2 class="radio-clips__title t-h1">Humanoids</h2>
+      <img class="radio-clips__stamp" src="/images/radio/stamp-clips.svg" alt="" width="585" style="--w: 585" height="148" loading="lazy" />
+      <p class="radio-clips__desc t-body">Robo Radio brings together the people shaping robotics for thoughtful conversations about design, technology and the human lives around them.</p>
+    </div>
+    {clips.map((c) => (
+      <figure class="radio-clips__clip">
+        <div class="radio-clips__media">
+          <Image src={c.image} alt="" widths={[403, 806]} sizes="(min-width: 1728px) 403px, 24vw" loading="lazy" />
+        </div>
+        <figcaption class="t-body">{c.caption}</figcaption>
+      </figure>
+    ))}
+  </div>
+</section>
+
+<style>
+  .radio-clips {
+    padding-top: var(--space-40);
+    padding-bottom: calc(140 * var(--px));
+    background: var(--color-white);
+    color: var(--color-black);
+  }
+  .radio-clips :global(.radio-clips__rule.divider--accent)::before {
+    width: calc(830 / 1648 * 100%);
+  }
+  .radio-clips__grid {
+    display: grid;
+    grid-template-columns: 1fr calc(403 * var(--px)) calc(403 * var(--px));
+    gap: var(--gutter);
+    margin-top: var(--space-40);
+  }
+  .radio-clips__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .radio-clips__title {
+    margin-top: calc(20 * var(--px));
+  }
+  .radio-clips__stamp {
+    margin-top: calc(10 * var(--px));
+    height: auto;
+  }
+  .radio-clips__desc {
+    width: calc(553 * var(--px));
+    max-width: 100%;
+    margin-top: auto;
+  }
+  .radio-clips__clip {
+    display: grid;
+    gap: calc(15 * var(--px));
+  }
+  .radio-clips__media {
+    aspect-ratio: 403 / 718;
+    overflow: hidden;
+  }
+  .radio-clips__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ── Mobile: text on top, the two clips side by side ── */
+  @media (max-width: 767px) {
+    .radio-clips {
+      padding-bottom: 164px;
+    }
+    .radio-clips__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 64px;
+      margin-top: var(--space-24);
+    }
+    .radio-clips__text {
+      grid-column: 1 / -1;
+    }
+    .radio-clips__stamp {
+      width: 293px;
+      margin-top: var(--space-20);
+    }
+    .radio-clips__desc {
+      margin-top: 64px;
+    }
+    .radio-clips__clip {
+      gap: var(--space-12);
+    }
+    .radio-clips__clip figcaption {
+      font-size: var(--type-body2-size-mobile);
+    }
+  }
+</style>

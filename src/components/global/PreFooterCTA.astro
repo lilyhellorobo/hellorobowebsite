@@ -1,0 +1,198 @@
+---
+/**
+ * Pre-footer CTA — Figma "block" 1728×949 (Home 10093:2001, Careers 10100:15564).
+ * Marked as a WebGL scene; the printer image is its static poster.
+ * Two copy variants appear in the designs:
+ *   "conversation" — "Start conversation if you are ready to make world say yes" + stamp
+ *   "building"     — "Tell us what you are building" + "[Click anywhere to start]"
+ */
+import WebGLSlot from '../ui/WebGLSlot.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../icons/Icon.astro';
+import { studio } from '../../data/site';
+
+interface Props {
+  variant?: 'conversation' | 'building';
+}
+const { variant = 'conversation' } = Astro.props;
+const title = 'Tell us what you are building';
+---
+<section class="prefooter" aria-label="Start a project">
+  <WebGLSlot name="prefooter" class="prefooter__scene">
+    <img
+      class="prefooter__printer"
+      src="/images/shell/prefooter-printer.png"
+      alt=""
+      width="994" style="--w: 994"
+      height="949"
+      loading="lazy"
+      decoding="async"
+    />
+  </WebGLSlot>
+
+  <a class="prefooter__link" href="/contact">
+    {variant === 'building' ? (
+      <h2 class="prefooter__title t-h2">{title}</h2>
+    ) : (
+      <h2 class="prefooter__title t-h2">Start conversation<br class="only-mobile" /> if you are ready to<br class="only-mobile" /> make world say yes</h2>
+    )}
+  </a>
+
+  <!-- Mobile layout (Figma 10129:31418): two buttons under the title, stamp + email bar at the bottom -->
+  <div class="prefooter__actions only-mobile">
+    <Button href="/contact#name" variant="light" size="small" icon="arrow">Start a project</Button>
+    <Button href="/contact#message" variant="light" size="small" icon="hex">Drop a word</Button>
+  </div>
+  <div class="prefooter__mail only-mobile">
+    <a class="prefooter__address" href={`mailto:${studio.email}`}>{studio.email}</a>
+    <span class="prefooter__copy">Copy <Icon name="hex" size={16} /></span>
+  </div>
+
+  {variant === 'conversation' ? (
+    <img
+      class="prefooter__stamp"
+      src="/images/shell/stamp-human-core.svg"
+      alt=""
+      width="403" style="--w: 403"
+      height="174"
+      loading="lazy"
+    />
+  ) : (
+    <p class="prefooter__hint t-body">[Click anywhere to start]</p>
+  )}
+</section>
+
+<style>
+  .prefooter {
+    position: relative;
+    aspect-ratio: 1728 / 949;
+    background: var(--color-grey-350);
+    color: var(--color-white);
+    overflow: hidden;
+  }
+  .prefooter :global(.prefooter__scene) {
+    position: absolute;
+    inset: 0;
+  }
+  .prefooter__printer {
+    position: absolute;
+    top: 0;
+    left: calc(607 / 1728 * 100%);
+    width: calc(994 / 1728 * 100%);
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: multiply; /* as in Figma: the photo's white ground takes the grey */
+  }
+  /* The whole block is clickable ("Click anywhere to start") */
+  .prefooter__link {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-raised);
+    padding: var(--space-40);
+  }
+  .prefooter__title {
+    max-width: calc(716 * var(--px));
+  }
+  .prefooter__stamp,
+  .prefooter__hint {
+    position: absolute;
+    left: var(--space-40);
+    bottom: var(--space-40);
+    z-index: var(--z-raised);
+    pointer-events: none;
+  }
+  .prefooter__stamp {
+    width: calc(403 / 1728 * 100%);
+    min-width: calc(200 * var(--px));
+    height: auto;
+  }
+
+  /* ── Mobile: Figma 390×694 ─────────────────────────────── */
+  @media (max-width: 767px) {
+    .prefooter {
+      aspect-ratio: auto;
+      height: 694px;
+    }
+    /* Printer photo 424×635 at (39, 97) */
+    .prefooter__printer {
+      left: 39px;
+      top: 97px;
+      width: 424px;
+      height: 635px;
+    }
+    /* Only the title is the link here; the buttons below do the rest */
+    .prefooter__link {
+      inset: auto;
+      top: 44px;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      padding: 0;
+    }
+    /* Figma uses Mobile/H3 for this title (line breaks as in Figma) */
+    .prefooter__title {
+      max-width: none;
+      font-size: var(--type-h3-size);
+      line-height: var(--type-h3-line);
+      letter-spacing: var(--type-h3-track);
+    }
+    .prefooter__actions {
+      position: absolute;
+      top: 179px;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      z-index: var(--z-raised);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .prefooter__actions :global(.button) {
+      min-width: 0;
+      min-height: 44px;
+      padding-inline: var(--space-16);
+    }
+    /* Stamp 224×96 at (150, 514) */
+    .prefooter__stamp {
+      left: auto;
+      right: var(--page-margin);
+      bottom: 84px;
+      width: 224px;
+      min-width: 0;
+    }
+    /* The buttons replace "[Click anywhere to start]" on mobile */
+    .prefooter__hint {
+      display: none;
+    }
+    /* Email bar 358×52 at the bottom */
+    .prefooter__mail {
+      position: absolute;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      bottom: 20px;
+      z-index: var(--z-raised);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      padding: 0 8px 0 12px;
+      background: var(--color-white);
+      color: var(--color-black);
+      border-radius: var(--radius-ui);
+    }
+    /* Figma: 20px — the desktop Body size */
+    .prefooter__address {
+      font-size: 20px;
+      letter-spacing: var(--type-body-track);
+    }
+    .prefooter__copy {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-12);
+      height: 36px;
+      padding: 0 var(--space-12);
+      background: var(--color-grey-300);
+      font-size: var(--type-body2-size-mobile);
+      letter-spacing: var(--type-button-track);
+      text-transform: uppercase;
+    }
+  }
+</style>

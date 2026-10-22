@@ -1,0 +1,166 @@
+---
+/**
+ * Nav pill — floating "MENU" bar, bottom centre (Figma "nav", 10093:2370, 426×80).
+ * `back` adds the 80×80 back button on the left (Figma "Group 2147227465",
+ * 10102:1707), used on Position and Episode pages.
+ *
+ * Opens the site menu (SiteMenu.astro, Figma "1.1 menu d" 10194:165): the bar
+ * widens to 1006, a close button takes the back button's place (80 + 8 + 1006
+ * = the 1094 menu width). State lives on <html data-menu="open">.
+ */
+import Icon from '../icons/Icon.astro';
+import RoboLogo from '../icons/RoboLogo.astro';
+import SiteMenu from './SiteMenu.astro';
+
+interface Props {
+  back?: string;
+}
+const { back } = Astro.props;
+---
+<SiteMenu />
+
+<nav class="nav-pill" aria-label="Main">
+  {back && (
+    <a class="nav-pill__back" href={back} aria-label="Back">
+      <Icon name="back" />
+    </a>
+  )}
+  <button class="nav-pill__close" type="button" aria-label="Close menu" tabindex="-1" data-menu-close>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M17.6719 14.3303L25.6023 6.3999" stroke="currentColor" stroke-width="1.28" />
+      <path d="M6.42578 25.574L14.3562 17.6436" stroke="currentColor" stroke-width="1.28" />
+      <path d="M6.39844 6.3999L25.5984 25.5999" stroke="currentColor" stroke-width="1.28" />
+    </svg>
+  </button>
+  <button class="nav-pill__menu" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
+    <span class="nav-pill__label">
+      <Icon name="dots" class="nav-pill__dots" />
+      <span class="t-button">Menu</span>
+    </span>
+    <RoboLogo />
+  </button>
+</nav>
+
+<script>
+  const root = document.documentElement;
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const closeBtn = document.querySelector<HTMLButtonElement>('[data-menu-close]');
+  const menu = document.getElementById('site-menu');
+
+  function setOpen(open: boolean) {
+    if (!toggle || !menu) return;
+    root.dataset.menu = open ? 'open' : 'closed';
+    toggle.setAttribute('aria-expanded', String(open));
+    menu.setAttribute('aria-hidden', String(!open));
+    menu.toggleAttribute('inert', !open);
+    closeBtn?.setAttribute('tabindex', open ? '0' : '-1');
+    if (open) menu.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+  }
+
+  toggle?.addEventListener('click', () => setOpen(root.dataset.menu !== 'open'));
+  closeBtn?.addEventListener('click', () => {
+    setOpen(false);
+    toggle?.focus();
+  });
+  // Clicking the blurred backdrop closes the menu
+  menu?.addEventListener('click', (e) => {
+    if (e.target === menu || (e.target as HTMLElement).hasAttribute('data-menu-backdrop')) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root.dataset.menu === 'open') {
+      setOpen(false);
+      toggle?.focus();
+    }
+  });
+</script>
+
+<style>
+  .nav-pill {
+    position: fixed;
+    left: 50%;
+    bottom: var(--space-40);
+    transform: translateX(-50%);
+    z-index: var(--z-nav);
+    display: flex;
+  }
+  .nav-pill__back,
+  .nav-pill__close,
+  .nav-pill__menu {
+    height: var(--nav-height);
+    background: var(--color-grey-50);
+    color: var(--color-black);
+    border-radius: var(--radius-ui);
+  }
+  .nav-pill__back,
+  .nav-pill__close {
+    flex: none;
+    width: var(--nav-height);
+    margin-right: calc(8 * var(--px));
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .nav-pill__menu {
+    width: var(--nav-width);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-20);
+  }
+  .nav-pill__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-12);
+  }
+  .nav-pill__dots {
+    color: var(--color-grey-400);
+  }
+
+  /* ── Open / closed (placeholder transitions — motion step refines them) ── */
+  .nav-pill__menu,
+  .nav-pill__close,
+  .nav-pill__back {
+    transition:
+      width 0.5s cubic-bezier(0.65, 0, 0.35, 1),
+      margin 0.5s cubic-bezier(0.65, 0, 0.35, 1),
+      opacity 0.3s ease;
+  }
+  .nav-pill__close {
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+  }
+  :global(html[data-menu='open']) .nav-pill__menu {
+    width: calc(1006 * var(--px));
+  }
+  :global(html[data-menu='open']) .nav-pill__close {
+    width: var(--nav-height);
+    margin-right: calc(8 * var(--px));
+    opacity: 1;
+  }
+  /* The close button takes the back button's place while the menu is open */
+  :global(html[data-menu='open']) .nav-pill__back {
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+  }
+
+  /* Mobile (Figma 10101:6488): full width 358×64, 16 from the sides, 20 from the bottom */
+  @media (max-width: 767px) {
+    .nav-pill {
+      left: var(--page-margin);
+      right: var(--page-margin);
+      bottom: var(--space-20);
+      transform: none;
+    }
+    .nav-pill__menu,
+    :global(html[data-menu='open']) .nav-pill__menu {
+      flex: 1;
+      width: auto;
+    }
+    .nav-pill :global(.robo-logo) {
+      width: 53px;
+      height: auto;
+    }
+  }
+</style>

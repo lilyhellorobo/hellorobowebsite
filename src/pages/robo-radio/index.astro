@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RadioTV from '../../blocks/radio/RadioTV.astro';
+import RadioIntro from '../../blocks/radio/RadioIntro.astro';
+import RadioClips from '../../blocks/radio/RadioClips.astro';
+import RadioCollage from '../../blocks/radio/RadioCollage.astro';
+import RadioInvite from '../../blocks/radio/RadioInvite.astro';
+import RadioEpisodes from '../../blocks/radio/RadioEpisodes.astro';
+import RadioGuests from '../../blocks/radio/RadioGuests.astro';
+---
+<BaseLayout title={'Robo Radio'} headerVariant="light">
+  <RadioTV variant="hero" />
+  <RadioIntro />
+  <RadioClips />
+  <RadioCollage />
+  <RadioInvite />
+  <RadioEpisodes />
+  <RadioGuests />
+</BaseLayout>

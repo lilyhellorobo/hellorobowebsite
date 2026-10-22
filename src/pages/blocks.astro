@@ -1,0 +1,60 @@
+---
+/**
+ * Block library — every finished block on one page, for review against Figma.
+ * Add each new block here first, then place it on its page.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PreFooterCTA from '../components/global/PreFooterCTA.astro';
+import HomeHero from '../blocks/home/HomeHero.astro';
+
+const pages = [
+  { label: 'Home', href: '/' },
+  { label: 'Work', href: '/work' },
+  { label: 'Project — Weekly Robotics', href: '/work/weekly-robotics' },
+  { label: 'Services', href: '/services' },
+  { label: 'Team', href: '/team' },
+  { label: 'Careers', href: '/careers' },
+  { label: 'Position — Content Creator', href: '/careers/content-creator' },
+  { label: 'Robo Radio', href: '/robo-radio' },
+  { label: 'Episode — Robo Radio 14', href: '/robo-radio/14-alejandro-otalora' },
+  { label: 'Contact', href: '/contact' },
+  { label: 'Styleguide', href: '/styleguide' },
+];
+---
+<BaseLayout title="Blocks" prefooter={false}>
+  <section class="blocks-index container">
+    <h1 class="t-h1">Blocks</h1>
+    <p class="t-body">Global blocks are shown below. Page blocks are added here as they are built.</p>
+    <ul class="blocks-index__pages t-h3">
+      {pages.map((p) => <li><a href={p.href}>{p.label}</a></li>)}
+    </ul>
+  </section>
+
+  <p class="blocks-label container t-button">Home — Hero</p>
+  <HomeHero />
+  <p class="blocks-label container t-button">Pre-footer — “conversation”</p>
+  <PreFooterCTA variant="conversation" />
+  <p class="blocks-label container t-button">Pre-footer — “building”</p>
+  <PreFooterCTA variant="building" />
+  <p class="blocks-label container t-button">Footer (below)</p>
+</BaseLayout>
+
+<style>
+  .blocks-index {
+    padding-top: var(--space-40);
+    padding-bottom: var(--space-120);
+    display: grid;
+    gap: var(--space-40);
+  }
+  .blocks-index__pages {
+    display: grid;
+    gap: var(--space-12);
+  }
+  .blocks-index__pages a:hover {
+    color: var(--color-orange);
+  }
+  .blocks-label {
+    padding-block: var(--space-40) var(--space-20);
+    color: var(--color-grey-600);
+  }
+</style>

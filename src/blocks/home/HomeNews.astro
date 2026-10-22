@@ -1,0 +1,136 @@
+---
+/**
+ * Home — Latest news
+ * Figma: "Frame 2147232796" (10093:1889), 1728×1531
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1889
+ * Cards come from the news collection. The row is wider than the page and
+ * runs off the right edge (it becomes a carousel in the motion step).
+ */
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import ArrowLink from '../../components/ui/ArrowLink.astro';
+
+const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.order);
+// Figma shows a 4th card past the right edge; repeat the first item to fill it until there's more news.
+const cards = news.length < 4 ? [...news, news[0]] : news;
+---
+<section class="home-news">
+  <header class="home-news__head container">
+    <img src="/images/home/stamp-news.svg" alt="" width="230" style="--w: 230" height="132" loading="lazy" />
+    <h2 class="t-h1">Latest news</h2>
+  </header>
+
+  <ul class="home-news__row">
+    {cards.map((item, i) => (
+      <li class:list={['home-news__card', `home-news__card--${item.data.size}`]} aria-hidden={i >= news.length ? 'true' : undefined}>
+        <div class="home-news__media">
+          <Image
+            src={item.data.image}
+            alt=""
+            widths={item.data.size === 'wide' ? [815, 1630] : [537, 1074]}
+            sizes={item.data.size === 'wide' ? '815px' : '537px'}
+            loading="lazy"
+          />
+        </div>
+        <p class="home-news__text t-body t-body2-mobile">{item.data.text}</p>
+        <ArrowLink href={item.data.href}>View</ArrowLink>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .home-news {
+    padding-top: calc(120 * var(--px));
+    padding-bottom: calc(166 * var(--px));
+    overflow-x: clip;
+  }
+  /* Stamp at x 40, title at x 312 (stamp 230 + 42) */
+  .home-news__head {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(42 * var(--px));
+  }
+  .home-news__row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gutter);
+    margin-top: calc(104 * var(--px));
+    padding-left: var(--page-margin);
+  }
+  .home-news__card {
+    flex: none;
+    display: grid;
+    justify-items: start;
+  }
+  .home-news__card--wide {
+    width: calc(815 * var(--px));
+  }
+  .home-news__card--narrow {
+    width: calc(537 * var(--px));
+  }
+  .home-news__media {
+    width: 100%;
+    background: var(--color-ink);
+    overflow: hidden;
+  }
+  .home-news__card--wide .home-news__media {
+    aspect-ratio: 815 / 853;
+  }
+  .home-news__card--narrow .home-news__media {
+    aspect-ratio: 537 / 610;
+  }
+  .home-news__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .home-news__text {
+    margin-top: var(--space-20);
+    max-width: calc(465 * var(--px));
+  }
+  .home-news__card :global(.arrow-link) {
+    margin-top: var(--space-40);
+  }
+
+  /* ── Mobile: Figma 10098:1661 — stamp above the title; cards 276 / 184 wide in a sideways row ── */
+  @media (max-width: 767px) {
+    .home-news {
+      padding-top: 188px;
+      padding-bottom: 187px;
+    }
+    .home-news__head {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .home-news__head img {
+      width: 120px;
+      height: auto;
+    }
+    .home-news__row {
+      margin-top: 64px;
+      padding-right: var(--page-margin);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .home-news__card--wide {
+      width: 276px;
+    }
+    .home-news__card--narrow {
+      width: 184px;
+    }
+    .home-news__card--wide .home-news__media {
+      aspect-ratio: 276 / 312;
+    }
+    .home-news__card--narrow .home-news__media {
+      aspect-ratio: 184 / 208;
+    }
+    .home-news__text {
+      margin-top: var(--space-12);
+    }
+    .home-news__card :global(.arrow-link) {
+      margin-top: var(--space-32);
+      font-size: var(--type-body-size);
+    }
+  }
+</style>

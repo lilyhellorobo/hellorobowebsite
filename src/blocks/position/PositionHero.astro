@@ -1,0 +1,60 @@
+---
+/**
+ * Position — Hero
+ * Figma: "Frame 2147232976" (10102:146), 1728×881
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10102-146
+ * TODO (CMS): illustration per position; all positions use the Content Creator one for now.
+ */
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+<section class="position-hero container">
+  <img class="position-hero__art" src="/images/careers/position-illustration.svg" alt="" width="818" style="--w: 818" height="803" />
+  <div class="position-hero__side">
+    <img src="/images/careers/stamp-position.svg" alt="" width="174" style="--w: 174" height="100" />
+    <h1 class="position-hero__title t-h1">{title}</h1>
+  </div>
+</section>
+
+<style>
+  .position-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+    padding-top: var(--space-40);
+    padding-bottom: calc(38 * var(--px));
+  }
+  .position-hero__art {
+    width: 100%;
+    height: auto;
+  }
+  .position-hero__side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .position-hero__title {
+    width: calc(673 * var(--px));
+    max-width: 100%;
+  }
+
+  /* ── Mobile: stamp + title first, illustration below ── */
+  @media (max-width: 767px) {
+    .position-hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 64px;
+      padding-top: var(--space-20);
+    }
+    .position-hero__side {
+      order: -1;
+      gap: var(--space-24);
+    }
+    .position-hero__side img {
+      width: 116px;
+      height: auto;
+    }
+  }
+</style>

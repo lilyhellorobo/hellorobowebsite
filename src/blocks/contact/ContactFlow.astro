@@ -1,0 +1,327 @@
+---
+/**
+ * Contact — "Start a project" / "Drop a quick word" flow
+ * Figma: "Contact" column (10093:10195 … 10093:10721), each screen 1728×949
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-10195
+ * Static: every state is its own screen, linked with #anchors (CSS :target).
+ * TODO (logic step): validation + error states ("Name can’t contain numbers",
+ * "Email is missing an @"), copy email → "copied", submit, receipt with real data.
+ */
+import Button from '../../components/ui/Button.astro';
+import Divider from '../../components/ui/Divider.astro';
+import Receipt from './Receipt.astro';
+
+const steps = [
+  { id: 'name', title: 'Who’s on the other side?', field: 'Your name', type: 'text', back: '#', next: '#email' },
+  { id: 'email', title: 'Where should we say hello?', field: 'Your email', type: 'email', back: '#name', next: '#company' },
+  { id: 'company', title: 'Who are we teaming up with?', field: 'Company name', type: 'text', back: '#email', next: '#mission' },
+];
+const services = [
+  { label: 'Branding', selected: false },
+  { label: 'Interface design', selected: true },
+  { label: 'Video production', selected: false },
+];
+---
+<section class="contact" aria-label="Contact">
+  <!-- Shared background: grey ground, printer photo (multiply), HUMAN_CORE stamp -->
+  <div class="contact__bg" aria-hidden="true">
+    <img class="contact__printer" src="/images/shell/prefooter-printer.png" alt="" width="994" style="--w: 994" height="949" />
+    <img class="contact__stamp" src="/images/shell/stamp-human-core.svg" alt="" width="403" style="--w: 403" height="174" />
+  </div>
+
+  <!-- Start -->
+  <div class="contact__screen contact__screen--start">
+    <h1 class="contact__title t-h2">Okay, we’re listening. So, what’s on your mind?</h1>
+    <div class="contact__actions">
+      <Button href="#name" variant="light" icon="none" style="min-width: calc(266 * var(--px))">Start a project</Button>
+      <Button href="#message" variant="light" icon="none" style="min-width: calc(307 * var(--px))">Drop a quick word</Button>
+      <Button variant="light" icon="none" style="min-width: calc(266 * var(--px))" data-copy="info@hellorobo.co">Copy our email</Button>
+    </div>
+  </div>
+
+  <!-- Name / Email / Company -->
+  {steps.map((s) => (
+    <form class="contact__screen" id={s.id} action="#" onsubmit="return false">
+      <h2 class="contact__title t-h2">{s.title}</h2>
+      <label class="contact__field">
+        <span class="visually-hidden">{s.field}</span>
+        <input class="contact__input t-h3" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.type === 'email' ? 'email' : s.id === 'name' ? 'name' : 'organization'} />
+      </label>
+      <div class="contact__actions">
+        <Button href={s.back} variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
+        <Button href={s.next} variant="light" icon="none" style="min-width: calc(147 * var(--px))">Next</Button>
+      </div>
+      <Divider tone="dark" accent class="contact__rule" />
+    </form>
+  ))}
+
+  <!-- Mission -->
+  <form class="contact__screen" id="mission" action="#" onsubmit="return false">
+    <h2 class="contact__title t-h2">What’s the mission?</h2>
+    <p class="contact__hint t-body">Select what you need. Pick as many as you like.</p>
+    <fieldset class="contact__chips">
+      <legend class="visually-hidden">Services</legend>
+      {services.map((s) => (
+        <label class="contact__chip t-button">
+          <input type="checkbox" name="services" value={s.label} checked={s.selected} />
+          <span>{s.label}</span>
+        </label>
+      ))}
+    </fieldset>
+    <div class="contact__actions">
+      <Button href="#company" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
+      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))">Send</Button>
+    </div>
+    <Divider tone="dark" accent class="contact__rule" />
+  </form>
+
+  <!-- Quick word -->
+  <form class="contact__screen" id="message" action="#" onsubmit="return false">
+    <h2 class="contact__title t-h2">We’re all ears. Well, sort of. Drop your message below</h2>
+    <label class="contact__field contact__field--message">
+      <span class="visually-hidden">Your message</span>
+      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Don’t overthink it. Just type away..."></textarea>
+    </label>
+    <div class="contact__actions">
+      <Button href="#" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
+      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))">Send</Button>
+    </div>
+    <Divider tone="dark" accent class="contact__rule" />
+  </form>
+
+  <!-- Done -->
+  <div class="contact__screen contact__screen--done" id="done">
+    <div class="contact__done-text">
+      <h2 class="t-h2">Signal received. Connection established.</h2>
+      <p class="t-body">Your message is in good hands. Human hands, actually. We'll be in touch.</p>
+    </div>
+    <Receipt class="contact__receipt" />
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    aspect-ratio: 1728 / 949;
+    background: var(--color-grey-350);
+    color: var(--color-white);
+    overflow: hidden;
+  }
+  .contact__bg {
+    position: absolute;
+    inset: 0;
+  }
+  /* Printer at x 732 on the contact screens (607 on the pre-footer) */
+  .contact__printer {
+    position: absolute;
+    top: 0;
+    left: calc(732 / 1728 * 100%);
+    width: calc(994 / 1728 * 100%);
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: multiply;
+  }
+  .contact__stamp {
+    position: absolute;
+    left: calc(1285 / 1728 * 100%);
+    top: calc(715 / 949 * 100%);
+    width: calc(403 / 1728 * 100%);
+    height: auto;
+  }
+
+  /* One screen at a time: start by default, otherwise the :target */
+  .contact__screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-40) var(--page-margin) var(--space-60);
+  }
+  .contact__screen--start {
+    display: flex;
+  }
+  .contact:has(.contact__screen:target) .contact__screen--start {
+    display: none;
+  }
+  .contact__screen:target {
+    display: flex;
+  }
+
+  .contact__title {
+    width: calc(716 * var(--px));
+    max-width: 100%;
+  }
+  .contact__hint {
+    margin-top: calc(20 * var(--px));
+  }
+  /* Fields sit at y 412 on every step (436 for the message), whatever the title length */
+  .contact__field {
+    position: absolute;
+    left: var(--page-margin);
+    top: calc(412 / 949 * 100%);
+    width: calc(680 * var(--px));
+    max-width: calc(100% - 2 * var(--page-margin));
+  }
+  .contact__field--message {
+    top: calc(436 / 949 * 100%);
+  }
+  .contact__input {
+    width: 100%;
+    padding: 0 0 calc(10 * var(--px));
+    border: 0;
+    border-bottom: var(--line-width) solid var(--color-white);
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-white);
+    font-family: inherit;
+    outline: none;
+  }
+  .contact__input::placeholder {
+    color: var(--color-white);
+    opacity: 1;
+  }
+  .contact__input:focus-visible {
+    border-bottom-color: var(--color-orange);
+  }
+  .contact__textarea {
+    resize: none;
+    padding-bottom: calc(20 * var(--px));
+  }
+  .contact__chips {
+    position: absolute;
+    left: var(--page-margin);
+    top: calc(415 / 949 * 100%);
+    display: flex;
+    gap: calc(9 * var(--px));
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .contact__chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .contact__chip span {
+    display: inline-flex;
+    align-items: center;
+    height: var(--button-height);
+    padding: 0 var(--space-24);
+    border: var(--line-width) solid var(--color-white);
+    border-radius: var(--radius-ui);
+    cursor: pointer;
+  }
+  .contact__chip input:checked + span {
+    background: var(--color-white);
+    color: var(--color-black);
+  }
+  .contact__chip input:focus-visible + span {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 2px;
+  }
+  .contact__actions {
+    display: flex;
+    gap: calc(10 * var(--px));
+    margin-top: auto;
+  }
+  .contact__screen :global(.contact__rule) {
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    bottom: var(--space-40);
+  }
+
+  .contact__screen--done {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  .contact__done-text {
+    display: grid;
+    gap: calc(96 * var(--px));
+    width: calc(716 * var(--px));
+    align-content: start;
+  }
+  .contact :global(.contact__receipt) {
+    position: absolute;
+    left: calc(888 / 1728 * 100%);
+    top: var(--space-40);
+    width: calc(315 / 1728 * 100%);
+  }
+
+  /* ── Mobile: same rules as the mobile pre-footer — H3 titles, printer at (39, 97),
+     stamp bottom right, full-width buttons above the nav pill ── */
+  @media (max-width: 767px) {
+    .contact {
+      aspect-ratio: auto;
+      height: 100svh;
+      min-height: 694px;
+    }
+    .contact__printer {
+      left: 39px;
+      top: 97px;
+      width: 424px;
+      height: 635px;
+    }
+    .contact__stamp {
+      left: auto;
+      right: var(--page-margin);
+      top: auto;
+      bottom: 180px;
+      width: 224px;
+    }
+    .contact__screen {
+      padding: var(--space-20) var(--page-margin) 96px;
+    }
+    .contact__title {
+      font-size: var(--type-h3-size);
+      line-height: var(--type-h3-line);
+      letter-spacing: var(--type-h3-track);
+    }
+    .contact__field,
+    .contact__field--message,
+    .contact__chips {
+      top: 36%;
+    }
+    .contact__chips {
+      right: var(--page-margin);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .contact__chip span {
+      height: 44px;
+      padding: 0 var(--space-16);
+      font-size: var(--type-body2-size-mobile);
+    }
+    .contact__actions {
+      align-self: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .contact__actions :global(.button) {
+      min-width: 0;
+      min-height: 52px;
+    }
+    .contact__screen :global(.contact__rule) {
+      display: none;
+    }
+    .contact__screen--done {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .contact__done-text {
+      width: auto;
+      gap: var(--space-24);
+    }
+    .contact :global(.contact__receipt) {
+      position: relative;
+      left: auto;
+      top: auto;
+      width: 220px;
+      flex: none;
+      margin-top: 40px;
+      align-self: center;
+    }
+  }
+</style>
+

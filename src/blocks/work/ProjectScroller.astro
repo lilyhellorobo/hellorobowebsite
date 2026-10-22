@@ -1,0 +1,221 @@
+---
+/**
+ * Work — Project scroller (also used on Home as "Featured work")
+ * Figma: Home "Portfolio page d" (10093:1049) / Work "Portfolio page" (10100:11973), 1728×1117
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1049
+ *
+ * Static state of the wheel: the active project in the H2 style, the others
+ * smaller and fainter above/below it. Sizes, opacities and offsets are from
+ * Figma. Scrolling the wheel + the lens/CRT shaders come in the motion/WebGL steps.
+ * Mobile (Figma Home 10101:9021): the wheel becomes a stack of full-bleed
+ * 390×694 project cards — image, globe mark, rule, title, services, VIEW.
+ * TODO (CMS): read the list from the projects collection.
+ */
+import { Image } from 'astro:assets';
+import Button from '../../components/ui/Button.astro';
+import bg from '../../assets/work/featured-bg.png';
+
+interface Props {
+  as?: 'section' | 'div';
+  /** How many project cards the mobile layout shows (Home shows 2) */
+  mobileLimit?: number;
+}
+const { as: Tag = 'section', mobileLimit } = Astro.props;
+
+// name, x, y, size (px in Figma), opacity — in the 1728×1117 frame
+const wheel = [
+  { name: 'Geolava', x: 335, y: -39, size: 56, opacity: 0.15 },
+  { name: 'Turing Robotics Industries', x: 376, y: 65, size: 52, opacity: 0.1 },
+  { name: 'Open Robotics', x: 354, y: 125, size: 58, opacity: 0.15 },
+  { name: 'Transitive Robotics', x: 344, y: 204, size: 62, opacity: 0.25 },
+  { name: 'Public.ai', x: 336, y: 298, size: 68, opacity: 0.35 },
+  { name: 'Bedrock Robotics', x: 319, y: 404, size: 75, opacity: 0.5 },
+  { name: 'Surf Air Flight Ops', x: 319, y: 511, size: 80, opacity: 1, active: true },
+  { name: 'Cosmic Robotics', x: 322, y: 628, size: 75, opacity: 0.5 },
+  { name: 'Geolava', x: 330, y: 738, size: 68, opacity: 0.35 },
+  { name: 'Weekly Robotics', x: 346, y: 838, size: 62, opacity: 0.25 },
+  { name: 'Turing Robotics Industries', x: 356, y: 935, size: 58, opacity: 0.15 },
+  { name: 'Open Robotics', x: 378, y: 1019, size: 52, opacity: 0.1 },
+  { name: 'Transitive Robotics', x: 372, y: 1089, size: 48, opacity: 0.1 },
+];
+const activeServices = ['Fleet Management Design', 'Brand Identity', 'Video Production'];
+// Mobile cards: the active project first, then the rest of the wheel (no repeats)
+const cardNames = [...new Set([...wheel.slice(6), ...wheel.slice(0, 6)].map((p) => p.name))];
+const cards = cardNames.slice(0, mobileLimit ?? cardNames.length).map((name) => ({
+  name,
+  image: name === 'Surf Air Flight Ops' ? bg : undefined,
+}));
+const pctX = (v: number) => `${(v / 1728) * 100}%`;
+const pctY = (v: number) => `${(v / 1117) * 100}%`;
+---
+<Tag class="project-scroller theme-dark only-desktop" aria-label="Selected work">
+  <Image
+    class="project-scroller__bg"
+    src={bg}
+    alt=""
+    widths={[1400, 2406]}
+    sizes="140vw"
+    loading="lazy"
+  />
+  <div class="project-scroller__scanlines" aria-hidden="true"></div>
+
+  <hr class="project-scroller__rule" />
+  <img class="project-scroller__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
+
+  <ol class="project-scroller__names">
+    {wheel.map((p) => (
+      <li
+        class:list={['project-scroller__name', 't-h2', { 'is-active': p.active }]}
+        style={`left:${pctX(p.x)};top:${pctY(p.y)};--k:${p.size / 80};opacity:${p.opacity}`}
+        aria-current={p.active ? 'true' : undefined}
+      >
+        {p.name}
+      </li>
+    ))}
+  </ol>
+
+  <Button href="/work" variant="light" size="small" class="project-scroller__view">View</Button>
+
+  <ul class="project-scroller__services t-body">
+    {activeServices.map((s) => <li>{s}</li>)}
+  </ul>
+</Tag>
+
+<Tag class="project-cards theme-dark only-mobile" aria-label="Selected work">
+  {cards.map((c) => (
+    <article class="project-card">
+      {c.image && (
+        <Image class="project-card__bg" src={c.image} alt="" widths={[800, 1600]} sizes="275vw" loading="lazy" />
+      )}
+      <div class="project-scroller__scanlines" aria-hidden="true"></div>
+      <img class="project-card__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
+      <div class="project-card__info">
+        <hr class="project-card__rule" />
+        <h3 class="project-card__title t-h2">{c.name}</h3>
+        <div class="project-card__row">
+          <ul class="project-card__services t-body t-body2-mobile">
+            {activeServices.map((s) => <li>{s}</li>)}
+          </ul>
+          <Button href="/work" variant="light" size="small">View</Button>
+        </div>
+      </div>
+    </article>
+  ))}
+</Tag>
+
+<style>
+  .project-scroller {
+    position: relative;
+    aspect-ratio: 1728 / 1117;
+    overflow: hidden;
+    background: var(--color-black);
+  }
+  /* Background still: 2406×1555 at (-339, -235) */
+  .project-scroller :global(.project-scroller__bg) {
+    position: absolute;
+    left: calc(-339 / 1728 * 100%);
+    top: calc(-235 / 1117 * 100%);
+    width: calc(2406 / 1728 * 100%);
+    height: auto;
+    max-width: none;
+  }
+  /* Stand-in for the CRT shader until the WebGL step */
+  .project-scroller__scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px calc(3 * var(--px)));
+    pointer-events: none;
+  }
+  .project-scroller__rule {
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    top: calc(622 / 1117 * 100%);
+    margin: 0;
+    border: 0;
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+  .project-scroller__mark {
+    position: absolute;
+    left: calc(104 / 1728 * 100%);
+    top: calc(519 / 1117 * 100%);
+    width: calc(72 / 1728 * 100%);
+    height: auto;
+  }
+  .project-scroller__names {
+    position: absolute;
+    inset: 0;
+  }
+  /* H2 style, scaled per row to match the wheel (80 → calc(48 * var(--px))) */
+  .project-scroller__name {
+    position: absolute;
+    font-size: calc(var(--type-h2-size) * var(--k));
+    white-space: nowrap;
+    color: var(--color-white);
+  }
+  .project-scroller :global(.project-scroller__view) {
+    position: absolute;
+    left: calc(1051 / 1728 * 100%);
+    top: calc(573 / 1117 * 100%);
+  }
+  .project-scroller__services {
+    position: absolute;
+    left: calc(1362 / 1728 * 100%);
+    top: calc(515 / 1117 * 100%);
+    display: grid;
+    gap: calc(8 * var(--px));
+  }
+
+  /* ── Mobile cards: Figma 390×694 ── */
+  .project-card {
+    position: relative;
+    height: calc(694 * var(--px));
+    overflow: hidden;
+    background: var(--color-black);
+  }
+  .project-card + .project-card {
+    border-top: 2px solid var(--color-white);
+  }
+  /* Same crop as desktop (the still's glowing edges stay outside), centred on the plane */
+  .project-cards :global(.project-card__bg) {
+    position: absolute;
+    left: 50%;
+    top: calc(-146 * var(--px));
+    width: calc(1495 * var(--px));
+    height: calc(966 * var(--px));
+    max-width: none;
+    transform: translateX(-50%);
+  }
+  .project-card__mark {
+    position: absolute;
+    left: var(--page-margin);
+    top: var(--space-20);
+    width: calc(51 * var(--px));
+    height: auto;
+  }
+  /* Rule at 481, title at 505, services at 600, VIEW bottom-right */
+  .project-card__info {
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    top: calc(481 * var(--px));
+  }
+  .project-card__rule {
+    margin: 0;
+    border: 0;
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+  .project-card__title {
+    margin-top: var(--space-24);
+  }
+  .project-card__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: calc(44 * var(--px));
+  }
+  .project-card__services {
+    display: grid;
+    gap: var(--space-16);
+  }
+</style>

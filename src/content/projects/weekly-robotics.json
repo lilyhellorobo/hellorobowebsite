@@ -1,0 +1,124 @@
+{
+  "name": "Weekly Robotics",
+  "intro": "We design the human side of robotics. Robo Radio is where that belief becomes a conversation — through intimate discussions with the people shaping the field.",
+  "services": [
+    "UX/UI",
+    "Brand Identity"
+  ],
+  "reveal": "../../assets/projects/weekly-robotics/logo-reveal.png",
+  "summary": {
+    "label": "What Made People Say Yes",
+    "text": "We redesigned the Robotics media ecosystem around how people actually consume content — making it easier to read, navigate, and discover across platforms. A unified system built for growth."
+  },
+  "facts": [
+    {
+      "label": "Industry",
+      "value": "Robotics"
+    },
+    {
+      "label": "Operator said yes",
+      "value": "UX/UI"
+    },
+    {
+      "label": "The world said yes",
+      "value": "Brand Identity"
+    }
+  ],
+  "sections": [
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-01.png"
+      ]
+    },
+    {
+      "type": "text",
+      "label": "Designed for What Comes Next",
+      "text": "Instead of delivering a heavy, hard-to-implement redesign, we used a Market-Ready Design approach to create a clear, tool-supported system the founder could assemble effortlessly."
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-02a.png",
+        "../../assets/projects/weekly-robotics/media-02b.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-03.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-04.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-05.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-06a.png",
+        "../../assets/projects/weekly-robotics/media-06b.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-07.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-08a.png",
+        "../../assets/projects/weekly-robotics/media-08b.png",
+        "../../assets/projects/weekly-robotics/media-08c.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-09.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/media-10a.png",
+        "../../assets/projects/weekly-robotics/media-10b.png"
+      ]
+    }
+  ],
+  "testimonial": {
+    "quote": "Hello Robo is the best at what they do. A blend of product thinking and beautiful interface design.",
+    "author": "Mateusz Sadowski",
+    "role": "Founder"
+  },
+  "credits": [
+    {
+      "role": "Design Director",
+      "name": "Shakir Dzheyranov"
+    },
+    {
+      "role": "Lead Designer",
+      "name": "Hanna Shpak"
+    },
+    {
+      "role": "Designer",
+      "name": "Anastasia Kucherenko"
+    }
+  ],
+  "next": {
+    "name": "Transitive Robotics",
+    "href": "/work",
+    "image": "../../assets/projects/weekly-robotics/next-transitive.png"
+  },
+  "order": 1
+}

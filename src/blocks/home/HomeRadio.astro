@@ -1,0 +1,153 @@
+---
+/**
+ * Home — Robo Radio teaser
+ * Figma: "block" (10093:1424), 1728×2122
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1424
+ * Posters are episode artwork (CMS later); exported at 2× from Figma.
+ */
+import { Image } from 'astro:assets';
+import Button from '../../components/ui/Button.astro';
+import snell from '../../assets/radio/poster-jason-snell.png';
+import ringley from '../../assets/radio/poster-brian-ringley.png';
+import kline from '../../assets/radio/poster-jason-kline.png';
+import piccinno from '../../assets/radio/poster-andrea-piccinno.png';
+
+// 3×2 grid in reading order; stamps sit in the two empty cells
+const cells = [
+  { poster: snell, alt: 'Robo Radio poster — Jason J. Snell, musical neurofeedback artist' },
+  { poster: ringley, alt: 'Robo Radio 12 poster — Brian Ringley' },
+  { stamp: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
+  { stamp: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
+  { poster: kline, alt: 'Robo Radio 10 poster — Jason Kline' },
+  { poster: piccinno, alt: 'Robo Radio poster — Andrea Piccinno' },
+];
+---
+<section class="home-radio container">
+  <div class="home-radio__head">
+    <h2 class="home-radio__title t-h1">Robo Radio</h2>
+    <div class="home-radio__intro">
+      <p class="t-body">Community webinar</p>
+      <p class="home-radio__text t-body">
+        We design the human side of robotics. Robo Radio is where that belief becomes a conversation — through intimate discussions with the people shaping the field.
+      </p>
+      <Button href="/robo-radio" icon="hex">Learn more</Button>
+    </div>
+  </div>
+
+  <ul class="home-radio__grid">
+    {cells.map((c) => (
+      <li class:list={['home-radio__cell', { 'home-radio__cell--stamp': !c.poster }]}>
+        {c.poster ? (
+          <Image
+            class="home-radio__poster"
+            src={c.poster}
+            alt={c.alt}
+            widths={[541, 1082]}
+            sizes="(min-width: 1728px) 541px, 31vw"
+            loading="lazy"
+          />
+        ) : (
+          <img
+            class="home-radio__stamp"
+            src={c.stamp}
+            alt=""
+            width={c.w}
+            height={c.h}
+            style={`--w: ${c.w}; width: calc(${c.w} / 541 * 100%)`}
+            loading="lazy"
+          />
+        )}
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .home-radio {
+    padding-top: calc(100 * var(--px));
+    padding-bottom: calc(124 * var(--px));
+  }
+  .home-radio__head {
+    display: grid;
+    grid-template-columns: calc(968 / 1648 * 100%) calc(553 * var(--px));
+    align-items: start;
+  }
+  .home-radio__title {
+    margin-top: calc(60 * var(--px));
+  }
+  .home-radio__intro {
+    display: grid;
+    justify-items: start;
+    gap: calc(60 * var(--px));
+  }
+  .home-radio__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: calc(12 * var(--px));
+    margin-top: calc(80 * var(--px));
+  }
+  .home-radio__cell {
+    aspect-ratio: 541 / 765;
+    display: grid;
+    place-items: center;
+  }
+  .home-radio :global(.home-radio__poster) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .home-radio__stamp {
+    height: auto;
+  }
+
+  /* ── Mobile: Figma 10098:911 — stacked head, full-width button,
+     posters 253×358 in a row that scrolls sideways (stamps between them) ── */
+  @media (max-width: 767px) {
+    .home-radio {
+      padding-top: 188px;
+      padding-bottom: 24px;
+    }
+    .home-radio__head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .home-radio__title {
+      margin-top: 0;
+    }
+    .home-radio__intro {
+      margin-top: 64px;
+      gap: var(--space-24);
+      justify-items: stretch;
+    }
+    .home-radio__intro :global(.button) {
+      margin-top: var(--space-20);
+    }
+    .home-radio__grid {
+      display: flex;
+      gap: 8px;
+      margin: 64px calc(-1 * var(--page-margin)) 0;
+      padding: 0 var(--page-margin);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .home-radio__cell {
+      flex: none;
+      width: 253px;
+      aspect-ratio: 253 / 358;
+    }
+    .home-radio__cell--stamp {
+      place-items: start;
+      aspect-ratio: auto;
+      width: auto;
+    }
+    /* Second stamp goes to the end of the row, as in Figma */
+    .home-radio__cell--stamp:nth-child(4) {
+      order: 1;
+    }
+    .home-radio__stamp {
+      width: 235px !important;
+    }
+    .home-radio__cell--stamp:nth-child(4) .home-radio__stamp {
+      width: 160px !important;
+    }
+  }
+</style>

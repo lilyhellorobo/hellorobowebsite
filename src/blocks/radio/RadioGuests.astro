@@ -1,0 +1,51 @@
+---
+/**
+ * Robo Radio — Guests
+ * Figma: "guests" (10105:1064), 1730×1091, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-1064
+ */
+---
+<section class="radio-guests theme-dark">
+  <div class="container">
+    <p class="t-body">Guests</p>
+    <h2 class="radio-guests__title t-h1">Where good conversations begin</h2>
+    <img class="radio-guests__logos" src="/images/radio/logos-guests.svg" alt="Humanoid, robot.com, Boston Dynamics, VolvoxLabs" width="1644" style="--w: 1644" height="374" loading="lazy" />
+  </div>
+</section>
+
+<style>
+  .radio-guests {
+    padding-top: calc(99 * var(--px));
+    padding-bottom: calc(42 * var(--px));
+  }
+  .radio-guests__title {
+    width: calc(766 * var(--px));
+    max-width: 100%;
+    margin-top: calc(30 * var(--px));
+  }
+  .radio-guests__logos {
+    width: calc(1644 / 1648 * 100%);
+    height: auto;
+    margin-top: calc(180 * var(--px));
+  }
+
+  /* ── Mobile: the logo row keeps its size and scrolls sideways ── */
+  @media (max-width: 767px) {
+    .radio-guests {
+      padding-top: 164px;
+      padding-bottom: 64px;
+    }
+    .radio-guests .container {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .radio-guests__title {
+      margin-top: var(--space-24);
+    }
+    .radio-guests__logos {
+      width: 822px;
+      max-width: none;
+      margin-top: 64px;
+    }
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+/**
+ * Home — Philosophy
+ * Figma: "4 philosophy" (10093:185), 1728×1110
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-185
+ * The three bars are marked "3d web gl" — the SVG is the static poster.
+ */
+import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+---
+<section class="home-philosophy">
+  <img
+    class="home-philosophy__stamp"
+    src="/images/home/stamp-philosophy.svg"
+    alt=""
+    width="257" style="--w: 257"
+    height="150"
+    loading="lazy"
+  />
+  <p class="home-philosophy__label t-body only-mobile">Mission</p>
+  <p class="home-philosophy__text t-h3">
+    In the last two years over 300 robotics companies launched in the U.S.
+  </p>
+  <WebGLSlot name="home-bars" class="home-philosophy__bars">
+    <img src="/images/home/philosophy-bars.svg" alt="" width="681" style="--w: 681" height="368" loading="lazy" />
+  </WebGLSlot>
+</section>
+
+<style>
+  .home-philosophy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* stamp 50→200, text at 220, bars 580→948, block 1110 tall */
+    padding-top: calc(50 * var(--px));
+    padding-bottom: calc(162 * var(--px));
+    text-align: center;
+  }
+  .home-philosophy__stamp {
+    width: calc(257 * var(--px));
+    height: auto;
+  }
+  .home-philosophy__text {
+    width: calc(818 * var(--px));
+    max-width: 100%;
+    margin-top: var(--space-20);
+  }
+  .home-philosophy :global(.home-philosophy__bars) {
+    width: calc(681 * var(--px));
+    max-width: 100%;
+    aspect-ratio: 681 / 368;
+    margin-top: auto;
+  }
+  .home-philosophy {
+    min-height: calc(1110 * var(--px));
+  }
+
+  /* ── Mobile: Figma 10101:7108 — stamp 123 wide, label, text 326 wide, bars 360×194 ── */
+  @media (max-width: 767px) {
+    .home-philosophy {
+      min-height: 0;
+      padding: 208px 32px 0;
+    }
+    .home-philosophy__stamp {
+      width: 123px;
+    }
+    .home-philosophy__label {
+      margin-top: 44px;
+    }
+    /* 290 reproduces Figma's line breaks */
+    .home-philosophy__text {
+      width: 290px;
+      margin-top: var(--space-24);
+    }
+    .home-philosophy :global(.home-philosophy__bars) {
+      width: 360px;
+      max-width: none;
+      margin-top: 149px;
+    }
+  }
+</style>

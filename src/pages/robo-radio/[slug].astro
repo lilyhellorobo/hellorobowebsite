@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EpisodeHero from '../../blocks/episode/EpisodeHero.astro';
+import EpisodeText from '../../blocks/episode/EpisodeText.astro';
+import RadioTV from '../../blocks/radio/RadioTV.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const episodes = await getCollection('episodes');
+  return episodes.map((episode) => ({ params: { slug: episode.id }, props: { episode } }));
+}
+const { episode } = Astro.props as { episode: CollectionEntry<'episodes'> };
+---
+<BaseLayout title={episode.data.title} headerVariant="light" back="/robo-radio">
+  <EpisodeHero episode={episode} />
+  <EpisodeText episode={episode} />
+  <RadioTV variant="episode" />
+  <EpisodeText episode={episode} />
+</BaseLayout>

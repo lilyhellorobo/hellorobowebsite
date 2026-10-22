@@ -1,0 +1,65 @@
+---
+/**
+ * Episode — Text block
+ * Figma: "text bloc" (10105:2815), 1728×494
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-2815
+ */
+import type { CollectionEntry } from 'astro:content';
+import ArrowLink from '../../components/ui/ArrowLink.astro';
+
+interface Props {
+  episode: CollectionEntry<'episodes'>;
+}
+const { data } = Astro.props.episode;
+const firstName = data.guest.split(' ')[0];
+---
+<section class="episode-text theme-dark">
+  <div class="episode-text__inner container">
+    <div class="episode-text__body">
+      <p class="t-body">{data.description}</p>
+      {data.portfolioUrl && (
+        <div class="episode-text__follow">
+          <p class="t-body">Follow {firstName}’s work:</p>
+          <ArrowLink href={data.portfolioUrl}>Portfolio</ArrowLink>
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .episode-text {
+    padding-block: calc(120 * var(--px));
+  }
+  .episode-text__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+  }
+  .episode-text__body {
+    grid-column: 2;
+    display: grid;
+    gap: calc(100 * var(--px));
+    width: calc(680 * var(--px));
+    max-width: 100%;
+  }
+  .episode-text__follow {
+    display: grid;
+    justify-items: start;
+    gap: calc(10 * var(--px));
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .episode-text {
+      padding-block: 64px;
+    }
+    .episode-text__inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .episode-text__body {
+      grid-column: auto;
+      gap: 40px;
+    }
+  }
+</style>

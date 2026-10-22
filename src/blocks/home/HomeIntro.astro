@@ -1,0 +1,61 @@
+---
+/**
+ * Home — Intro
+ * Figma: "2 intro" (10093:145), 1728×1012
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-145
+ */
+---
+<section class="home-intro">
+  <img
+    class="home-intro__stamp"
+    src="/images/home/stamp-intro.svg"
+    alt=""
+    width="342" style="--w: 342"
+    height="144"
+    loading="lazy"
+  />
+  <p class="home-intro__label t-body only-mobile">Mission</p>
+  <p class="home-intro__text t-h3">
+    Hello Robo designs the human side of robotics — turning complex systems into products operators trust, teams ship, and investors notice.
+  </p>
+</section>
+
+<style>
+  .home-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* stamp at 213, text at 390, block 1012 tall */
+    padding-top: calc(213 * var(--px));
+    padding-bottom: calc(390 * var(--px));
+    gap: calc(33 * var(--px));
+    text-align: center;
+  }
+  .home-intro__stamp {
+    width: calc(342 * var(--px));
+    height: auto;
+  }
+  /* Figma box is 807; browsers set Alliance ~1% tighter, 795 reproduces Figma's line breaks */
+  .home-intro__text {
+    width: calc(795 * var(--px));
+    max-width: 100%;
+  }
+
+  /* ── Mobile: Figma 10101:6503 — stamp 193 wide, "Mission" label, text 326 wide ── */
+  @media (max-width: 767px) {
+    .home-intro {
+      padding: 208px 32px 396px;
+      gap: 0;
+    }
+    .home-intro__stamp {
+      width: 193px;
+    }
+    .home-intro__label {
+      margin-top: 44px;
+    }
+    .home-intro__text {
+      width: 100%;
+      margin-top: var(--space-24);
+    }
+  }
+</style>

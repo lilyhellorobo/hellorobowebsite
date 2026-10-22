@@ -1,0 +1,141 @@
+---
+/**
+ * Home — Hero
+ * Figma: 1.0 home → "1 hero" (10093:119), 1728×1117
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-119
+ *
+ * Marked "3d web gl": the sphere + robot are the static poster for the future
+ * scene and sit inside a WebGLSlot. (The receipt photo under the sphere in
+ * Figma is fully covered by it, so it isn't used.)
+ */
+import { Image } from 'astro:assets';
+import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+import sphere from '../../assets/home/hero-sphere.png';
+import robot from '../../assets/home/hero-robot.png';
+---
+<section class="home-hero" aria-labelledby="home-hero-title">
+  <WebGLSlot name="home-hero" class="home-hero__scene">
+    <Image
+      class="home-hero__sphere"
+      src={sphere}
+      alt=""
+      widths={[1200, 2002]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <div class="home-hero__robot-frame">
+      <Image
+        class="home-hero__robot"
+        src={robot}
+        alt="Hello Robo service robot with a 79% display"
+        widths={[900, 1520]}
+        sizes="100vw"
+        loading="eager"
+      />
+    </div>
+  </WebGLSlot>
+
+  <h1 id="home-hero-title" class="home-hero__title t-h1">Make<br class="only-mobile" /> the world<br class="only-mobile" /> say yes to<br class="only-mobile" /> your robot</h1>
+
+  <!-- White notches at the bottom corners (Figma 10093:124, 10093:125) -->
+  <svg class="home-hero__notch home-hero__notch--left" viewBox="0 0 117 71" aria-hidden="true">
+    <path d="M58 35.1966L0 0V71H117L58 35.1966Z" fill="currentColor" />
+  </svg>
+  <svg class="home-hero__notch home-hero__notch--right" viewBox="0 0 117 71" aria-hidden="true">
+    <path d="M59 35.1966L117 0V71H0L59 35.1966Z" fill="currentColor" />
+  </svg>
+</section>
+
+<style>
+  /* Positions are percentages of the 1728×1117 Figma frame */
+  .home-hero {
+    position: relative;
+    aspect-ratio: 1728 / 1117;
+    overflow: hidden;
+    background: var(--color-white);
+  }
+  .home-hero :global(.home-hero__scene) {
+    position: absolute;
+    inset: 0;
+  }
+  /* Sphere: 1784×1118, centred */
+  .home-hero :global(.home-hero__sphere) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(1784 / 1728 * 100%);
+    height: calc(1118 / 1117 * 100%);
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+  }
+  /* Robot: a 1772×757 window at (-5, 480); the image inside is 285.71% tall, offset -48.85% */
+  .home-hero__robot-frame {
+    position: absolute;
+    left: calc(-5 / 1728 * 100%);
+    top: calc(480 / 1117 * 100%);
+    width: calc(1772 / 1728 * 100%);
+    height: calc(757 / 1117 * 100%);
+    overflow: hidden;
+  }
+  .home-hero :global(.home-hero__robot) {
+    position: absolute;
+    left: 0;
+    top: -48.85%;
+    width: 100%;
+    height: 285.71%;
+    max-width: none;
+  }
+  .home-hero__title {
+    position: absolute;
+    top: var(--space-40);
+    left: var(--page-margin);
+    width: calc(1095 / 1728 * 100%);
+    color: var(--color-orange);
+    z-index: var(--z-raised);
+  }
+  .home-hero__notch {
+    position: absolute;
+    bottom: 0;
+    width: calc(117 / 1728 * 100%);
+    height: auto;
+    color: var(--color-white);
+    z-index: var(--z-raised);
+  }
+  .home-hero__notch--left {
+    left: 0;
+  }
+  .home-hero__notch--right {
+    right: 0;
+  }
+
+  /* ── Mobile: Figma "home mob" (10101:6462), 390×844 ── */
+  @media (max-width: 767px) {
+    .home-hero {
+      aspect-ratio: 390 / 844;
+    }
+    /* Receipt sphere: cropped to its centre (Figma shows a close-up of the receipts) */
+    .home-hero :global(.home-hero__sphere) {
+      width: 260%;
+      height: 100%;
+    }
+    /* Robot: a 723×484 window at (-167, 419) */
+    .home-hero__robot-frame {
+      left: calc(-167 / 390 * 100%);
+      top: calc(419 / 844 * 100%);
+      width: calc(723 / 390 * 100%);
+      height: calc(484 / 844 * 100%);
+    }
+    .home-hero :global(.home-hero__robot) {
+      top: -31%;
+      height: auto;
+    }
+    .home-hero__title {
+      top: var(--space-20);
+      width: calc(100% - 2 * var(--page-margin));
+    }
+    .home-hero__notch {
+      width: calc(88 / 390 * 100%);
+    }
+  }
+</style>

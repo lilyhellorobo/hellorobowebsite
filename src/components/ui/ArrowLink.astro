@@ -1,0 +1,26 @@
+---
+/**
+ * Arrow link — Figma "View →" (news cards, 10093:1889) and "Portfolio →" (episode page).
+ * Body text style, orange, 20px arrow, gap 6.
+ */
+import Icon from '../icons/Icon.astro';
+
+interface Props {
+  href: string;
+  class?: string;
+}
+const { href, class: className } = Astro.props;
+---
+<a class:list={['arrow-link', 't-body', className]} href={href}>
+  <span><slot /></span>
+  <Icon name="arrow" />
+</a>
+
+<style>
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-6);
+    color: var(--color-orange);
+  }
+</style>

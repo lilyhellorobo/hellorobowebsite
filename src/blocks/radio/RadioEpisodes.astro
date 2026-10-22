@@ -1,0 +1,112 @@
+---
+/**
+ * Robo Radio — All of the episodes
+ * Figma: "all episodes" (10105:985), 1730×2694, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-985
+ * Rows from the episodes collection (listed: true). Load more is wired in the motion step.
+ */
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Button from '../../components/ui/Button.astro';
+
+const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a, b) => a.data.order - b.data.order);
+---
+<section class="radio-episodes theme-dark">
+  <div class="container">
+    <p class="t-body">All of the episodes</p>
+    <ul class="radio-episodes__list">
+      {episodes.map((e) => (
+        <li class="radio-episodes__row">
+          <div class="radio-episodes__text">
+            <h3 class="t-h2">{e.data.title}</h3>
+            <p class="radio-episodes__line t-body">{e.data.guestLine}</p>
+            <Button href={`/robo-radio/${e.id}`} variant="light" icon="arrow">Watch</Button>
+          </div>
+          <div class="radio-episodes__cover">
+            {e.data.cover && <Image src={e.data.cover} alt="" widths={[680, 1360]} sizes="(min-width: 1728px) 680px, 40vw" loading="lazy" />}
+          </div>
+        </li>
+      ))}
+    </ul>
+    <div class="radio-episodes__more">
+      <Button variant="light" icon="hex">Load more</Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .radio-episodes {
+    padding-top: calc(180 * var(--px));
+  }
+  .radio-episodes__list {
+    margin-top: var(--space-40);
+  }
+  /* Rule above each row, calc(40 * var(--px)) around it; no rule after the last row */
+  .radio-episodes__row {
+    display: grid;
+    grid-template-columns: calc(680 * var(--px)) 1fr calc(680 * var(--px));
+    padding-top: var(--space-40);
+    padding-bottom: var(--space-40);
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+  .radio-episodes__row:last-child {
+    padding-bottom: 0;
+  }
+  .radio-episodes__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .radio-episodes__line {
+    width: calc(553 * var(--px));
+    max-width: 100%;
+    margin-top: var(--space-20);
+  }
+  .radio-episodes__text :global(.button) {
+    margin-top: auto;
+  }
+  .radio-episodes__cover {
+    grid-column: 3;
+    aspect-ratio: 680 / 382;
+    background: var(--color-ink);
+    overflow: hidden;
+  }
+  .radio-episodes__cover :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .radio-episodes__more {
+    display: flex;
+    justify-content: center;
+    margin-top: calc(120 * var(--px));
+  }
+
+  /* ── Mobile: cover on top of each row, then title, line and button ── */
+  @media (max-width: 767px) {
+    .radio-episodes {
+      padding-top: 164px;
+    }
+    .radio-episodes__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+    .radio-episodes__cover {
+      grid-column: auto;
+      order: -1;
+    }
+    .radio-episodes__line {
+      margin-top: var(--space-12);
+    }
+    .radio-episodes__text :global(.button) {
+      align-self: stretch;
+      margin-top: var(--space-24);
+    }
+    .radio-episodes__more {
+      margin-top: 64px;
+    }
+    .radio-episodes__more :global(.button) {
+      flex: 1;
+    }
+  }
+</style>

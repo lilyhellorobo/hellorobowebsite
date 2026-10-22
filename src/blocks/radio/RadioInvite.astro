@@ -1,0 +1,61 @@
+---
+/**
+ * Robo Radio — Invite
+ * Figma: "invite" (10105:971), 1730×730, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-971
+ */
+import Button from '../../components/ui/Button.astro';
+---
+<section class="radio-invite theme-dark">
+  <div class="radio-invite__inner container">
+    <p class="radio-invite__label t-h3" lang="ja">対話</p>
+    <h2 class="radio-invite__title t-h2">The next conversation needs your point of view</h2>
+    <p class="radio-invite__text t-body">Come listen, ask a question or tell us what you’re building. If it changes how people and robots live together, it belongs on Robo Radio.</p>
+    <Button href="/contact" variant="light" icon="hex-pin">Pull up a chair</Button>
+  </div>
+</section>
+
+<style>
+  .radio-invite {
+    padding-block: calc(120 * var(--px));
+  }
+  .radio-invite__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .radio-invite__label {
+    color: var(--color-orange);
+  }
+  .radio-invite__title {
+    width: calc(956 * var(--px));
+    max-width: 100%;
+    margin-top: var(--space-40);
+  }
+  .radio-invite__text {
+    width: calc(553 * var(--px));
+    max-width: 100%;
+    margin-top: var(--space-48);
+  }
+  .radio-invite__inner :global(.button) {
+    margin-top: var(--space-60);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .radio-invite {
+      padding-block: 164px;
+    }
+    .radio-invite__title {
+      margin-top: var(--space-24);
+    }
+    .radio-invite__text {
+      margin-top: var(--space-24);
+    }
+    .radio-invite__inner :global(.button) {
+      align-self: stretch;
+      margin-top: 44px;
+    }
+  }
+</style>

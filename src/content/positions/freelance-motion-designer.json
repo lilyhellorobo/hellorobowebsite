@@ -1,0 +1,12 @@
+{
+  "title": "Freelance Motion Designer",
+  "location": "Remote",
+  "hours": "US-friendly hours",
+  "type": "Freelance",
+  "order": 7,
+  "stamp": {
+    "src": "/images/careers/stamp-role-motion.svg",
+    "w": 139,
+    "h": 80
+  }
+}

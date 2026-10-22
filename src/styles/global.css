@@ -1,0 +1,147 @@
+@import "./fonts.css";
+@import "./tokens.css";
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  letter-spacing: var(--type-body-track);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+h1, h2, h3, h4, p, ul, ol, dl, dd, figure, blockquote {
+  margin: 0;
+}
+ul, ol {
+  padding: 0;
+  list-style: none;
+}
+img, video, svg {
+  display: block;
+  max-width: 100%;
+}
+/* Images take their Figma width from the width attribute (copied to --w), scaled
+   with the page. A block's own CSS width always wins over this. */
+img[style*="--w"],
+.icon,
+.robo-logo {
+  width: calc(var(--w) * var(--px));
+  height: auto;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+/* ── Text styles (the 5 Figma desktop styles) ─────────────────── */
+.t-h1 {
+  font-size: var(--type-h1-size);
+  line-height: var(--type-h1-line);
+  letter-spacing: var(--type-h1-track);
+  font-weight: 400;
+}
+.t-h2 {
+  font-size: var(--type-h2-size);
+  line-height: var(--type-h2-line);
+  letter-spacing: var(--type-h2-track);
+  font-weight: 400;
+}
+.t-h3 {
+  font-size: var(--type-h3-size);
+  line-height: var(--type-h3-line);
+  letter-spacing: var(--type-h3-track);
+  font-weight: 400;
+}
+.t-body {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  letter-spacing: var(--type-body-track);
+  font-weight: 400;
+}
+.t-button {
+  font-size: var(--type-button-size);
+  line-height: var(--type-button-line);
+  letter-spacing: var(--type-button-track);
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+/* Mobile/Body2 (12 / 120% / -1%): Body on desktop, 12px on mobile */
+@media (max-width: 767px) {
+  .t-body2-mobile {
+    font-size: var(--type-body2-size-mobile);
+  }
+}
+
+/* ── Layout helpers ────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-margin);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Elements that only exist in one of the Figma layouts */
+@media (min-width: 768px) {
+  .only-mobile {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .only-desktop {
+    display: none !important;
+  }
+}
+
+/* ── Surface themes for full-bleed sections ────────────────────── */
+.theme-dark {
+  background: var(--color-black);
+  color: var(--color-white);
+  --color-muted: rgb(255 255 255 / 0.6);
+}
+.theme-light {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

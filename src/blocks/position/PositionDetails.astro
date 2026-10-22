@@ -1,0 +1,133 @@
+---
+/**
+ * Position — Details
+ * Figma: "Frame 2147232860" (10102:1315), 1648×3910
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10102-1315
+ * Two columns: label (H3) left, content right. Sections without content are skipped.
+ */
+import type { CollectionEntry } from 'astro:content';
+import Button from '../../components/ui/Button.astro';
+import { studio } from '../../data/site';
+
+interface Props {
+  position: CollectionEntry<'positions'>;
+}
+const { data } = Astro.props.position;
+const steps = data.applySteps.map((s, i) => ({ n: String(i + 1).padStart(2, '0'), s }));
+---
+<section class="position-details container">
+  <div class="position-details__row">
+    <p class="t-body">{data.location}<br />{data.hours}<br />{data.type}</p>
+    <div class="position-details__intro t-body">
+      {data.intro.map((p) => <p>{p}</p>)}
+    </div>
+  </div>
+
+  <div class="position-details__row">
+    <h2 class="position-details__label t-h3">Hello Robo in one breath</h2>
+    <p class="t-h3">Hello Robo designs the human side of robotics. From brand to interface, we turn complex systems into products that operators trust, teams can ship, and investors notice.</p>
+  </div>
+
+  {data.workOn.length > 0 && (
+    <div class="position-details__row">
+      <h2 class="position-details__label t-h3">What you’ll work on</h2>
+      <ul class="position-details__list t-body">{data.workOn.map((i) => <li>{i}</li>)}</ul>
+    </div>
+  )}
+
+  {data.bring.length > 0 && (
+    <div class="position-details__row">
+      <h2 class="position-details__label t-h3">What you bring</h2>
+      <ul class="position-details__list t-body">{data.bring.map((i) => <li>{i}</li>)}</ul>
+    </div>
+  )}
+
+  {data.howWeWork.length > 0 && (
+    <div class="position-details__row">
+      <h2 class="position-details__label t-h3">How we work</h2>
+      <p class="t-h3">{data.howWeWork.map((p, i) => <>{i > 0 && <br />}{p}</>)}</p>
+    </div>
+  )}
+
+  <div class="position-details__row">
+    <h2 class="position-details__label t-h3">How to apply</h2>
+    <div class="position-details__apply">
+      <p class="t-body">Email {studio.email} with:</p>
+      {steps.length > 0 && (
+        <ol class="position-details__list position-details__steps">
+          {steps.map(({ n, s }) => (
+            <li>
+              <span class="t-h3">{n}</span>
+              <span class="t-body">{s}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <Button href={`mailto:${studio.email}?subject=${encodeURIComponent(data.title)}`} icon="hex">Apply now</Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .position-details {
+    display: grid;
+    gap: calc(240 * var(--px));
+    padding-top: calc(120 * var(--px));
+    padding-bottom: calc(120 * var(--px));
+  }
+  .position-details__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+    align-items: start;
+  }
+  .position-details__label {
+    width: calc(480 * var(--px));
+    max-width: 100%;
+  }
+  .position-details__intro {
+    display: grid;
+    gap: calc(24 * var(--px));
+  }
+  /* Items separated by a 20% rule, calc(32 * var(--px)) above and below */
+  .position-details__list > li + li {
+    margin-top: calc(32 * var(--px));
+    padding-top: calc(32 * var(--px));
+    border-top: var(--line-width) solid var(--line-on-light);
+  }
+  .position-details__apply {
+    display: grid;
+    justify-items: start;
+    gap: calc(120 * var(--px));
+  }
+  .position-details__steps {
+    width: 100%;
+  }
+  .position-details__steps li {
+    display: grid;
+    gap: var(--space-20);
+  }
+
+  /* ── Mobile: label above content ── */
+  @media (max-width: 767px) {
+    .position-details {
+      gap: 100px;
+      padding-top: 100px;
+      padding-bottom: 164px;
+    }
+    .position-details__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+    .position-details__list > li + li {
+      margin-top: var(--space-20);
+      padding-top: var(--space-20);
+    }
+    .position-details__apply {
+      gap: 64px;
+    }
+    .position-details__apply :global(.button) {
+      width: 100%;
+    }
+  }
+</style>

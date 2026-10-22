@@ -1,0 +1,112 @@
+---
+/**
+ * Project — Hero + logo reveal
+ * Figma: "Frame 2147232848" (10100:12388, 1728×814) and "Frame 2147232797" (10100:12374, 1728×944)
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12388
+ */
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { data } = Astro.props.project;
+---
+<section class="project-hero theme-dark">
+  <h1 class="project-hero__title t-h1 container">{data.name}</h1>
+  <span class="project-hero__plus t-h1" aria-hidden="true">+</span>
+  <img class="project-hero__badge" src="/images/project/badge-25.svg" alt="" width="200" style="--w: 200" height="200" />
+  <img class="project-hero__stamp" src="/images/project/stamp-project-hero.svg" alt="" width="238" style="--w: 238" height="90" />
+  <p class="project-hero__intro t-body">{data.intro}</p>
+</section>
+<section class="project-reveal" aria-label={`${data.name} identity`}>
+  <Image src={data.reveal} alt="" widths={[1728, 3456]} sizes="100vw" loading="eager" />
+</section>
+
+<style>
+  .project-hero {
+    position: relative;
+    aspect-ratio: 1728 / 814;
+  }
+  .project-hero__title {
+    padding-top: var(--space-40);
+  }
+  .project-hero__plus {
+    position: absolute;
+    left: 50%;
+    top: calc(350 / 814 * 100%);
+    transform: translateX(-50%);
+  }
+  .project-hero__badge,
+  .project-hero__stamp {
+    position: absolute;
+    height: auto;
+  }
+  .project-hero__badge {
+    left: var(--page-margin);
+    top: calc(570 / 814 * 100%);
+    width: calc(200 / 1728 * 100%);
+  }
+  .project-hero__stamp {
+    left: calc(286 / 1728 * 100%);
+    top: calc(684 / 814 * 100%);
+    width: calc(238 / 1728 * 100%);
+  }
+  .project-hero__intro {
+    position: absolute;
+    left: calc(1147 / 1728 * 100%);
+    /* Anchored by its bottom (773 in Figma) so longer wraps grow upwards */
+    bottom: calc((814 - 773) / 814 * 100%);
+    width: calc(541 * var(--px));
+  }
+  .project-reveal {
+    aspect-ratio: 1728 / 944;
+    background: var(--color-ink);
+    overflow: hidden;
+  }
+  .project-reveal :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ── Mobile: title, badge + stamp, intro in flow; the reveal image becomes 4:5 ── */
+  @media (max-width: 767px) {
+    .project-hero {
+      aspect-ratio: auto;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 64px;
+    }
+    .project-hero__title {
+      padding-top: var(--space-20);
+    }
+    .project-hero__plus {
+      position: static;
+      transform: none;
+      align-self: center;
+      margin-top: 64px;
+    }
+    .project-hero__badge,
+    .project-hero__stamp,
+    .project-hero__intro {
+      position: static;
+      margin-left: var(--page-margin);
+    }
+    .project-hero__badge {
+      width: 100px;
+      margin-top: 64px;
+    }
+    .project-hero__stamp {
+      width: 160px;
+      margin-top: var(--space-24);
+    }
+    .project-hero__intro {
+      width: auto;
+      margin: 64px var(--page-margin) 0;
+    }
+    .project-reveal {
+      aspect-ratio: 4 / 5;
+    }
+  }
+</style>

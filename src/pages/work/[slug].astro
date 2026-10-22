@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectHero from '../../blocks/project/ProjectHero.astro';
+import ProjectSummary from '../../blocks/project/ProjectSummary.astro';
+import ProjectSections from '../../blocks/project/ProjectSections.astro';
+import ProjectTestimonial from '../../blocks/project/ProjectTestimonial.astro';
+import ProjectNext from '../../blocks/project/ProjectNext.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+const { project } = Astro.props as { project: CollectionEntry<'projects'> };
+---
+<BaseLayout title={project.data.name} headerVariant="light" prefooter="building">
+  <ProjectHero project={project} />
+  <ProjectSummary project={project} />
+  <ProjectSections project={project} />
+  <ProjectTestimonial project={project} />
+  <ProjectNext project={project} />
+</BaseLayout>

@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HomeHero from '../blocks/home/HomeHero.astro';
+import HomeIntro from '../blocks/home/HomeIntro.astro';
+import HomeShowreel from '../blocks/home/HomeShowreel.astro';
+import HomePhilosophy from '../blocks/home/HomePhilosophy.astro';
+import HomeShowcase from '../blocks/home/HomeShowcase.astro';
+import HomeClients from '../blocks/home/HomeClients.astro';
+import ProjectScroller from '../blocks/work/ProjectScroller.astro';
+import HomeRadio from '../blocks/home/HomeRadio.astro';
+import HomeNews from '../blocks/home/HomeNews.astro';
+---
+<BaseLayout title={'Home'}>
+  <HomeHero />
+  <HomeIntro />
+  <HomeShowreel />
+  <HomePhilosophy />
+  <HomeShowcase />
+  <HomeClients />
+  <ProjectScroller mobileLimit={2} />
+  <HomeRadio />
+  <HomeNews />
+</BaseLayout>
