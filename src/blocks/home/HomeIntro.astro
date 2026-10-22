@@ -1,0 +1,42 @@
+---
+/**
+ * Home — Intro
+ * Figma: "2 intro" (10093:145), 1728×1012
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-145
+ */
+---
+<section class="home-intro">
+  <img
+    class="home-intro__stamp"
+    src="/images/home/stamp-intro.svg"
+    alt=""
+    width="342"
+    height="144"
+    loading="lazy"
+  />
+  <p class="home-intro__text t-h3">
+    Hello Robo designs the human side of robotics — turning complex systems into products operators trust, teams ship, and investors notice.
+  </p>
+</section>
+
+<style>
+  .home-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* stamp at 213, text at 390, block 1012 tall */
+    padding-top: 213px;
+    padding-bottom: 390px;
+    gap: 33px;
+    text-align: center;
+  }
+  .home-intro__stamp {
+    width: 342px;
+    height: auto;
+  }
+  /* Figma box is 807; browsers set Alliance ~1% tighter, 795 reproduces Figma's line breaks */
+  .home-intro__text {
+    width: 795px;
+    max-width: 100%;
+  }
+</style>

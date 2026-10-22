@@ -9,16 +9,18 @@ import Icon from '../icons/Icon.astro';
 interface Props {
   href?: string;
   variant?: 'dark' | 'light';
+  /** "small" = the 145×50 VIEW button on the project scroller */
+  size?: 'default' | 'small';
   icon?: 'hex' | 'hex-pin' | 'corners' | 'arrow' | 'none';
   type?: 'button' | 'submit';
   class?: string;
   [key: string]: unknown;
 }
-const { href, variant = 'dark', icon = 'hex', type = 'button', class: className, ...rest } = Astro.props;
+const { href, variant = 'dark', size = 'default', icon = 'hex', type = 'button', class: className, ...rest } = Astro.props;
 const Tag = href ? 'a' : 'button';
 ---
 <Tag
-  class:list={['button', `button--${variant}`, 't-button', className]}
+  class:list={['button', `button--${variant}`, `button--${size}`, 't-button', className]}
   href={href}
   type={href ? undefined : type}
   {...rest}
@@ -47,6 +49,11 @@ const Tag = href ? 'a' : 'button';
   .button--light {
     background: var(--color-white);
     color: var(--color-black);
+  }
+  .button--small {
+    min-width: 145px;
+    min-height: 50px;
+    gap: var(--space-32);
   }
   .button__icon {
     flex: none;

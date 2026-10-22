@@ -1,5 +1,7 @@
 {
   "text": "Our client Surfair in partnership with Palantir started building Surf OS, operating system for the Advanced Air Mobility industry",
   "href": "#",
-  "order": 1
+  "order": 1,
+  "image": "../../assets/news/surf-os.png",
+  "size": "wide"
 }

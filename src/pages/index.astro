@@ -1,16 +1,23 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import BlockPlaceholder from '../components/ui/BlockPlaceholder.astro';
 import HomeHero from '../blocks/home/HomeHero.astro';
+import HomeIntro from '../blocks/home/HomeIntro.astro';
+import HomeShowreel from '../blocks/home/HomeShowreel.astro';
+import HomePhilosophy from '../blocks/home/HomePhilosophy.astro';
+import HomeShowcase from '../blocks/home/HomeShowcase.astro';
+import HomeClients from '../blocks/home/HomeClients.astro';
+import ProjectScroller from '../blocks/work/ProjectScroller.astro';
+import HomeRadio from '../blocks/home/HomeRadio.astro';
+import HomeNews from '../blocks/home/HomeNews.astro';
 ---
-<BaseLayout title={'Home'} >
+<BaseLayout title={'Home'}>
   <HomeHero />
-  <BlockPlaceholder name="Intro" node="10093:145" height={1012} kind="static" tone="light" />
-  <BlockPlaceholder name="Showreel" node="10093:183" height={1005} kind="video" tone="light" />
-  <BlockPlaceholder name="Philosophy" node="10093:185" height={1110} kind="webgl" tone="light" />
-  <BlockPlaceholder name="Showcase" node="10093:249" height={1555} kind="static" tone="dark" />
-  <BlockPlaceholder name="Clients" node="10093:577" height={1481} kind="static" tone="light" />
-  <BlockPlaceholder name="Featured work" node="10093:1049" height={1117} kind="cms" tone="dark" />
-  <BlockPlaceholder name="Robo Radio teaser" node="10093:1424" height={2122} kind="cms" tone="light" />
-  <BlockPlaceholder name="Latest news" node="10093:1889" height={1531} kind="cms" tone="light" />
+  <HomeIntro />
+  <HomeShowreel />
+  <HomePhilosophy />
+  <HomeShowcase />
+  <HomeClients />
+  <ProjectScroller />
+  <HomeRadio />
+  <HomeNews />
 </BaseLayout>

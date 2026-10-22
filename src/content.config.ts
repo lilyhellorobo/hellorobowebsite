@@ -56,8 +56,11 @@ const episodes = defineCollection({
 
 const news = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/news' }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     text: z.string(),
+    image: image(),
+    /** Card width on the Home carousel: "wide" = 815, "narrow" = 537 */
+    size: z.enum(['wide', 'narrow']).default('narrow'),
     href: z.string(),
     order: z.number().default(0),
   }),

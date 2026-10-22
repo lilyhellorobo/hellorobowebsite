@@ -1,0 +1,108 @@
+---
+/**
+ * Home — Showcase ("What it took those founders…")
+ * Figma: "Frame 2147232805" (10093:249), 1728×1555; photo block 10093:250 (1648×1117)
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-249
+ */
+import { Image } from 'astro:assets';
+import Divider from '../../components/ui/Divider.astro';
+import photo from '../../assets/home/showcase-photo.png';
+
+const services = [
+  'Robot Brand Identity',
+  'Brand Strategy & Positioning',
+  'Robot Naming & Nomenclature',
+  'Motion Identity',
+  'Tone of Voice',
+];
+---
+<section class="home-showcase container">
+  <h2 class="home-showcase__intro t-h3">What it took those founders to be ready for that moment.</h2>
+
+  <div class="home-showcase__media">
+    <Image
+      class="home-showcase__photo"
+      src={photo}
+      alt="A person holding a tablet showing a robotics product interface"
+      widths={[1100, 1648, 2400, 3296]}
+      sizes="(min-width: 1728px) 1648px, calc(100vw - 80px)"
+      loading="lazy"
+    />
+    <div class="home-showcase__shade" aria-hidden="true"></div>
+
+    <div class="home-showcase__overlay">
+      <Divider tone="dark" accent class="home-showcase__rule" />
+      <div class="home-showcase__row">
+        <div class="home-showcase__marks" aria-hidden="true">
+          <img src="/images/home/showcase-globe.svg" alt="" width="68" height="72" />
+          <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" height="14" />
+        </div>
+        <p class="home-showcase__title t-h2">Make the world say yes</p>
+        <ul class="home-showcase__services t-body">
+          {services.map((s) => <li>{s}</li>)}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .home-showcase {
+    padding-top: 160px;
+    padding-bottom: 82px;
+  }
+  .home-showcase__intro {
+    width: 818px;
+    max-width: 100%;
+  }
+  .home-showcase__media {
+    position: relative;
+    margin-top: 80px;
+    aspect-ratio: 1648 / 1117;
+    overflow: hidden;
+    color: var(--color-white);
+  }
+  .home-showcase :global(.home-showcase__photo) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .home-showcase__shade {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.3);
+  }
+  /* Rule at 681, content row at 714 inside the 1117-tall block */
+  .home-showcase__overlay {
+    position: absolute;
+    left: var(--space-40);
+    right: var(--space-40);
+    top: calc(681 / 1117 * 100%);
+  }
+  .home-showcase__row {
+    display: grid;
+    /* columns from the 1568-wide row: marks 108 · title 947 · services 403 · rest */
+    grid-template-columns: calc(108 / 1568 * 100%) calc(947 / 1568 * 100%) calc(403 / 1568 * 100%) 1fr;
+    gap: 0;
+    margin-top: 33px;
+  }
+  .home-showcase__marks {
+    position: relative;
+  }
+  .home-showcase__y2k {
+    position: absolute;
+    left: 5px;
+    top: 62px;
+  }
+  .home-showcase__title {
+    width: 542px;
+    margin-top: 7px;
+  }
+  .home-showcase__services {
+    display: grid;
+    gap: var(--space-24);
+    margin-top: 11px;
+  }
+</style>

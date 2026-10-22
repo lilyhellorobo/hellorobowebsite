@@ -1,0 +1,114 @@
+---
+/**
+ * Home — Clients
+ * Figma: "Frame 2147232804" (10093:577), 1728×1481
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-577
+ * Logo tiles and stamps are scattered on the right; positions are taken
+ * from the 1728 frame and expressed as % so they scale with the page.
+ */
+
+// x, y, w, h in the 1728×1481 frame
+const tiles = [
+  { name: 'NYSE', src: '/images/home/logo-nyse.svg', x: 1286, y: -10 },
+  { name: 'Cisco', src: '/images/home/logo-cisco.svg', x: 1563, y: 168 },
+  { name: 'Pubco', src: '/images/home/logo-pubco.svg', x: 1287, y: 357 },
+  { name: 'Surf Air', src: '/images/home/logo-surfair.svg', x: 1011, y: 535 },
+  { name: 'Palantir', src: '/images/home/logo-palantir.svg', x: 732, y: 724 },
+  { name: 'Bedrock', src: '/images/home/logo-bedrock.png', x: 1287, y: 724, raster: true },
+  { name: 'Weekly Robotics', src: '/images/home/logo-weekly-robotics.svg', x: 1011, y: 902 },
+  { name: 'Geolava', src: '/images/home/logo-geolava.svg', x: 732, y: 1091 },
+];
+const stamps = [
+  { src: '/images/home/stamp-human-department.svg', x: 1003, y: 226, w: 292, h: 292 },
+  { src: '/images/home/stamp-human-approved.svg', x: 1526, y: 525, w: 388, h: 651 },
+];
+const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+---
+<section class="home-clients">
+  <div class="home-clients__text container">
+    <img class="home-clients__stamp-text" src="/images/home/stamp-clients.svg" alt="" width="306" height="76" loading="lazy" />
+    <p class="home-clients__label t-body">Clients</p>
+    <h2 class="home-clients__title t-h3">
+      And we are doing it together with visionary founders who are ready for the world to adopt their robots. And they chose to do it with Hello Robo.
+    </h2>
+  </div>
+
+  <ul class="home-clients__wall" aria-label="Clients">
+    {tiles.map((t) => (
+      <li
+        class="home-clients__tile"
+        style={`left:${pct(t.x, 1728)};top:${pct(t.y, 1481)}`}
+      >
+        {t.raster ? (
+          <img class="home-clients__logo-raster" src={t.src} alt={t.name} width="165" height="22" loading="lazy" />
+        ) : (
+          <img src={t.src} alt={t.name} width="264" height="355" loading="lazy" />
+        )}
+      </li>
+    ))}
+    {stamps.map((s) => (
+      <li
+        class="home-clients__stamp"
+        aria-hidden="true"
+        style={`left:${pct(s.x, 1728)};top:${pct(s.y, 1481)};width:${pct(s.w, 1728)}`}
+      >
+        <img src={s.src} alt="" width={s.w} height={s.h} loading="lazy" />
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .home-clients {
+    position: relative;
+    aspect-ratio: 1728 / 1481;
+    overflow-x: clip;
+  }
+  .home-clients__text {
+    position: relative;
+    z-index: var(--z-raised);
+    padding-top: 191px;
+  }
+  /* The SVG includes 13/8px of stroke overflow around the 280×60 stamp */
+  .home-clients__stamp-text {
+    margin: -8px -13px;
+  }
+  .home-clients__label {
+    margin-top: 32px;
+  }
+  .home-clients__title {
+    width: 835px;
+    max-width: 50%;
+    margin-top: 32px;
+  }
+  .home-clients__wall {
+    position: absolute;
+    inset: 0;
+  }
+  .home-clients__tile,
+  .home-clients__stamp {
+    position: absolute;
+  }
+  .home-clients__tile {
+    width: calc(264 / 1728 * 100%);
+    aspect-ratio: 264 / 355;
+    display: grid;
+    place-items: center;
+  }
+  .home-clients__tile img {
+    width: 100%;
+    height: 100%;
+  }
+  /* The SVG tiles include their own light background; the PNG one doesn't */
+  .home-clients__tile:has(.home-clients__logo-raster) {
+    background: rgb(0 0 0 / 0.02);
+  }
+  .home-clients__tile .home-clients__logo-raster {
+    width: calc(165 / 264 * 100%);
+    height: auto;
+  }
+  .home-clients__stamp img {
+    width: 100%;
+    height: auto;
+  }
+</style>

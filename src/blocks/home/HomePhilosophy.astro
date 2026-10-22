@@ -1,0 +1,55 @@
+---
+/**
+ * Home — Philosophy
+ * Figma: "4 philosophy" (10093:185), 1728×1110
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-185
+ * The three bars are marked "3d web gl" — the SVG is the static poster.
+ */
+import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+---
+<section class="home-philosophy">
+  <img
+    class="home-philosophy__stamp"
+    src="/images/home/stamp-philosophy.svg"
+    alt=""
+    width="257"
+    height="150"
+    loading="lazy"
+  />
+  <p class="home-philosophy__text t-h3">
+    In the last two years over 300 robotics companies launched in the U.S.
+  </p>
+  <WebGLSlot name="home-bars" class="home-philosophy__bars">
+    <img src="/images/home/philosophy-bars.svg" alt="" width="681" height="368" loading="lazy" />
+  </WebGLSlot>
+</section>
+
+<style>
+  .home-philosophy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* stamp 50→200, text at 220, bars 580→948, block 1110 tall */
+    padding-top: 50px;
+    padding-bottom: 162px;
+    text-align: center;
+  }
+  .home-philosophy__stamp {
+    width: 257px;
+    height: auto;
+  }
+  .home-philosophy__text {
+    width: 818px;
+    max-width: 100%;
+    margin-top: var(--space-20);
+  }
+  .home-philosophy :global(.home-philosophy__bars) {
+    width: 681px;
+    max-width: 100%;
+    aspect-ratio: 681 / 368;
+    margin-top: auto;
+  }
+  .home-philosophy {
+    min-height: 1110px;
+  }
+</style>
