@@ -241,49 +241,63 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     }
   }
 
-  /* ── Mobile (basic until the mobile menu is built from Figma "menu" 10112:25477):
-     Let's talk + links + Say hello stacked above the nav pill ── */
+  /* ── Mobile: Figma "menu" (10112:25477), 390×756 ──────────
+     Let's talk 358×64 at the top (20) · links panel · Say hello card fills the rest,
+     28 above the bottom bar (close 64 + 8 + menu). No logo, Japanese line or photo. */
   @media (max-width: 767px) {
     .site-menu__grid {
       left: var(--page-margin);
       right: var(--page-margin);
-      top: var(--page-margin);
-      bottom: calc(var(--space-20) + var(--nav-height) + 8px);
+      top: var(--space-20);
+      bottom: calc(var(--space-20) + var(--nav-height) + 28px);
       width: auto;
       height: auto;
       transform: none;
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto 1fr;
+      grid-template-rows: auto auto minmax(0, 1fr);
       gap: 8px;
-    }
-    .site-menu__links {
-      grid-row: 2;
     }
     .site-menu__side {
       display: contents;
     }
     .site-menu__talk {
       grid-row: 1;
+      height: 64px;
+      padding: 0 16px 0 24px;
     }
+    .site-menu__links {
+      grid-row: 2;
+      padding: 24px 16px;
+    }
+    .site-menu__head,
     .site-menu__photo {
       display: none;
     }
-    .site-menu__hello {
-      grid-row: 3;
+    .site-menu__list {
+      margin: 0;
     }
-    .site-menu__head {
-      display: none;
-    }
+    /* Rows: 28 text · 12 · rule · 12 (the 1px rule counts inside the 12) */
     .site-menu__list li + li {
       margin-top: 12px;
-      padding-top: 12px;
+      padding-top: 11px;
     }
+    /* Figma sets these links at 24px (H3 spacing) — not one of the 5 styles; to confirm with the designer */
     .site-menu__link {
-      font-size: 20px;
+      font-size: 24px;
     }
     .site-menu__arrow {
       width: 24px;
       height: 24px;
+    }
+    .site-menu__hello {
+      grid-row: 3;
+    }
+    .site-menu__hello-title {
+      top: 20px;
+    }
+    .site-menu__socials {
+      bottom: 20px;
+      gap: 12px;
     }
   }
 </style>
