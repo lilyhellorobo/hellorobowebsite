@@ -111,4 +111,58 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     width: 100%;
     height: auto;
   }
+
+  /* ── Mobile: Figma 10098:4018 — text, then two rows of 123×69 logo tiles bleeding off both edges ── */
+  @media (max-width: 767px) {
+    .home-clients {
+      aspect-ratio: auto;
+      padding-bottom: 189px;
+    }
+    .home-clients__text {
+      padding-top: 188px;
+    }
+    /* Stamp 205×44 → the SVG (with its stroke overflow) at 224 */
+    .home-clients__stamp-text {
+      width: 224px;
+      height: auto;
+      margin: -6px -10px;
+    }
+    .home-clients__label {
+      margin-top: 44px;
+    }
+    .home-clients__title {
+      width: auto;
+      max-width: none;
+      margin-top: var(--space-24);
+    }
+    .home-clients__wall {
+      position: relative;
+      inset: auto;
+      display: grid;
+      grid-template-columns: repeat(4, 123px);
+      grid-auto-rows: 69px;
+      gap: 8px 6px;
+      width: max-content;
+      margin: 64px 0 0 -40px;
+    }
+    .home-clients__tile {
+      position: relative;
+      left: auto !important;
+      top: auto !important;
+      width: 123px;
+      aspect-ratio: auto;
+      overflow: hidden;
+    }
+    .home-clients__tile img:not(.home-clients__logo-raster) {
+      position: absolute;
+      inset: 0;
+      object-fit: cover;
+    }
+    .home-clients__tile:nth-child(n + 5) {
+      transform: translateX(-64px);
+    }
+    .home-clients__stamp {
+      display: none;
+    }
+  }
 </style>

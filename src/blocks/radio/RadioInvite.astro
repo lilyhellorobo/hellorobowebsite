@@ -41,4 +41,21 @@ import Button from '../../components/ui/Button.astro';
   .radio-invite__inner :global(.button) {
     margin-top: var(--space-60);
   }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .radio-invite {
+      padding-block: 164px;
+    }
+    .radio-invite__title {
+      margin-top: var(--space-24);
+    }
+    .radio-invite__text {
+      margin-top: var(--space-24);
+    }
+    .radio-invite__inner :global(.button) {
+      align-self: stretch;
+      margin-top: 44px;
+    }
+  }
 </style>

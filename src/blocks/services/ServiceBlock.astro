@@ -92,4 +92,33 @@ const { title, services, image, imageAlt, stamp } = Astro.props;
     height: 100%;
     object-fit: cover;
   }
+
+  /* ── Mobile: one column — label, title, stamp, list, then the image full width ── */
+  @media (max-width: 767px) {
+    .service-block {
+      padding-top: 164px;
+      padding-bottom: 0;
+    }
+    .service-block__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 64px;
+      margin-top: var(--space-24);
+    }
+    .service-block__title {
+      width: auto;
+    }
+    .service-block__stamp {
+      position: static;
+      width: auto;
+      max-height: 72px;
+      margin-top: var(--space-24);
+    }
+    .service-block__list {
+      gap: var(--space-16);
+      margin-top: 64px;
+    }
+    .service-block__media {
+      margin-inline: calc(-1 * var(--page-margin));
+    }
+  }
 </style>

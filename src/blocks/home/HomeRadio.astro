@@ -36,7 +36,7 @@ const cells = [
 
   <ul class="home-radio__grid">
     {cells.map((c) => (
-      <li class="home-radio__cell">
+      <li class:list={['home-radio__cell', { 'home-radio__cell--stamp': !c.poster }]}>
         {c.poster ? (
           <Image
             class="home-radio__poster"
@@ -98,5 +98,56 @@ const cells = [
   }
   .home-radio__stamp {
     height: auto;
+  }
+
+  /* ── Mobile: Figma 10098:911 — stacked head, full-width button,
+     posters 253×358 in a row that scrolls sideways (stamps between them) ── */
+  @media (max-width: 767px) {
+    .home-radio {
+      padding-top: 188px;
+      padding-bottom: 24px;
+    }
+    .home-radio__head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .home-radio__title {
+      margin-top: 0;
+    }
+    .home-radio__intro {
+      margin-top: 64px;
+      gap: var(--space-24);
+      justify-items: stretch;
+    }
+    .home-radio__intro :global(.button) {
+      margin-top: var(--space-20);
+    }
+    .home-radio__grid {
+      display: flex;
+      gap: 8px;
+      margin: 64px calc(-1 * var(--page-margin)) 0;
+      padding: 0 var(--page-margin);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .home-radio__cell {
+      flex: none;
+      width: 253px;
+      aspect-ratio: 253 / 358;
+    }
+    .home-radio__cell--stamp {
+      place-items: start;
+      aspect-ratio: auto;
+      width: auto;
+    }
+    /* Second stamp goes to the end of the row, as in Figma */
+    .home-radio__cell--stamp:nth-child(4) {
+      order: 1;
+    }
+    .home-radio__stamp {
+      width: 235px !important;
+    }
+    .home-radio__cell--stamp:nth-child(4) .home-radio__stamp {
+      width: 160px !important;
+    }
   }
 </style>

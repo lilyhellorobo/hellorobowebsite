@@ -81,4 +81,32 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
     justify-content: center;
     margin-top: 120px;
   }
+
+  /* ── Mobile: cover on top of each row, then title, line and button ── */
+  @media (max-width: 767px) {
+    .radio-episodes {
+      padding-top: 164px;
+    }
+    .radio-episodes__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+    .radio-episodes__cover {
+      grid-column: auto;
+      order: -1;
+    }
+    .radio-episodes__line {
+      margin-top: var(--space-12);
+    }
+    .radio-episodes__text :global(.button) {
+      align-self: stretch;
+      margin-top: var(--space-24);
+    }
+    .radio-episodes__more {
+      margin-top: 64px;
+    }
+    .radio-episodes__more :global(.button) {
+      flex: 1;
+    }
+  }
 </style>

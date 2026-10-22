@@ -14,11 +14,18 @@ const webm = has('showreel.webm') ? '/videos/showreel.webm' : undefined;
 const poster = has('showreel-poster.jpg') ? '/videos/showreel-poster.jpg' : undefined;
 ---
 <section class="home-showreel container" aria-label="Showreel">
-  <VideoSlot ratio="1648 / 925" src={src} webm={webm} poster={poster} autoplay />
+  <VideoSlot ratio="1648 / 925" mobileRatio="390 / 694" src={src} webm={webm} poster={poster} autoplay />
 </section>
 
 <style>
   .home-showreel {
     padding-bottom: var(--space-80);
+  }
+
+  /* Mobile: full-bleed 390×694, the video is cropped to the centre */
+  @media (max-width: 767px) {
+    .home-showreel {
+      padding: 0;
+    }
   }
 </style>

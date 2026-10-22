@@ -57,4 +57,29 @@
     width: calc(165 / 1644 * 100%);
     height: auto;
   }
+
+  /* ── Mobile: stacked head; the logo row keeps its size and scrolls sideways ── */
+  @media (max-width: 767px) {
+    .services-building {
+      margin-top: 164px;
+      padding-top: 64px;
+      padding-bottom: 64px;
+    }
+    .services-building__head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .services-building__text {
+      margin-top: var(--space-24);
+    }
+    .services-building__logos {
+      margin-top: 64px;
+      padding: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .services-building__row {
+      width: 822px;
+      margin-inline: var(--page-margin);
+    }
+  }
 </style>

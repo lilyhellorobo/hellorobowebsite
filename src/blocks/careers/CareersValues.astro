@@ -110,4 +110,36 @@ const tabs = ['01', '02', '03'];
     height: 100%;
     object-fit: cover;
   }
+
+  /* ── Mobile: one column — kanji, copy, tabs, then the robot ── */
+  @media (max-width: 767px) {
+    .careers-values {
+      padding-top: 164px;
+      padding-bottom: 0;
+    }
+    .careers-values__intro {
+      gap: var(--space-24);
+    }
+    .careers-values__intro img {
+      width: 100px;
+      height: auto;
+    }
+    .careers-values__value {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 64px;
+      margin-top: 164px;
+    }
+    .careers-values__copy {
+      gap: var(--space-24);
+      margin-top: 64px;
+    }
+    .careers-values__tabs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 64px;
+    }
+    .careers-values :global(.careers-values__media) {
+      width: auto;
+      margin-inline: calc(-1 * var(--page-margin));
+    }
+  }
 </style>

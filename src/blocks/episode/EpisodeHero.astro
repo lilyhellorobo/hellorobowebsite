@@ -58,4 +58,20 @@ const art = data.poster ?? data.cover;
     height: 100%;
     object-fit: cover;
   }
+
+  /* ── Mobile: text, then the poster full width ── */
+  @media (max-width: 767px) {
+    .episode-hero {
+      grid-template-columns: minmax(0, 1fr);
+      padding-top: var(--space-20);
+    }
+    .episode-hero__guest {
+      margin-top: var(--space-24);
+    }
+    .episode-hero__badge {
+      width: 105px;
+      height: auto;
+      margin-top: 64px;
+    }
+  }
 </style>

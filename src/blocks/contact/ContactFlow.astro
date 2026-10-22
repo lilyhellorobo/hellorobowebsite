@@ -248,4 +248,80 @@ const services = [
     top: var(--space-40);
     width: calc(315 / 1728 * 100%);
   }
+
+  /* ── Mobile: same rules as the mobile pre-footer — H3 titles, printer at (39, 97),
+     stamp bottom right, full-width buttons above the nav pill ── */
+  @media (max-width: 767px) {
+    .contact {
+      aspect-ratio: auto;
+      height: 100svh;
+      min-height: 694px;
+    }
+    .contact__printer {
+      left: 39px;
+      top: 97px;
+      width: 424px;
+      height: 635px;
+    }
+    .contact__stamp {
+      left: auto;
+      right: var(--page-margin);
+      top: auto;
+      bottom: 180px;
+      width: 224px;
+    }
+    .contact__screen {
+      padding: var(--space-20) var(--page-margin) 96px;
+    }
+    .contact__title {
+      font-size: var(--type-h3-size);
+      line-height: var(--type-h3-line);
+      letter-spacing: var(--type-h3-track);
+    }
+    .contact__field,
+    .contact__field--message,
+    .contact__chips {
+      top: 36%;
+    }
+    .contact__chips {
+      right: var(--page-margin);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .contact__chip span {
+      height: 44px;
+      padding: 0 var(--space-16);
+      font-size: var(--type-body2-size-mobile);
+    }
+    .contact__actions {
+      align-self: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .contact__actions :global(.button) {
+      min-width: 0;
+      min-height: 52px;
+    }
+    .contact__screen :global(.contact__rule) {
+      display: none;
+    }
+    .contact__screen--done {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .contact__done-text {
+      width: auto;
+      gap: var(--space-24);
+    }
+    .contact :global(.contact__receipt) {
+      position: relative;
+      left: auto;
+      top: auto;
+      width: 220px;
+      flex: none;
+      margin-top: 40px;
+      align-self: center;
+    }
+  }
 </style>
+

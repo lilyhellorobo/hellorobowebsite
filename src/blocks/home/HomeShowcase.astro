@@ -3,6 +3,7 @@
  * Home — Showcase ("What it took those founders…")
  * Figma: "Frame 2147232805" (10093:249), 1728×1555; photo block 10093:250 (1648×1117)
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-249
+ * Mobile: the full-bleed slide "block 1" (10101:14507, 390×694) under the intro text.
  */
 import { Image } from 'astro:assets';
 import Divider from '../../components/ui/Divider.astro';
@@ -38,7 +39,7 @@ const services = [
           <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" height="14" />
         </div>
         <p class="home-showcase__title t-h2">Make the world say yes</p>
-        <ul class="home-showcase__services t-body">
+        <ul class="home-showcase__services t-body t-body2-mobile">
           {services.map((s) => <li>{s}</li>)}
         </ul>
       </div>
@@ -104,5 +105,54 @@ const services = [
     display: grid;
     gap: var(--space-24);
     margin-top: 11px;
+  }
+
+  /* ── Mobile: intro (Figma 10098:3679) + slide "block 1" (10101:14507, 390×694) ── */
+  @media (max-width: 767px) {
+    .home-showcase {
+      padding-top: 164px;
+      padding-bottom: 0;
+    }
+    .home-showcase__media {
+      margin: 40px calc(-1 * var(--page-margin)) 0;
+      aspect-ratio: 390 / 694;
+    }
+    /* Content sits at the bottom: rule at 370, title at 394, services at 540 */
+    .home-showcase__overlay {
+      left: var(--page-margin);
+      right: var(--page-margin);
+      top: 0;
+      bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .home-showcase__row {
+      display: block;
+      margin-top: 0;
+    }
+    .home-showcase__marks {
+      position: absolute;
+      top: 20px;
+      left: 0;
+    }
+    .home-showcase__marks img:first-child {
+      width: 51px;
+      height: auto;
+    }
+    .home-showcase__y2k {
+      left: 0;
+      top: 54px;
+      width: 51px;
+      height: auto;
+    }
+    .home-showcase__title {
+      width: 300px; /* Figma breaks after "the" */
+      margin-top: var(--space-24);
+    }
+    .home-showcase__services {
+      gap: var(--space-16);
+      margin-top: 44px;
+    }
   }
 </style>

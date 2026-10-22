@@ -32,7 +32,7 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
             loading="lazy"
           />
         </div>
-        <p class="home-news__text t-body">{item.data.text}</p>
+        <p class="home-news__text t-body t-body2-mobile">{item.data.text}</p>
         <ArrowLink href={item.data.href}>View</ArrowLink>
       </li>
     ))}
@@ -91,5 +91,46 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
   }
   .home-news__card :global(.arrow-link) {
     margin-top: var(--space-40);
+  }
+
+  /* ── Mobile: Figma 10098:1661 — stamp above the title; cards 276 / 184 wide in a sideways row ── */
+  @media (max-width: 767px) {
+    .home-news {
+      padding-top: 188px;
+      padding-bottom: 187px;
+    }
+    .home-news__head {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .home-news__head img {
+      width: 120px;
+      height: auto;
+    }
+    .home-news__row {
+      margin-top: 64px;
+      padding-right: var(--page-margin);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .home-news__card--wide {
+      width: 276px;
+    }
+    .home-news__card--narrow {
+      width: 184px;
+    }
+    .home-news__card--wide .home-news__media {
+      aspect-ratio: 276 / 312;
+    }
+    .home-news__card--narrow .home-news__media {
+      aspect-ratio: 184 / 208;
+    }
+    .home-news__text {
+      margin-top: var(--space-12);
+    }
+    .home-news__card :global(.arrow-link) {
+      margin-top: var(--space-32);
+      font-size: var(--type-body-size);
+    }
   }
 </style>

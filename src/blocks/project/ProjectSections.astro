@@ -53,4 +53,14 @@ const { sections, name } = Astro.props.project.data;
     height: auto;
     border-radius: 4px;
   }
+
+  /* Mobile: 3-up rows become one column; 2-up rows stay side by side */
+  @media (max-width: 767px) {
+    .project-media.is-after-media {
+      margin-top: var(--gutter);
+    }
+    .project-media--3 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 </style>

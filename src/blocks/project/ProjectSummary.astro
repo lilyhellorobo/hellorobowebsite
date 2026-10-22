@@ -54,4 +54,22 @@ const { data } = Astro.props.project;
   dd {
     margin: 0;
   }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .project-summary {
+      padding-bottom: 64px;
+    }
+    .project-summary__facts {
+      grid-template-columns: minmax(0, 1fr);
+      margin-top: 64px;
+    }
+    .project-summary__list {
+      grid-column: auto;
+    }
+    .project-summary__fact + .project-summary__fact {
+      margin-top: var(--space-20);
+      padding-top: var(--space-20);
+    }
+  }
 </style>

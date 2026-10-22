@@ -28,4 +28,24 @@
     height: auto;
     margin-top: 180px;
   }
+
+  /* ── Mobile: the logo row keeps its size and scrolls sideways ── */
+  @media (max-width: 767px) {
+    .radio-guests {
+      padding-top: 164px;
+      padding-bottom: 64px;
+    }
+    .radio-guests .container {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .radio-guests__title {
+      margin-top: var(--space-24);
+    }
+    .radio-guests__logos {
+      width: 822px;
+      max-width: none;
+      margin-top: 64px;
+    }
+  }
 </style>

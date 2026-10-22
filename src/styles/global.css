@@ -84,6 +84,13 @@ button {
   font-weight: 400;
 }
 
+/* Mobile/Body2 (12 / 120% / -1%): Body on desktop, 12px on mobile */
+@media (max-width: 767px) {
+  .t-body2-mobile {
+    font-size: var(--type-body2-size-mobile);
+  }
+}
+
 /* ── Layout helpers ────────────────────────────────────────────── */
 .container {
   width: 100%;
@@ -98,6 +105,18 @@ button {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* Elements that only exist in one of the Figma layouts */
+@media (min-width: 768px) {
+  .only-mobile {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .only-desktop {
+    display: none !important;
+  }
 }
 
 /* ── Surface themes for full-bleed sections ────────────────────── */

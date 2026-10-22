@@ -52,4 +52,17 @@ const controls = variant === 'hero' ? { x: 100, y: 843 } : { x: 105, y: 759 };
     width: 100%;
     height: auto;
   }
+
+  /* ── Mobile: a 4:5 crop of the poster; controls across the bottom ── */
+  @media (max-width: 767px) {
+    .radio-tv {
+      aspect-ratio: 4 / 5 !important;
+    }
+    .radio-tv__controls {
+      left: var(--page-margin) !important;
+      top: auto !important;
+      bottom: var(--space-24);
+      width: calc(100% - 2 * var(--page-margin));
+    }
+  }
 </style>

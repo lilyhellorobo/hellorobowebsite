@@ -109,3 +109,21 @@
   --z-nav: 200;
   --z-overlay: 300;
 }
+
+/* ── Mobile (≤ 767px) — Figma 390 frames ────────────────────────
+   The 5 text styles switch to their Figma Mobile/* values, so every
+   .t-* class follows automatically. Breakpoint: 767px everywhere. */
+@media (max-width: 767px) {
+  :root {
+    --type-h1-size: var(--type-h1-size-mobile);
+    --type-h2-size: var(--type-h2-size-mobile);
+    --type-h2-line: var(--type-h2-line-mobile);
+    --type-h2-track: var(--type-h2-track-mobile);
+    --type-h3-size: var(--type-h3-size-mobile);
+    --type-body-size: var(--type-body-size-mobile);
+
+    --page-margin: var(--page-margin-mobile);
+    --nav-height: 64px;
+  }
+}
+

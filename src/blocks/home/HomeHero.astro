@@ -36,7 +36,7 @@ import robot from '../../assets/home/hero-robot.png';
     </div>
   </WebGLSlot>
 
-  <h1 id="home-hero-title" class="home-hero__title t-h1">Make the world say yes to your robot</h1>
+  <h1 id="home-hero-title" class="home-hero__title t-h1">Make<br class="only-mobile" /> the world<br class="only-mobile" /> say yes to<br class="only-mobile" /> your robot</h1>
 
   <!-- White notches at the bottom corners (Figma 10093:124, 10093:125) -->
   <svg class="home-hero__notch home-hero__notch--left" viewBox="0 0 117 71" aria-hidden="true">
@@ -107,5 +107,35 @@ import robot from '../../assets/home/hero-robot.png';
   }
   .home-hero__notch--right {
     right: 0;
+  }
+
+  /* ── Mobile: Figma "home mob" (10101:6462), 390×844 ── */
+  @media (max-width: 767px) {
+    .home-hero {
+      aspect-ratio: 390 / 844;
+    }
+    /* Receipt sphere: cropped to its centre (Figma shows a close-up of the receipts) */
+    .home-hero :global(.home-hero__sphere) {
+      width: 260%;
+      height: 100%;
+    }
+    /* Robot: a 723×484 window at (-167, 419) */
+    .home-hero__robot-frame {
+      left: calc(-167 / 390 * 100%);
+      top: calc(419 / 844 * 100%);
+      width: calc(723 / 390 * 100%);
+      height: calc(484 / 844 * 100%);
+    }
+    .home-hero :global(.home-hero__robot) {
+      top: -31%;
+      height: auto;
+    }
+    .home-hero__title {
+      top: var(--space-20);
+      width: calc(100% - 2 * var(--page-margin));
+    }
+    .home-hero__notch {
+      width: calc(88 / 390 * 100%);
+    }
   }
 </style>

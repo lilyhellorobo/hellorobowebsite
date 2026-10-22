@@ -6,6 +6,8 @@
  */
 interface Props {
   ratio: string;
+  /** Aspect ratio on mobile (≤ 767px), if the Figma mobile frame differs */
+  mobileRatio?: string;
   src?: string;
   webm?: string;
   poster?: string;
@@ -13,9 +15,9 @@ interface Props {
   autoplay?: boolean;
   class?: string;
 }
-const { ratio, src, webm, poster, alt = '', autoplay = false, class: className } = Astro.props;
+const { ratio, mobileRatio, src, webm, poster, alt = '', autoplay = false, class: className } = Astro.props;
 ---
-<div class:list={['video-slot', className]} style={`aspect-ratio: ${ratio}`}>
+<div class:list={['video-slot', className]} style={`--ratio: ${ratio}; --ratio-mobile: ${mobileRatio ?? ratio}`}>
   {src ? (
     <video
       class="video-slot__media"
@@ -39,6 +41,7 @@ const { ratio, src, webm, poster, alt = '', autoplay = false, class: className }
   .video-slot {
     position: relative;
     width: 100%;
+    aspect-ratio: var(--ratio);
     background: var(--color-ink-warm);
     overflow: hidden;
   }
@@ -48,5 +51,10 @@ const { ratio, src, webm, poster, alt = '', autoplay = false, class: className }
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  @media (max-width: 767px) {
+    .video-slot {
+      aspect-ratio: var(--ratio-mobile);
+    }
   }
 </style>

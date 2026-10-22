@@ -45,4 +45,10 @@ const { variant = 'dark', href = '/contact' } = Astro.props;
     background: var(--color-white);
     color: var(--color-black);
   }
+  /* Mobile: no header button — "Let's talk" lives in the menu overlay (Figma "menu", 10112:25477) */
+  @media (max-width: 767px) {
+    .get-in-touch {
+      display: none;
+    }
+  }
 </style>

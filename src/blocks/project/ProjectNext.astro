@@ -64,4 +64,19 @@ const { next } = Astro.props.project.data;
     height: 100%;
     object-fit: cover;
   }
+
+  /* ── Mobile: text, then the image ── */
+  @media (max-width: 767px) {
+    .project-next {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 40px;
+      padding-block: 64px 100px;
+    }
+    .project-next__text {
+      padding-bottom: 0;
+    }
+    .project-next__text :global(.button) {
+      margin-top: 40px;
+    }
+  }
 </style>

@@ -40,4 +40,21 @@ const { title } = Astro.props;
     width: 673px;
     max-width: 100%;
   }
+
+  /* ── Mobile: stamp + title first, illustration below ── */
+  @media (max-width: 767px) {
+    .position-hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 64px;
+      padding-top: var(--space-20);
+    }
+    .position-hero__side {
+      order: -1;
+      gap: var(--space-24);
+    }
+    .position-hero__side img {
+      width: 116px;
+      height: auto;
+    }
+  }
 </style>

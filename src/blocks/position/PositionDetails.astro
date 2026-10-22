@@ -107,4 +107,27 @@ const steps = data.applySteps.map((s, i) => ({ n: String(i + 1).padStart(2, '0')
     display: grid;
     gap: var(--space-20);
   }
+
+  /* ── Mobile: label above content ── */
+  @media (max-width: 767px) {
+    .position-details {
+      gap: 100px;
+      padding-top: 100px;
+      padding-bottom: 164px;
+    }
+    .position-details__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+    .position-details__list > li + li {
+      margin-top: var(--space-20);
+      padding-top: var(--space-20);
+    }
+    .position-details__apply {
+      gap: 64px;
+    }
+    .position-details__apply :global(.button) {
+      width: 100%;
+    }
+  }
 </style>

@@ -13,23 +13,23 @@ import { mainNav, studio } from '../../data/site';
     <div class="footer__row container">
       <p class="t-body">Menu</p>
       <p class="t-body">Studio</p>
-      <p class="t-body">Mail</p>
+      <p class="footer__mail-label t-body">Mail</p>
     </div>
     <hr class="footer__rule" />
     <div class="footer__row container">
-      <ul class="t-h3">
+      <ul class="footer__nav t-h3">
         {mainNav.map((item) => (
           <li><a href={item.href}>{item.label}</a></li>
         ))}
       </ul>
-      <p class="t-h3">{studio.city}<br />{studio.region}</p>
-      <a class="t-h3" href={`mailto:${studio.email}`}>{studio.email}</a>
+      <p class="footer__city t-h3">{studio.city}<br class="only-desktop" /> {studio.region}</p>
+      <a class="footer__email t-h3" href={`mailto:${studio.email}`}>{studio.email}</a>
     </div>
   </div>
 
   <div class="footer__bottom container">
     <FooterWordmark />
-    <div class="footer__legal t-body">
+    <div class="footer__legal t-body t-body2-mobile">
       <a href="/terms">Terms of use</a>
       <RoboLogo width={121} class="footer__logo" />
       <a href="/privacy">Privacy policy</a>
@@ -74,5 +74,68 @@ import { mainNav, studio } from '../../data/site';
   .footer__legal :global(.footer__logo) {
     width: 121px;
     height: auto;
+  }
+
+  /* ── Mobile: Figma "Frame 2147233084" (10098:2534), 390×1181 ── */
+  @media (max-width: 767px) {
+    .footer {
+      overflow-x: clip;
+    }
+    .footer__contacts {
+      padding-top: 64px;
+      padding-bottom: 0;
+    }
+    /* Two columns at 16 / 199: Menu | Studio (the email moves under the city) */
+    .footer__row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 8px;
+    }
+    .footer__row:last-child {
+      grid-template-rows: auto 1fr;
+    }
+    .footer__mail-label {
+      display: none;
+    }
+    .footer__rule {
+      margin: var(--space-32) 0;
+    }
+    /* Figma uses Body at its desktop size (20) for these links on mobile */
+    .footer__nav,
+    .footer__city,
+    .footer__email {
+      font-size: 20px;
+      line-height: var(--type-body-line);
+      letter-spacing: var(--type-body-track);
+    }
+    .footer__nav {
+      grid-row: span 2;
+      display: grid;
+      gap: var(--space-16);
+    }
+    .footer__city {
+      grid-column: 2;
+    }
+    .footer__email {
+      grid-column: 2;
+      align-self: start;
+      margin-top: var(--space-16);
+    }
+    /* Wordmark: the desktop graphic at half size (824 wide), centred and cropped */
+    .footer__bottom {
+      padding-top: 140px;
+      padding-bottom: 64px;
+    }
+    .footer__bottom :global(.footer-wordmark) {
+      width: calc(824 / 358 * 100%);
+      max-width: none;
+      margin-left: calc((358 - 824) / 2 / 358 * 100%);
+    }
+    .footer__legal {
+      margin-top: 64px;
+      height: 32px;
+    }
+    .footer__legal :global(.footer__logo) {
+      width: 61px;
+    }
   }
 </style>

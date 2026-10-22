@@ -26,4 +26,16 @@ const { label, text } = Astro.props;
   .project-text-row__label {
     max-width: 170px;
   }
+
+  /* Mobile: label above text */
+  @media (max-width: 767px) {
+    .project-text-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+      padding-block: 64px;
+    }
+    .project-text-row__label {
+      max-width: none;
+    }
+  }
 </style>

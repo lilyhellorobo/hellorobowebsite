@@ -28,6 +28,7 @@ const objects: Record<string, { label: string; x: number; y: number; w: number; 
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 ---
 <section class="team-field" aria-label="The team">
+  <div class="team-field__canvas">
   <WebGLSlot name="team-field" class="team-field__scene">
     <Image src={field} alt="" widths={[1728, 3456]} sizes="100vw" loading="eager" />
   </WebGLSlot>
@@ -42,6 +43,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       ) : null;
     })}
   </ul>
+  </div>
 
   {people.map((p) => (
     <article class="team-card" id={p.id} aria-label={p.data.name}>
@@ -70,9 +72,12 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 <style>
   .team-field {
     position: relative;
-    aspect-ratio: 1728 / 1117;
     overflow: hidden;
     background: var(--color-grey-200);
+  }
+  .team-field__canvas {
+    position: relative;
+    aspect-ratio: 1728 / 1117;
   }
   .team-field :global(.team-field__scene) {
     position: absolute;
@@ -155,5 +160,53 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     margin-top: var(--space-40);
     display: grid;
     gap: 24px;
+  }
+
+  /* ── Mobile: the field fills the screen height and pans sideways (same hit areas);
+     the card becomes a full-screen sheet above the nav pill ── */
+  @media (max-width: 767px) {
+    .team-field {
+      height: 100svh;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .team-field__canvas {
+      height: 100%;
+      width: auto;
+    }
+    .team-card {
+      top: var(--page-margin);
+      left: var(--page-margin);
+      right: var(--page-margin);
+      bottom: 96px;
+      width: auto;
+      max-width: none;
+      min-height: 0;
+      max-height: none;
+      padding: var(--space-20);
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+    }
+    .team-card__close,
+    .team-card__names,
+    .team-card__photo,
+    .team-card__quote {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .team-card__names {
+      margin-top: var(--space-24);
+    }
+    .team-card__photo {
+      width: 100%;
+      margin-top: var(--space-24);
+    }
+    .team-card__photo :global(img) {
+      width: 100%;
+    }
+    .team-card__quote {
+      margin-top: var(--space-24);
+      gap: var(--space-16);
+    }
   }
 </style>

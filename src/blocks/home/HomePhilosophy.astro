@@ -16,6 +16,7 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
     height="150"
     loading="lazy"
   />
+  <p class="home-philosophy__label t-body only-mobile">Mission</p>
   <p class="home-philosophy__text t-h3">
     In the last two years over 300 robotics companies launched in the U.S.
   </p>
@@ -51,5 +52,29 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
   }
   .home-philosophy {
     min-height: 1110px;
+  }
+
+  /* ── Mobile: Figma 10101:7108 — stamp 123 wide, label, text 326 wide, bars 360×194 ── */
+  @media (max-width: 767px) {
+    .home-philosophy {
+      min-height: 0;
+      padding: 208px 32px 0;
+    }
+    .home-philosophy__stamp {
+      width: 123px;
+    }
+    .home-philosophy__label {
+      margin-top: 44px;
+    }
+    /* 290 reproduces Figma's line breaks */
+    .home-philosophy__text {
+      width: 290px;
+      margin-top: var(--space-24);
+    }
+    .home-philosophy :global(.home-philosophy__bars) {
+      width: 360px;
+      max-width: none;
+      margin-top: 149px;
+    }
   }
 </style>

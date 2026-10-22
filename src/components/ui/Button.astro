@@ -58,4 +58,18 @@ const Tag = href ? 'a' : 'button';
   .button__icon {
     flex: none;
   }
+  /* Mobile "VIEW" (Figma 88×36, 12px label, 16px icon) */
+  @media (max-width: 767px) {
+    .button--small {
+      min-width: 88px;
+      min-height: 36px;
+      gap: var(--space-16);
+      padding: var(--space-6) var(--space-12);
+      font-size: var(--type-body2-size-mobile);
+    }
+    .button--small :global(.button__icon) {
+      width: 16px;
+      height: 16px;
+    }
+  }
 </style>

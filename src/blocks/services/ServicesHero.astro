@@ -7,7 +7,7 @@
 ---
 <section class="services-hero container">
   <h1 class="services-hero__title t-h1">
-    We design every reason<br />to say yes
+    We design every reason<br /> to say yes
     <img class="services-hero__stamp" src="/images/services/stamp-thinkers.svg" alt="" width="252" height="82" />
   </h1>
   <div class="services-hero__intro">
@@ -40,5 +40,25 @@
     display: grid;
     grid-template-columns: calc(830 / 1648 * 100%) 680px;
     margin-top: 389px;
+  }
+
+  /* ── Mobile (no Figma frame yet — follows the Home mobile rules) ── */
+  @media (max-width: 767px) {
+    .services-hero {
+      padding-top: var(--space-20);
+    }
+    .services-hero__title br {
+      display: none;
+    }
+    .services-hero__stamp {
+      display: block;
+      width: 126px;
+      margin: var(--space-24) 0 0;
+    }
+    .services-hero__intro {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+      margin-top: 164px;
+    }
   }
 </style>

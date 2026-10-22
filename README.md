@@ -86,6 +86,11 @@ with a link to the Figma node.
   original at 4× zoom before committing. Photos and video stay raster.
 - **WebGL and video** areas use `WebGLSlot` / `VideoSlot` so the layout never
   waits for 3D or video files.
+- **Mobile:** one breakpoint, `@media (max-width: 767px)`, at the end of each
+  block's `<style>`. The text styles switch to Figma's Mobile/* sizes in
+  `tokens.css`, so blocks only change layout. Mobile/Body2 (12px) is
+  `.t-body2-mobile`; `.only-mobile` / `.only-desktop` hide elements that exist
+  in one layout only. Use `minmax(0, 1fr)` for mobile grid columns.
 
 ## How we work
 

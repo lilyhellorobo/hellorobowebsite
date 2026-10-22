@@ -68,4 +68,44 @@ const { data } = Astro.props.project;
     height: 100%;
     object-fit: cover;
   }
+
+  /* ── Mobile: title, badge + stamp, intro in flow; the reveal image becomes 4:5 ── */
+  @media (max-width: 767px) {
+    .project-hero {
+      aspect-ratio: auto;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 64px;
+    }
+    .project-hero__title {
+      padding-top: var(--space-20);
+    }
+    .project-hero__plus {
+      position: static;
+      transform: none;
+      align-self: center;
+      margin-top: 64px;
+    }
+    .project-hero__badge,
+    .project-hero__stamp,
+    .project-hero__intro {
+      position: static;
+      margin-left: var(--page-margin);
+    }
+    .project-hero__badge {
+      width: 100px;
+      margin-top: 64px;
+    }
+    .project-hero__stamp {
+      width: 160px;
+      margin-top: var(--space-24);
+    }
+    .project-hero__intro {
+      width: auto;
+      margin: 64px var(--page-margin) 0;
+    }
+    .project-reveal {
+      aspect-ratio: 4 / 5;
+    }
+  }
 </style>

@@ -76,4 +76,30 @@ const { testimonial, credits } = Astro.props.project.data;
     margin-top: 218px;
     height: auto;
   }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .project-testimonial {
+      padding-top: 164px;
+      padding-bottom: 64px;
+    }
+    .project-testimonial__grid {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 64px;
+    }
+    .project-testimonial__quote figcaption {
+      margin-top: 40px;
+    }
+    .project-testimonial__credits {
+      margin-top: var(--space-24);
+    }
+    .project-testimonial__credit + .project-testimonial__credit {
+      margin-top: var(--space-20);
+      padding-top: var(--space-20);
+    }
+    .project-testimonial__stamp {
+      width: 202px;
+      margin-top: 100px;
+    }
+  }
 </style>

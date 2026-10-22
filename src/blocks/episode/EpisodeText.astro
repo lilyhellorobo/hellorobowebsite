@@ -48,4 +48,18 @@ const firstName = data.guest.split(' ')[0];
     justify-items: start;
     gap: 10px;
   }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .episode-text {
+      padding-block: 64px;
+    }
+    .episode-text__inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .episode-text__body {
+      grid-column: auto;
+      gap: 40px;
+    }
+  }
 </style>

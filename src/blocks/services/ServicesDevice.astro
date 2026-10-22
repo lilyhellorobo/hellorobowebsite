@@ -23,4 +23,11 @@ import still from '../../assets/services/device-visual.png';
     height: 100%;
     object-fit: cover;
   }
+
+  /* Mobile: a square crop of the still (Home media rhythm) */
+  @media (max-width: 767px) {
+    .services-device {
+      aspect-ratio: 1 / 1;
+    }
+  }
 </style>

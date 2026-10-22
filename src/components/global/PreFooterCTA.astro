@@ -7,15 +7,15 @@
  *   "building"     — "Tell us what you are building" + "[Click anywhere to start]"
  */
 import WebGLSlot from '../ui/WebGLSlot.astro';
+import Button from '../ui/Button.astro';
+import Icon from '../icons/Icon.astro';
+import { studio } from '../../data/site';
 
 interface Props {
   variant?: 'conversation' | 'building';
 }
 const { variant = 'conversation' } = Astro.props;
-const title =
-  variant === 'building'
-    ? 'Tell us what you are building'
-    : 'Start conversation if you are ready to make world say yes';
+const title = 'Tell us what you are building';
 ---
 <section class="prefooter" aria-label="Start a project">
   <WebGLSlot name="prefooter" class="prefooter__scene">
@@ -31,8 +31,22 @@ const title =
   </WebGLSlot>
 
   <a class="prefooter__link" href="/contact">
-    <h2 class="prefooter__title t-h2">{title}</h2>
+    {variant === 'building' ? (
+      <h2 class="prefooter__title t-h2">{title}</h2>
+    ) : (
+      <h2 class="prefooter__title t-h2">Start conversation<br class="only-mobile" /> if you are ready to<br class="only-mobile" /> make world say yes</h2>
+    )}
   </a>
+
+  <!-- Mobile layout (Figma 10129:31418): two buttons under the title, stamp + email bar at the bottom -->
+  <div class="prefooter__actions only-mobile">
+    <Button href="/contact#name" variant="light" size="small" icon="arrow">Start a project</Button>
+    <Button href="/contact#message" variant="light" size="small" icon="hex">Drop a word</Button>
+  </div>
+  <div class="prefooter__mail only-mobile">
+    <a class="prefooter__address" href={`mailto:${studio.email}`}>{studio.email}</a>
+    <span class="prefooter__copy">Copy <Icon name="hex" size={16} /></span>
+  </div>
 
   {variant === 'conversation' ? (
     <img
@@ -91,5 +105,94 @@ const title =
     width: calc(403 / 1728 * 100%);
     min-width: 200px;
     height: auto;
+  }
+
+  /* ── Mobile: Figma 390×694 ─────────────────────────────── */
+  @media (max-width: 767px) {
+    .prefooter {
+      aspect-ratio: auto;
+      height: 694px;
+    }
+    /* Printer photo 424×635 at (39, 97) */
+    .prefooter__printer {
+      left: 39px;
+      top: 97px;
+      width: 424px;
+      height: 635px;
+    }
+    /* Only the title is the link here; the buttons below do the rest */
+    .prefooter__link {
+      inset: auto;
+      top: 44px;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      padding: 0;
+    }
+    /* Figma uses Mobile/H3 for this title (line breaks as in Figma) */
+    .prefooter__title {
+      max-width: none;
+      font-size: var(--type-h3-size);
+      line-height: var(--type-h3-line);
+      letter-spacing: var(--type-h3-track);
+    }
+    .prefooter__actions {
+      position: absolute;
+      top: 179px;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      z-index: var(--z-raised);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .prefooter__actions :global(.button) {
+      min-width: 0;
+      min-height: 44px;
+      padding-inline: var(--space-16);
+    }
+    /* Stamp 224×96 at (150, 514) */
+    .prefooter__stamp {
+      left: auto;
+      right: var(--page-margin);
+      bottom: 84px;
+      width: 224px;
+      min-width: 0;
+    }
+    /* The buttons replace "[Click anywhere to start]" on mobile */
+    .prefooter__hint {
+      display: none;
+    }
+    /* Email bar 358×52 at the bottom */
+    .prefooter__mail {
+      position: absolute;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      bottom: 20px;
+      z-index: var(--z-raised);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      padding: 0 8px 0 12px;
+      background: var(--color-white);
+      color: var(--color-black);
+      border-radius: var(--radius-ui);
+    }
+    /* Figma: 20px — the desktop Body size */
+    .prefooter__address {
+      font-size: 20px;
+      letter-spacing: var(--type-body-track);
+    }
+    .prefooter__copy {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-12);
+      height: 36px;
+      padding: 0 var(--space-12);
+      background: var(--color-grey-300);
+      font-size: var(--type-body2-size-mobile);
+      letter-spacing: var(--type-button-track);
+      text-transform: uppercase;
+    }
   }
 </style>
