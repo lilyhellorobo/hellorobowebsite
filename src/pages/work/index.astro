@@ -1,7 +1,12 @@
 ---
+/**
+ * Work — the project scroller is the whole page
+ * Figma: "Portfolio page" (10100:11973), 1728×1117 — same block as Home's featured work
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BlockPlaceholder from '../../components/ui/BlockPlaceholder.astro';
+import ProjectScroller from '../../blocks/work/ProjectScroller.astro';
 ---
 <BaseLayout title={'Work'} prefooter={false} footer={false} headerVariant="light">
-  <BlockPlaceholder name="Project scroller" node="10100:11974" height={1117} kind="cms" tone="dark" />
+  <h1 class="visually-hidden">Work</h1>
+  <ProjectScroller />
 </BaseLayout>

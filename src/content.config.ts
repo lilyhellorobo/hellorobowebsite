@@ -33,14 +33,17 @@ const projects = defineCollection({
 
 const team = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/team' }),
-  schema: z.object({
-    name: z.string(),
-    nameJa: z.string(),
-    role: z.string(),
-    quote: z.string(),
-    object: z.string().describe('3D object caption on the Team field, e.g. HELLO_ROBO.OBJ'),
-    order: z.number().default(0),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      name: z.string(),
+      nameJa: z.string(),
+      role: z.string(),
+      quote: z.string(),
+      photo: image(),
+      /** The 3D object on the Team field that opens this card */
+      object: z.string().describe('Object id on the Team field, e.g. hello_robo'),
+      order: z.number().default(0),
+    }),
 });
 
 const positions = defineCollection({
