@@ -1,9 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import BlockPlaceholder from '../components/ui/BlockPlaceholder.astro';
+import HomeHero from '../blocks/home/HomeHero.astro';
 ---
 <BaseLayout title={'Home'} >
-  <BlockPlaceholder name="Hero" node="10093:119" height={1117} kind="webgl" tone="light" />
+  <HomeHero />
   <BlockPlaceholder name="Intro" node="10093:145" height={1012} kind="static" tone="light" />
   <BlockPlaceholder name="Showreel" node="10093:183" height={1005} kind="video" tone="light" />
   <BlockPlaceholder name="Philosophy" node="10093:185" height={1110} kind="webgl" tone="light" />

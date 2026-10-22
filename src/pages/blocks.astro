@@ -5,6 +5,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PreFooterCTA from '../components/global/PreFooterCTA.astro';
+import HomeHero from '../blocks/home/HomeHero.astro';
 
 const pages = [
   { label: 'Home', href: '/' },
@@ -29,6 +30,8 @@ const pages = [
     </ul>
   </section>
 
+  <p class="blocks-label container t-button">Home — Hero</p>
+  <HomeHero />
   <p class="blocks-label container t-button">Pre-footer — “conversation”</p>
   <PreFooterCTA variant="conversation" />
   <p class="blocks-label container t-button">Pre-footer — “building”</p>
