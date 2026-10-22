@@ -18,3 +18,10 @@ out/
 .vscode/
 .idea/
 *.log
+
+# Astro
+.astro/
+
+# Licensed fonts are added locally (see public/fonts/README.md)
+public/fonts/*.woff
+public/fonts/*.woff2

@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlockPlaceholder from '../../components/ui/BlockPlaceholder.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const positions = await getCollection('positions');
+  return positions.map((position) => ({ params: { slug: position.id }, props: { position } }));
+}
+const { position } = Astro.props as { position: CollectionEntry<'positions'> };
+---
+<BaseLayout title={position.data.title} prefooter="building" back="/careers">
+  <BlockPlaceholder name="Position hero" node="10102:146" height={881} kind="cms" tone="light" />
+  <BlockPlaceholder name="Position details" node="10102:1315" height={3910} kind="cms" tone="light" />
+</BaseLayout>

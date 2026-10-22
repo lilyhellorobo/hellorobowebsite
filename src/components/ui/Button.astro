@@ -1,0 +1,54 @@
+---
+/**
+ * Button — Figma "button" (e.g. "Learn more" 10093:1424, "Pull up a chair" 10105:971).
+ * 60px tall, padding 20/16, label in the Button text style, icon on the right.
+ * Also used for "Get in touch" (variant="dark"|"light", icon="corners").
+ */
+import Icon from '../icons/Icon.astro';
+
+interface Props {
+  href?: string;
+  variant?: 'dark' | 'light';
+  icon?: 'hex' | 'hex-pin' | 'corners' | 'arrow' | 'none';
+  type?: 'button' | 'submit';
+  class?: string;
+  [key: string]: unknown;
+}
+const { href, variant = 'dark', icon = 'hex', type = 'button', class: className, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+<Tag
+  class:list={['button', `button--${variant}`, 't-button', className]}
+  href={href}
+  type={href ? undefined : type}
+  {...rest}
+>
+  <span class="button__label"><slot /></span>
+  {icon !== 'none' && <Icon name={icon} class="button__icon" />}
+</Tag>
+
+<style>
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-24);
+    min-height: var(--button-height);
+    min-width: 263px;
+    padding: var(--space-12) var(--space-16) var(--space-12) var(--space-16);
+    border-radius: var(--radius-ui);
+    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .button--dark {
+    background: var(--color-black);
+    color: var(--color-white);
+  }
+  .button--light {
+    background: var(--color-white);
+    color: var(--color-black);
+  }
+  .button__icon {
+    flex: none;
+  }
+</style>

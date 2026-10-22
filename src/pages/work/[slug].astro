@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlockPlaceholder from '../../components/ui/BlockPlaceholder.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+const { project } = Astro.props as { project: CollectionEntry<'projects'> };
+---
+<BaseLayout title={project.data.name} headerVariant="light">
+  <BlockPlaceholder name="Project hero" node="10100:12388" height={814} kind="cms" tone="dark" />
+  <BlockPlaceholder name="Logo reveal" node="10100:12374" height={944} kind="cms" tone="light" />
+  <BlockPlaceholder name="Summary" node="10100:12615" height={632} kind="cms" tone="dark" />
+  <BlockPlaceholder name="Media: full width" node="10100:12631" height={900} kind="cms" tone="dark" />
+  <BlockPlaceholder name="Text row" node="10100:12633" height={312} kind="cms" tone="dark" />
+  <BlockPlaceholder name="Media rows" node="10100:12637" height={8304} kind="cms" tone="dark" />
+  <BlockPlaceholder name="Testimonial + credits" node="10100:12938" height={1426} kind="cms" tone="dark" />
+  <BlockPlaceholder name="Next project" node="10100:13197" height={992} kind="cms" tone="light" />
+</BaseLayout>

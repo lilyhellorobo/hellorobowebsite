@@ -1,0 +1,47 @@
+---
+/**
+ * WebGLSlot — reserves the exact space of a future 3D scene and shows the
+ * static poster from Figma in the meantime. When the scene is ready, mount it
+ * inside `.webgl-slot__stage`; the poster stays as the fallback (slow devices,
+ * reduced motion, mobile).
+ *
+ * Slots marked "3d web gl" in Figma: home-hero, home-bars, careers-robot,
+ * team-field, radio-tv, prefooter.
+ */
+interface Props {
+  name: string;
+  /** CSS aspect-ratio, e.g. "1728 / 1117". Omit to fill the parent. */
+  ratio?: string;
+  poster?: string;
+  alt?: string;
+  class?: string;
+}
+const { name, ratio, poster, alt = '', class: className } = Astro.props;
+---
+<div
+  class:list={['webgl-slot', className]}
+  data-webgl={name}
+  style={ratio ? `aspect-ratio: ${ratio}` : undefined}
+>
+  {poster && <img class="webgl-slot__poster" src={poster} alt={alt} loading="lazy" decoding="async" />}
+  <div class="webgl-slot__stage" aria-hidden="true"></div>
+  <slot />
+</div>
+
+<style>
+  .webgl-slot {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  .webgl-slot__poster,
+  .webgl-slot__stage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .webgl-slot__poster {
+    object-fit: cover;
+  }
+</style>

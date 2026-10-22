@@ -1,0 +1,73 @@
+---
+/**
+ * Icons exported from Figma (Handoff ✅ / website). Strokes and fills use
+ * currentColor so the parent sets the color.
+ *
+ *  corners  — "Get in touch" (hero nav, 10093:128)
+ *  hex      — button icon, e.g. "Learn more" (10093:1431)
+ *  hex-pin  — button icon, e.g. "Pull up a chair" (10105:980)
+ *  back     — back arrow (10102:1709)
+ *  arrow    — "View →" link arrow, 20px (10093:1899)
+ *  dots     — menu dots, 20px (10093:2372)
+ */
+interface Props {
+  name: 'corners' | 'hex' | 'hex-pin' | 'back' | 'arrow' | 'dots';
+  size?: number;
+  class?: string;
+}
+const { name, size, class: className } = Astro.props;
+const box = name === 'arrow' || name === 'dots' ? 20 : 32;
+const px = size ?? box;
+---
+<svg
+  class:list={['icon', className]}
+  width={px}
+  height={px}
+  viewBox={`0 0 ${box} ${box}`}
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  {name === 'corners' && (
+    <g fill="currentColor">
+      <path d="M25.6524 12.4764L20.4091 12.4771L19.5812 11.6491L19.5819 6.40591L20.222 6.4066L20.8614 6.4066L20.8621 11.1968L25.6524 11.1975L25.6524 12.4764Z" />
+      <path d="M12.4704 6.40611L12.4711 11.648L11.6418 12.4773L6.39993 12.4766L6.40062 11.8365V11.197L11.1909 11.1963L11.1915 6.40611H12.4704Z" />
+      <path d="M25.6524 19.5917L20.4091 19.591L19.5812 20.4189L19.5819 25.6621L20.222 25.6614L20.8614 25.6614L20.8621 20.8712L25.6524 20.8705L25.6524 19.5917Z" />
+      <path d="M12.4704 25.6619L12.4711 20.4201L11.6418 19.5908L6.39993 19.5915L6.40062 20.2316V20.871L11.1909 20.8717L11.1915 25.6619H12.4704Z" />
+    </g>
+  )}
+  {name === 'hex' && (
+    <>
+      <path d="M3.83984 12.6936L3.83984 18.9869L9.88208 25.2803L21.9666 25.2803L28.1598 18.9869L28.1598 12.6936L21.9666 6.40027L9.88208 6.40027L3.83984 12.6936Z" stroke="currentColor" stroke-width="1.28" />
+      <rect x="14.4" y="14.4" width="3.2" height="3.2" fill="currentColor" />
+    </>
+  )}
+  {name === 'hex-pin' && (
+    <>
+      <path d="M3.83984 12.6936L3.83984 18.9869L9.88208 25.2803L21.9666 25.2803L28.1598 18.9869L28.1598 12.6936L21.9666 6.40027L9.88208 6.40027L3.83984 12.6936Z" stroke="currentColor" stroke-width="1.28" />
+      <path d="M16 11.2002L16 3.2002" stroke="currentColor" stroke-width="1.28" />
+      <path d="M16 28.7998L16 20.7998" stroke="currentColor" stroke-width="1.28" />
+      <rect x="14.4" y="14.4" width="3.2" height="3.2" fill="currentColor" />
+    </>
+  )}
+  {name === 'back' && (
+    <>
+      <path d="M25.6016 15.6846L10.7556 15.6846" stroke="currentColor" stroke-width="1.5" />
+      <path d="M15.3594 24.96L7.35938 16.96L7.35938 14.88L15.3594 6.87996" stroke="currentColor" stroke-width="1.5" />
+    </>
+  )}
+  {name === 'arrow' && (
+    <>
+      <path d="M4 10.1973H13.2787" stroke="currentColor" />
+      <path d="M10.3984 4.40039L15.3984 9.40039V10.7004L10.3984 15.7004" stroke="currentColor" />
+    </>
+  )}
+  {name === 'dots' && (
+    <g fill="currentColor">
+      <circle cx="5" cy="5" r="2" />
+      <circle cx="5" cy="15" r="2" />
+      <circle cx="15" cy="5" r="2" />
+      <circle cx="15" cy="15" r="2" />
+    </g>
+  )}
+</svg>

@@ -1,0 +1,212 @@
+---
+/**
+ * Styleguide — every token and text style, for checking against Figma.
+ * Not linked from the site.
+ */
+import '../styles/global.css';
+import Button from '../components/ui/Button.astro';
+import ArrowLink from '../components/ui/ArrowLink.astro';
+import Divider from '../components/ui/Divider.astro';
+import Icon from '../components/icons/Icon.astro';
+import RoboLogo from '../components/icons/RoboLogo.astro';
+
+const colors = [
+  { group: 'Brand (Figma variables)', items: [
+    ['--color-orange', '#FF6B03', 'Orange / primary'],
+    ['--color-orange-02', '#E86000', 'Orange / 02'],
+  ]},
+  { group: 'Neutrals (measured)', items: [
+    ['--color-black', '#000000', 'Backgrounds, buttons'],
+    ['--color-ink', '#111111', 'Text on light'],
+    ['--color-ink-warm', '#100F0D', 'Deep backgrounds'],
+    ['--color-white', '#FFFFFF', ''],
+    ['--color-grey-50', '#F9F9F9', 'Nav pill'],
+    ['--color-grey-100', '#F2F2F2', 'Light surfaces'],
+    ['--color-grey-200', '#EDEDED', ''],
+    ['--color-grey-300', '#D9D9D9', 'Image placeholders'],
+    ['--color-grey-350', '#C6C6C6', 'Pre-footer'],
+    ['--color-grey-400', '#BCBCBC', 'Menu dots'],
+    ['--color-grey-600', '#747474', 'Secondary text, thin rules'],
+  ]},
+  { group: 'Lines (measured)', items: [
+    ['--line-on-light', 'rgb(0 0 0 / 0.2)', 'Rules on white'],
+    ['--line-on-dark', 'rgb(255 255 255 / 0.2)', 'Rules on black'],
+  ]},
+];
+
+const type = [
+  { cls: 't-h1', name: 'H1', spec: '120 / 95% / −6%', mobile: '64', sample: 'Make the world say yes to your robot' },
+  { cls: 't-h2', name: 'H2', spec: '80 / 95% / −6%', mobile: '44', sample: 'Start conversation if you are ready' },
+  { cls: 't-h3', name: 'H3', spec: '50 / 116% / −5%', mobile: '32', sample: 'Hello Robo designs the human side of robotics — turning complex systems into products operators trust.' },
+  { cls: 't-body', name: 'Body', spec: '20 / 120% / −1%', mobile: '16', sample: 'We start with what people need to understand, trust and believe before they say yes. Then we bring brand, product and film together as one system.' },
+  { cls: 't-button', name: 'Button', spec: '18 / 100% / +6%, uppercase', mobile: '—', sample: 'Get in touch' },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Styleguide — Hello Robo</title>
+  </head>
+  <body>
+    <main class="sg container">
+      <header class="sg__head">
+        <p class="t-body sg__muted">Hello Robo website · design tokens</p>
+        <h1 class="t-h1">Styleguide</h1>
+        <p class="t-body sg__muted">Source: Figma “Hello Robo Website 2026” → Handoff ✅ → website. Font: Alliance No.2 Regular (falls back to Helvetica until the font files are added to <code>public/fonts</code>).</p>
+      </header>
+
+      <section class="sg__section">
+        <h2 class="t-h3">Text styles</h2>
+        <Divider />
+        {type.map((t) => (
+          <div class="sg__type">
+            <div class="sg__type-meta t-body">
+              <b>{t.name}</b>
+              <span class="sg__muted">{t.spec}</span>
+              <span class="sg__muted">Mobile: {t.mobile}</span>
+              <code>.{t.cls}</code>
+            </div>
+            <p class={t.cls}>{t.sample}</p>
+          </div>
+        ))}
+      </section>
+
+      <section class="sg__section">
+        <h2 class="t-h3">Colors</h2>
+        <Divider />
+        {colors.map((g) => (
+          <div class="sg__colors">
+            <p class="t-body sg__muted">{g.group}</p>
+            <div class="sg__swatches">
+              {g.items.map(([token, value, note]) => (
+                <div class="sg__swatch">
+                  <span class="sg__chip" style={`background: var(${token})`}></span>
+                  <code>{token}</code>
+                  <span class="t-body">{value}</span>
+                  {note && <span class="sg__muted sg__note">{note}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section class="sg__section">
+        <h2 class="t-h3">Buttons, links, icons</h2>
+        <Divider />
+        <div class="sg__row">
+          <Button href="#" icon="hex">Learn more</Button>
+          <div class="sg__dark"><Button href="#" variant="light" icon="hex-pin">Pull up a chair</Button></div>
+          <Button href="#" icon="corners">Get in touch</Button>
+          <ArrowLink href="#">View</ArrowLink>
+        </div>
+        <div class="sg__row">
+          <Icon name="corners" /><Icon name="hex" /><Icon name="hex-pin" /><Icon name="back" /><Icon name="arrow" /><Icon name="dots" /><RoboLogo />
+        </div>
+      </section>
+
+      <section class="sg__section">
+        <h2 class="t-h3">Lines</h2>
+        <Divider />
+        <div class="sg__lines">
+          <Divider />
+          <Divider accent />
+          <div class="sg__dark"><Divider tone="dark" /><Divider tone="dark" accent /></div>
+        </div>
+      </section>
+
+      <section class="sg__section">
+        <h2 class="t-h3">Layout</h2>
+        <Divider />
+        <ul class="t-body sg__list">
+          <li>Desktop frame 1728 · side margin 40 · column gap 12</li>
+          <li>Mobile frame 390 · side margin 16 · section gap 164</li>
+          <li>Nav pill 426×80 · Get in touch 265×64 · buttons 60 high · radius 2</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
+
+<style>
+  .sg {
+    padding-block: var(--space-80) var(--space-160);
+    display: grid;
+    gap: var(--space-100);
+  }
+  .sg__head {
+    display: grid;
+    gap: var(--space-24);
+    max-width: 1100px;
+  }
+  .sg__muted {
+    color: var(--color-grey-600);
+  }
+  .sg__section {
+    display: grid;
+    gap: var(--space-32);
+  }
+  .sg__type {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-40);
+    align-items: baseline;
+    padding-bottom: var(--space-32);
+    border-bottom: var(--line-width) solid var(--line-on-light);
+  }
+  .sg__type-meta {
+    display: grid;
+    gap: var(--space-6);
+  }
+  code {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 14px;
+  }
+  .sg__colors {
+    display: grid;
+    gap: var(--space-16);
+  }
+  .sg__swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-24) var(--gutter);
+  }
+  .sg__swatch {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .sg__chip {
+    height: 96px;
+    border: var(--line-width) solid var(--line-on-light);
+    border-radius: var(--radius-ui);
+  }
+  .sg__note {
+    font-size: 14px;
+  }
+  .sg__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-24);
+  }
+  .sg__dark {
+    background: var(--color-black);
+    color: var(--color-white);
+    padding: var(--space-20);
+  }
+  .sg__lines {
+    display: grid;
+    gap: var(--space-40);
+  }
+  .sg__lines .sg__dark {
+    display: grid;
+    gap: var(--space-40);
+    padding: var(--space-40) var(--space-20);
+  }
+  .sg__list {
+    display: grid;
+    gap: var(--space-12);
+  }
+</style>

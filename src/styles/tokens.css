@@ -1,0 +1,112 @@
+/*
+  Hello Robo — design tokens
+  Source: Figma "Hello Robo Website 2026" → Handoff ✅ → website
+
+  FROM FIGMA (variables / text styles):
+    Orange / primary, Orange / 02
+    H1, H2, H3, Body, Button  (+ Mobile/H1, Mobile/H2, Mobile/H3, Mobile/Body1, Mobile/Body2)
+
+  ADDED (measured from the designs, not yet Figma variables):
+    neutrals, lines, layout, z-index
+*/
+
+:root {
+  /* ── Color: brand (Figma variables) ─────────────────────────── */
+  --color-orange: #ff6b03;        /* Orange / primary */
+  --color-orange-02: #e86000;     /* Orange / 02 (hover / pressed) */
+
+  /* ── Color: neutrals (measured) ─────────────────────────────── */
+  --color-black: #000000;         /* page backgrounds, buttons */
+  --color-ink: #111111;           /* body text on light */
+  --color-ink-warm: #100f0d;      /* deep backgrounds (video, footer images) */
+  --color-white: #ffffff;
+  --color-grey-50: #f9f9f9;       /* nav pill, back button */
+  --color-grey-100: #f2f2f2;      /* light surfaces, cards */
+  --color-grey-200: #ededed;
+  --color-grey-300: #d9d9d9;      /* image placeholders */
+  --color-grey-350: #c6c6c6;      /* pre-footer background */
+  --color-grey-400: #bcbcbc;      /* menu dots icon */
+  --color-grey-600: #747474;      /* secondary text, captions, thin rules */
+
+  /* ── Color: lines (measured) ────────────────────────────────── */
+  --line-on-light: rgb(0 0 0 / 0.2);
+  --line-on-dark: rgb(255 255 255 / 0.2);
+  --line-strong-on-light: var(--color-black);
+  --line-strong-on-dark: var(--color-white);
+  --line-width: 1px;
+
+  /* ── Color: roles ───────────────────────────────────────────── */
+  --color-bg: var(--color-white);
+  --color-fg: var(--color-black);
+  --color-accent: var(--color-orange);
+  --color-muted: var(--color-grey-600);
+
+  /* ── Typography (Figma text styles only) ────────────────────── */
+  --font-sans: "Alliance No.2", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* H1 — 120 / 95% / -6% */
+  --type-h1-size: 120px;
+  --type-h1-line: 0.95;
+  --type-h1-track: -0.06em;
+  /* H2 — 80 / 95% / -6% */
+  --type-h2-size: 80px;
+  --type-h2-line: 0.95;
+  --type-h2-track: -0.06em;
+  /* H3 — 50 / 116% / -5% */
+  --type-h3-size: 50px;
+  --type-h3-line: 1.16;
+  --type-h3-track: -0.05em;
+  /* Body — 20 / 120% / -1% */
+  --type-body-size: 20px;
+  --type-body-line: 1.2;
+  --type-body-track: -0.01em;
+  /* Button — 18 / 100% / +6%, uppercase */
+  --type-button-size: 18px;
+  --type-button-line: 1;
+  --type-button-track: 0.06em;
+
+  /* Mobile values (Figma: Mobile/*) — applied in the responsive phase */
+  --type-h1-size-mobile: 64px;    /* Mobile/H1 — 64 / 95% / -6% */
+  --type-h2-size-mobile: 44px;    /* Mobile/H2 — 44 / 116% / -5% */
+  --type-h2-line-mobile: 1.16;
+  --type-h2-track-mobile: -0.05em;
+  --type-h3-size-mobile: 32px;    /* Mobile/H3 — 32 / 116% / -5% */
+  --type-body-size-mobile: 16px;  /* Mobile/Body1 — 16 / 120% / -1% */
+  --type-body2-size-mobile: 12px; /* Mobile/Body2 — 12 / 120% / -1% */
+
+  /* ── Layout (measured from 1728 desktop / 390 mobile frames) ── */
+  --page-max: 1728px;
+  --page-margin: 40px;            /* desktop side margin */
+  --page-margin-mobile: 16px;
+  --gutter: 12px;                 /* gap between columns / cards */
+  --section-gap-mobile: 164px;    /* "divider" frames on mobile */
+
+  /* Spacing scale — values that repeat in the designs */
+  --space-6: 6px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-60: 60px;
+  --space-80: 80px;
+  --space-100: 100px;
+  --space-120: 120px;
+  --space-160: 160px;
+
+  /* ── Components ─────────────────────────────────────────────── */
+  --radius-ui: 2px;               /* nav pill, buttons */
+  --button-height: 60px;
+  --nav-height: 80px;
+  --nav-width: 426px;
+  --icon-size: 32px;
+
+  /* ── Z-index ────────────────────────────────────────────────── */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-header: 100;
+  --z-nav: 200;
+  --z-overlay: 300;
+}

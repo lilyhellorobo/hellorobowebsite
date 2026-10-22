@@ -1,0 +1,95 @@
+---
+/**
+ * Pre-footer CTA — Figma "block" 1728×949 (Home 10093:2001, Careers 10100:15564).
+ * Marked as a WebGL scene; the printer image is its static poster.
+ * Two copy variants appear in the designs:
+ *   "conversation" — "Start conversation if you are ready to make world say yes" + stamp
+ *   "building"     — "Tell us what you are building" + "[Click anywhere to start]"
+ */
+import WebGLSlot from '../ui/WebGLSlot.astro';
+
+interface Props {
+  variant?: 'conversation' | 'building';
+}
+const { variant = 'conversation' } = Astro.props;
+const title =
+  variant === 'building'
+    ? 'Tell us what you are building'
+    : 'Start conversation if you are ready to make world say yes';
+---
+<section class="prefooter" aria-label="Start a project">
+  <WebGLSlot name="prefooter" class="prefooter__scene">
+    <img
+      class="prefooter__printer"
+      src="/images/shell/prefooter-printer.png"
+      alt=""
+      width="994"
+      height="949"
+      loading="lazy"
+      decoding="async"
+    />
+  </WebGLSlot>
+
+  <a class="prefooter__link" href="/contact">
+    <h2 class="prefooter__title t-h2">{title}</h2>
+  </a>
+
+  {variant === 'conversation' ? (
+    <img
+      class="prefooter__stamp"
+      src="/images/shell/stamp-human-core.png"
+      alt=""
+      width="403"
+      height="174"
+      loading="lazy"
+    />
+  ) : (
+    <p class="prefooter__hint t-body">[Click anywhere to start]</p>
+  )}
+</section>
+
+<style>
+  .prefooter {
+    position: relative;
+    aspect-ratio: 1728 / 949;
+    background: var(--color-grey-350);
+    color: var(--color-white);
+    overflow: hidden;
+  }
+  .prefooter :global(.prefooter__scene) {
+    position: absolute;
+    inset: 0;
+  }
+  .prefooter__printer {
+    position: absolute;
+    top: 0;
+    left: calc(607 / 1728 * 100%);
+    width: calc(994 / 1728 * 100%);
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: multiply; /* as in Figma: the photo's white ground takes the grey */
+  }
+  /* The whole block is clickable ("Click anywhere to start") */
+  .prefooter__link {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-raised);
+    padding: var(--space-40);
+  }
+  .prefooter__title {
+    max-width: 716px;
+  }
+  .prefooter__stamp,
+  .prefooter__hint {
+    position: absolute;
+    left: var(--space-40);
+    bottom: var(--space-40);
+    z-index: var(--z-raised);
+    pointer-events: none;
+  }
+  .prefooter__stamp {
+    width: calc(403 / 1728 * 100%);
+    min-width: 200px;
+    height: auto;
+  }
+</style>

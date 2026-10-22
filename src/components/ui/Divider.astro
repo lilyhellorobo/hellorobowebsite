@@ -1,0 +1,40 @@
+---
+/**
+ * Divider — 1px rule. On light sections 20% black, on dark 20% white
+ * (Figma: footer "Line 122", list rows on Careers / Position).
+ * `accent` draws the short black/white segment that sits on top of the rule
+ * at the start of Services / Robo Radio sections (Figma "Group 2147227382").
+ */
+interface Props {
+  tone?: 'light' | 'dark';
+  accent?: boolean;
+  class?: string;
+}
+const { tone = 'light', accent = false, class: className } = Astro.props;
+---
+<hr class:list={['divider', `divider--${tone}`, { 'divider--accent': accent }, className]} />
+
+<style>
+  .divider {
+    position: relative;
+    height: 0;
+    margin: 0;
+    border: 0;
+    border-top: var(--line-width) solid var(--line-on-light);
+    overflow: visible;
+  }
+  .divider--dark {
+    border-top-color: var(--line-on-dark);
+  }
+  .divider--accent::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--line-width) * -1);
+    left: 0;
+    width: 25%;
+    border-top: var(--line-width) solid var(--line-strong-on-light);
+  }
+  .divider--dark.divider--accent::before {
+    border-top-color: var(--line-strong-on-dark);
+  }
+</style>

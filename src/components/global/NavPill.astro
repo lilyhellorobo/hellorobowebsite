@@ -1,0 +1,68 @@
+---
+/**
+ * Nav pill — floating "MENU" bar, bottom centre (Figma "nav", 10093:2370, 426×80).
+ * `back` adds the 80×80 back button on the left (Figma "Group 2147227465",
+ * 10102:1707), used on Position and Episode pages.
+ * Opening the menu overlay is wired up in the motion phase.
+ */
+import Icon from '../icons/Icon.astro';
+import RoboLogo from '../icons/RoboLogo.astro';
+
+interface Props {
+  back?: string;
+}
+const { back } = Astro.props;
+---
+<nav class="nav-pill" aria-label="Main">
+  {back && (
+    <a class="nav-pill__back" href={back} aria-label="Back">
+      <Icon name="back" />
+    </a>
+  )}
+  <button class="nav-pill__menu" type="button" aria-expanded="false" aria-controls="site-menu">
+    <span class="nav-pill__label">
+      <Icon name="dots" class="nav-pill__dots" />
+      <span class="t-button">Menu</span>
+    </span>
+    <RoboLogo />
+  </button>
+</nav>
+
+<style>
+  .nav-pill {
+    position: fixed;
+    left: 50%;
+    bottom: var(--space-40);
+    transform: translateX(-50%);
+    z-index: var(--z-nav);
+    display: flex;
+    gap: 8px;
+  }
+  .nav-pill__back,
+  .nav-pill__menu {
+    height: var(--nav-height);
+    background: var(--color-grey-50);
+    color: var(--color-black);
+    border-radius: var(--radius-ui);
+  }
+  .nav-pill__back {
+    width: var(--nav-height);
+    display: grid;
+    place-items: center;
+  }
+  .nav-pill__menu {
+    width: var(--nav-width);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-20);
+  }
+  .nav-pill__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-12);
+  }
+  .nav-pill__dots {
+    color: var(--color-grey-400);
+  }
+</style>
