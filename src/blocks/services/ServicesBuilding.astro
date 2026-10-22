@@ -1,0 +1,60 @@
+---
+/**
+ * Services — Building toward yes
+ * Figma: "Frame 2147232853" (10103:1223), 1728×1035, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10103-1223
+ * The logo row is one SVG; the Bedrock logo only exists as a PNG in Figma and sits on top of it.
+ */
+---
+<section class="services-building theme-dark">
+  <div class="services-building__head container">
+    <h2 class="services-building__title t-h1">Building toward yes</h2>
+    <p class="services-building__text t-body">
+      We work with teams building new ways to move, work and live — from robotics and autonomy to the technology around them. Together, we turn complex ideas into brands, products and stories people can understand, trust and say yes to.
+    </p>
+  </div>
+  <div class="services-building__logos container">
+    <div class="services-building__row">
+      <img src="/images/services/logos-building.svg" alt="Palantir, Bedrock, Surf Air, Weekly Robotics" width="1644" height="355" loading="lazy" />
+      <img class="services-building__bedrock" src="/images/services/logo-bedrock-white.png" alt="" width="165" height="22" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .services-building {
+    padding-top: var(--space-80);
+    padding-bottom: var(--space-80);
+  }
+  .services-building__head {
+    display: grid;
+    grid-template-columns: calc(968 / 1648 * 100%) 676px;
+    align-items: start;
+  }
+  .services-building__title {
+    width: 766px;
+    max-width: 100%;
+  }
+  .services-building__text {
+    margin-top: 16px;
+  }
+  .services-building__logos {
+    margin-top: 292px;
+  }
+  .services-building__row {
+    position: relative;
+    width: calc(1644 / 1648 * 100%);
+  }
+  .services-building__row img:first-child {
+    width: 100%;
+    height: auto;
+  }
+  /* Bedrock PNG at (601, 166) in the 1644×355 row */
+  .services-building__bedrock {
+    position: absolute;
+    left: calc(601 / 1644 * 100%);
+    top: calc(166 / 355 * 100%);
+    width: calc(165 / 1644 * 100%);
+    height: auto;
+  }
+</style>

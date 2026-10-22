@@ -1,0 +1,26 @@
+---
+/**
+ * Services — Device visual (full width, marked "video" in Figma)
+ * Figma: "Frame 2147232849" (10103:211), 1728×945
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10103-211
+ * Static still for now; swap for the video when it's ready.
+ */
+import { Image } from 'astro:assets';
+import still from '../../assets/services/device-visual.png';
+---
+<section class="services-device" aria-label="Product interface on a robot display">
+  <Image src={still} alt="A robot display showing a fleet software interface" widths={[1728, 2600, 3456]} sizes="100vw" loading="lazy" />
+</section>
+
+<style>
+  .services-device {
+    aspect-ratio: 1728 / 945;
+    background: var(--color-black);
+    overflow: hidden;
+  }
+  .services-device :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

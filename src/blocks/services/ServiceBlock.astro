@@ -1,0 +1,95 @@
+---
+/**
+ * Services — Service block (branding / interface / video production)
+ * Figma: 10103:212, 10103:267, 10103:304 — each 1728×1109
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10103-212
+ * Rule with accent · 初め label · H1 title + stamp · list of services · media on the right.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Divider from '../../components/ui/Divider.astro';
+
+interface Props {
+  title: string;
+  services: string[];
+  image: ImageMetadata;
+  imageAlt: string;
+  /** Stamp next to the title: src, size and offset inside the left column (Figma px) */
+  stamp: { src: string; w: number; h: number; x: number; y: number };
+}
+const { title, services, image, imageAlt, stamp } = Astro.props;
+---
+<section class="service-block container">
+  <Divider accent class="service-block__rule" />
+  <div class="service-block__grid">
+    <div class="service-block__text">
+      <p class="service-block__label t-h3">初め</p>
+      <h2 class="service-block__title t-h1">{title}</h2>
+      <img
+        class="service-block__stamp"
+        src={stamp.src}
+        alt=""
+        width={stamp.w}
+        height={stamp.h}
+        style={`left:${stamp.x}px;top:${stamp.y}px`}
+        loading="lazy"
+      />
+      <ul class="service-block__list t-body">
+        {services.map((s) => <li>{s}</li>)}
+      </ul>
+    </div>
+    <div class="service-block__media">
+      <Image src={image} alt={imageAlt} widths={[818, 1636]} sizes="(min-width: 1728px) 818px, 48vw" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .service-block {
+    padding-top: var(--space-40);
+    padding-bottom: 157px;
+  }
+  /* Accent segment is 338 of 1648 */
+  .service-block :global(.service-block__rule.divider--accent)::before {
+    width: calc(338 / 1648 * 100%);
+  }
+  .service-block__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+    margin-top: var(--space-40);
+  }
+  .service-block__text {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .service-block__label {
+    color: var(--color-orange);
+  }
+  .service-block__title {
+    margin-top: var(--space-20);
+    width: 818px;
+    max-width: 100%;
+  }
+  .service-block__stamp {
+    position: absolute;
+    height: auto;
+  }
+  .service-block__list {
+    display: grid;
+    gap: var(--space-32);
+    margin-top: auto;
+  }
+  .service-block__media {
+    aspect-ratio: 818 / 872;
+    background: var(--color-black);
+    overflow: hidden;
+  }
+  .service-block__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

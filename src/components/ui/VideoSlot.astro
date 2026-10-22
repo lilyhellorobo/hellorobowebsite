@@ -1,20 +1,35 @@
 ---
 /**
- * VideoSlot — keeps a video's size from Figma and shows its poster frame.
- * Pass `src` once the video file exists; until then only the poster renders.
+ * VideoSlot — keeps a video's size from Figma.
+ * With `src` it plays the video (muted + looping when `autoplay`);
+ * without it, it shows the poster or a black area of the same size.
  */
 interface Props {
   ratio: string;
-  poster?: string;
   src?: string;
+  webm?: string;
+  poster?: string;
   alt?: string;
+  autoplay?: boolean;
   class?: string;
 }
-const { ratio, poster, src, alt = '', class: className } = Astro.props;
+const { ratio, src, webm, poster, alt = '', autoplay = false, class: className } = Astro.props;
 ---
 <div class:list={['video-slot', className]} style={`aspect-ratio: ${ratio}`}>
   {src ? (
-    <video class="video-slot__media" src={src} poster={poster} muted playsinline loop preload="none"></video>
+    <video
+      class="video-slot__media"
+      poster={poster}
+      muted
+      playsinline
+      loop
+      autoplay={autoplay}
+      preload={autoplay ? 'auto' : 'none'}
+      aria-label={alt || undefined}
+    >
+      {webm && <source src={webm} type="video/webm" />}
+      <source src={src} type="video/mp4" />
+    </video>
   ) : poster ? (
     <img class="video-slot__media" src={poster} alt={alt} loading="lazy" decoding="async" />
   ) : null}
