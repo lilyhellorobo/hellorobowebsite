@@ -21,6 +21,9 @@ Then open http://localhost:4321.
 | `npm run preview` | Serves the built site |
 | `npm run svg` | Optimizes every SVG in `public/images` |
 
+If you change `src/content.config.ts` and the dev server shows old data, stop it
+and clear the cache: `rm -rf .astro node_modules/.astro`, then `npm run dev`.
+
 Review pages (not linked from the site):
 
 - `/styleguide` — every color, text style, button, icon and line

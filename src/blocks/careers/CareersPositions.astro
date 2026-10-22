@@ -1,0 +1,96 @@
+---
+/**
+ * Careers — Positions
+ * Figma: "Frame 2147232978" (10100:14936), 1728×2687, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-14936
+ * Rows come from the positions collection and link to /careers/[slug].
+ */
+import { getCollection } from 'astro:content';
+
+const positions = (await getCollection('positions')).sort((a, b) => a.data.order - b.data.order);
+---
+<section class="careers-positions theme-dark">
+  <header class="careers-positions__head container">
+    <img src="/images/careers/stamp-positions.svg" alt="" width="222" height="66" />
+    <h2 class="t-h1">Positions</h2>
+    <p class="careers-positions__intro t-body">
+      We’re hiring — and always interested in people who care about the human side of robotics. Don’t see the right role? Say hello anyway.
+    </p>
+  </header>
+
+  <ul class="careers-positions__list">
+    {positions.map((p) => (
+      <li class="careers-positions__row">
+        <a class="careers-positions__link container" href={`/careers/${p.id}`}>
+          <span class="careers-positions__title">
+            <span class="t-h2">{p.data.title}</span>
+            {p.data.stamp && (
+              <img src={p.data.stamp.src} alt="" width={p.data.stamp.w} height={p.data.stamp.h} loading="lazy" />
+            )}
+          </span>
+          <span class="careers-positions__meta t-body">
+            <span>{p.data.location}</span>
+            <span>{p.data.hours}</span>
+            <span>{p.data.type}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .careers-positions {
+    padding-top: 165px;
+    padding-bottom: 160px;
+  }
+  .careers-positions__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .careers-positions__head h2 {
+    margin-top: 28px;
+  }
+  .careers-positions__intro {
+    width: 553px;
+    max-width: 100%;
+    margin-top: var(--space-40);
+  }
+  .careers-positions__list {
+    display: grid;
+    gap: 100px;
+    margin-top: 130px;
+  }
+  /* Full-bleed rule above each row, then 100px to the title */
+  .careers-positions__row {
+    border-top: var(--line-width) solid var(--line-on-dark);
+    padding-top: 100px;
+  }
+  .careers-positions__link {
+    display: grid;
+    grid-template-columns: 1fr calc(542 / 1648 * 100%);
+    align-items: start;
+  }
+  .careers-positions__title {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-20);
+  }
+  .careers-positions__title .t-h2 {
+    max-width: 900px;
+  }
+  .careers-positions__title img {
+    flex: none;
+    height: auto;
+  }
+  .careers-positions__meta {
+    display: grid;
+    grid-template-columns: 138px 277px 1fr;
+    margin-top: -5px;
+  }
+  .careers-positions__link:hover .t-h2 {
+    color: var(--color-orange);
+  }
+</style>

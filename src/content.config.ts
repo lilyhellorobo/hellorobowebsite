@@ -39,6 +39,10 @@ const positions = defineCollection({
     intro: z.array(z.string()).default([]),
     workOn: z.array(z.string()).default([]),
     bring: z.array(z.string()).default([]),
+    howWeWork: z.array(z.string()).default([]),
+    applySteps: z.array(z.string()).default([]),
+    /** Optional stamp shown next to the title in the Careers list */
+    stamp: z.object({ src: z.string(), w: z.number(), h: z.number() }).optional(),
     order: z.number().default(0),
   }),
 });

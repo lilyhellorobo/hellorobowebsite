@@ -1,0 +1,113 @@
+---
+/**
+ * Careers — Values
+ * Figma: "Frame 2147232837" (10100:14871), 1728×1877
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-14871
+ * Static state: value 01 (Curiosity) selected. The robot is marked "3d web gl".
+ * TODO (motion step): switch values 01–03.
+ */
+import { Image } from 'astro:assets';
+import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+import robot from '../../assets/careers/values-robot.png';
+
+const tabs = ['01', '02', '03'];
+---
+<section class="careers-values container">
+  <header class="careers-values__intro">
+    <img src="/images/careers/stamp-values.svg" alt="" width="149" height="152" />
+    <p class="t-body">Our values</p>
+    <h2 class="careers-values__statement t-h3">
+      Robots are complex. Working together shouldn’t be. We stay curious, share openly and give great ideas room to grow.
+    </h2>
+  </header>
+
+  <div class="careers-values__value">
+    <div class="careers-values__text">
+      <p class="careers-values__kanji t-h1" lang="ja">好奇心</p>
+      <div class="careers-values__copy">
+        <p class="t-body">Curiosity</p>
+        <p class="t-body">We ask the extra question, look past the obvious answer and stay interested in how people and machines understand each other.</p>
+      </div>
+      <ol class="careers-values__tabs t-body" aria-label="Values">
+        {tabs.map((t, i) => (
+          <li class:list={['careers-values__tab', { 'is-active': i === 0 }]} aria-current={i === 0 ? 'true' : undefined}>{t}</li>
+        ))}
+      </ol>
+    </div>
+    <WebGLSlot name="careers-robot" class="careers-values__media">
+      <Image src={robot} alt="Hello Robo robot in front of floating receipts" widths={[816, 1632]} sizes="(min-width: 1728px) 816px, 48vw" loading="lazy" />
+    </WebGLSlot>
+  </div>
+</section>
+
+<style>
+  .careers-values {
+    padding-top: 119px;
+    padding-bottom: 67px;
+  }
+  .careers-values__intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    text-align: center;
+  }
+  .careers-values__statement {
+    width: 957px;
+    max-width: 100%;
+  }
+  .careers-values__value {
+    display: grid;
+    grid-template-columns: 1fr 816px;
+    gap: var(--gutter);
+    margin-top: 308px;
+  }
+  .careers-values__text {
+    display: flex;
+    flex-direction: column;
+  }
+  .careers-values__kanji {
+    color: var(--color-orange);
+  }
+  .careers-values__copy {
+    display: grid;
+    gap: 30px;
+    width: 680px;
+    max-width: 100%;
+    margin-top: auto;
+  }
+  .careers-values__tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 265px);
+    gap: var(--gutter);
+    margin-top: 120px;
+  }
+  .careers-values__tab {
+    position: relative;
+    padding-bottom: 10px;
+    text-align: center;
+    color: var(--color-grey-350);
+    border-bottom: var(--line-width) solid var(--line-on-light);
+  }
+  .careers-values__tab.is-active {
+    color: var(--color-black);
+  }
+  /* Active tab: black segment over the first 103px of the line */
+  .careers-values__tab.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: calc(var(--line-width) * -1);
+    width: calc(103 / 265 * 100%);
+    border-bottom: var(--line-width) solid var(--line-strong-on-light);
+  }
+  .careers-values :global(.careers-values__media) {
+    aspect-ratio: 816 / 973;
+    background: var(--color-grey-100);
+  }
+  .careers-values :global(.careers-values__media img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

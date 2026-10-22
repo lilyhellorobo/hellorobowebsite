@@ -1,12 +1,13 @@
 ---
 /**
  * "Get in touch" — fixed top-right (Figma hero "nav", 265×64, 40px from the top
- * and right edges, background blur). Black on light pages, white on dark pages.
+ * and right edges, background blur). Black on light pages, white on dark pages,
+ * light grey on the Position page.
  */
 import Icon from '../icons/Icon.astro';
 
 interface Props {
-  variant?: 'dark' | 'light';
+  variant?: 'dark' | 'light' | 'grey';
   href?: string;
 }
 const { variant = 'dark', href = '/contact' } = Astro.props;
@@ -35,6 +36,10 @@ const { variant = 'dark', href = '/contact' } = Astro.props;
   .get-in-touch--dark {
     background: var(--color-black);
     color: var(--color-white);
+  }
+  .get-in-touch--grey {
+    background: var(--color-grey-50);
+    color: var(--color-black);
   }
   .get-in-touch--light {
     background: var(--color-white);
