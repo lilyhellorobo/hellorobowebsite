@@ -3,15 +3,47 @@
   "location": "US Based",
   "hours": "EDT / PDT",
   "type": "Full time",
-  "intro": [],
-  "workOn": [],
-  "bring": [],
-  "howWeWork": [],
-  "applySteps": [],
+  "order": 4,
   "stamp": {
     "src": "/images/careers/stamp-role-design-director.svg",
     "w": 238,
     "h": 70
   },
-  "order": 4
+  "intro": [
+    "Robotics companies come to us for two things at once: a brand the market believes in and a product operators actually want to use. Most studios can do one. We do both, and we need a Design Director who can lead across that whole surface — identity, UX/UI, and the video and motion that bring a robot to life before anyone sees it in person.",
+    "You'll set the creative direction, grow the team, and still be the person who opens the file and shows how it's done."
+  ],
+  "workOn": [
+    "Lead design direction",
+    "Build robot brands and identity systems that hold up on a trade-show booth, a pitch deck, and the machine itself",
+    "Direct UX/UI for operator interfaces, fleet dashboards, and 0-to-1 products — from a scrappy V1 to the long-term vision",
+    "Direct launch and product videos: concept, script, storyboard, shoot, and edit",
+    "Work closely with our motion designer to turn ideas into animation that explains complex tech in seconds",
+    "Mentor designers through regular critique, clear feedback, and pairing on real work",
+    "Jump into the file when it matters — sketch the direction, design the key screen, set the bar by example",
+    "Partner with founders, PMs, and engineers to bring clarity to hard problems",
+    "Shape how we work so the studio gets faster and the output gets better"
+  ],
+  "bring": [
+    "8+ years in design, with senior or director-level experience at an agency or studio",
+    "A portfolio that shows both brand identity and UX/UI at a high level — we need to see both",
+    "Experience directing video: you've taken a piece from concept to final cut and know how to brief and guide a motion designer",
+    "A track record of managing designers — you give feedback people can act on and you know how to grow someone's craft",
+    "Hands-on skill that's still sharp. You lead from the canvas, not just from the meeting",
+    "Comfort presenting to founders and defending a creative point of view",
+    "Based in the US",
+    "Bonus: experience with robotics, hardware, or deep-tech clients"
+  ],
+  "howWeWork": [
+    "We design together, not in silos",
+    "We “steal brains” — learning from every project, client, and teammate.",
+    "We care about clarity, speed, and impact.",
+    "We’re explorers: curious, adaptive, and focused on progress"
+  ],
+  "applySteps": [
+    "Portfolio link",
+    "CV or LinkedIn",
+    "One project you’re proud of & why (tweet length)"
+  ],
+  "outro": "If you’re ready to turn robots and AI into products humans adore, we’d love to meet you."
 }

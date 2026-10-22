@@ -31,7 +31,8 @@ export type Field =
   | { kind: 'image'; key: string; label: string; required?: boolean; video?: boolean; hint?: string }
   /** 1..max images (or videos) side by side */
   | { kind: 'images'; key: string; label: string; max: number; video?: boolean; hint?: string }
-  | { kind: 'strings'; key: string; label: string; item: string; multiline?: boolean; hint?: string }
+  /** `omitEmpty`: leave the key out instead of writing [] (for schema fields that default to []) */
+  | { kind: 'strings'; key: string; label: string; item: string; multiline?: boolean; omitEmpty?: boolean; hint?: string }
   /** A nested object; `optional` adds an on/off switch and omits it when off */
   | { kind: 'group'; key: string; label: string; fields: Field[]; optional?: boolean; hint?: string }
   /** A repeatable list of objects */
@@ -284,13 +285,9 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         kind: 'select',
         key: 'type',
         label: 'Type',
-        options: ['Full time', 'Contract', 'Freelance'].map((t) => ({ value: t, label: t })),
+        options: ['Full time', 'Contract', 'Contract to hire', 'Freelance'].map((t) => ({ value: t, label: t })),
       },
-      { kind: 'strings', key: 'intro', label: 'Intro', item: 'paragraph', multiline: true },
-      { kind: 'strings', key: 'workOn', label: 'What you’ll work on', item: 'point', multiline: true },
-      { kind: 'strings', key: 'bring', label: 'What you bring', item: 'point', multiline: true },
-      { kind: 'strings', key: 'howWeWork', label: 'How we work', item: 'paragraph', multiline: true },
-      { kind: 'strings', key: 'applySteps', label: 'To apply, send', item: 'step', multiline: true, hint: 'Numbered 01, 02… on the page.' },
+      order,
       {
         kind: 'group',
         key: 'stamp',
@@ -303,7 +300,13 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
           { kind: 'number', key: 'h', label: 'Height (px)', hint: 'Leave at 0 to use the graphic’s own size.', sizeOf: { field: 'src', dimension: 'height' } },
         ],
       },
-      order,
+      { kind: 'strings', key: 'intro', label: 'Intro', item: 'paragraph', multiline: true, omitEmpty: true },
+      { kind: 'strings', key: 'workOn', label: 'What you’ll work on', item: 'point', multiline: true, omitEmpty: true },
+      { kind: 'strings', key: 'bring', label: 'What you bring', item: 'point', multiline: true, omitEmpty: true },
+      { kind: 'strings', key: 'niceToHave', label: 'Nice to have', item: 'point', multiline: true, omitEmpty: true },
+      { kind: 'strings', key: 'howWeWork', label: 'How we work', item: 'paragraph', multiline: true, omitEmpty: true },
+      { kind: 'strings', key: 'applySteps', label: 'To apply, send', item: 'step', multiline: true, omitEmpty: true, hint: 'Numbered 01, 02… on the page.' },
+      { kind: 'textarea', key: 'outro', label: 'Closing line', hint: 'Optional. Shown under “How to apply”.' },
     ],
   },
   {

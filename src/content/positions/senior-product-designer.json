@@ -1,12 +1,41 @@
 {
   "title": "Senior Product Designer",
   "location": "Remote",
-  "hours": "US-friendly hours",
+  "hours": "US-friendly time zones",
   "type": "Full time",
-  "intro": [],
-  "workOn": [],
-  "bring": [],
-  "howWeWork": [],
-  "applySteps": [],
-  "order": 2
+  "order": 2,
+  "intro": [
+    "Our client roster is growing fast (aviation, robotics, automation). We need another product thinker who can tame heavy data, ship weekly, and keep things effortlessly human."
+  ],
+  "workOn": [
+    "Partner with CEOs, PMs, and engineers from day zero—no silos.",
+    "UX: Run lean discovery: map jobs-to-be-done, interview users, mine insights, create userflows.",
+    "UI: Sketch → wireframe → prototype → polish in Figma; ship slices every week. This is a visual work.",
+    "UI: Design bite-size interactions and micro-animations that explain themselves."
+  ],
+  "bring": [
+    "4-7 yrs designing complex apps.",
+    "Portfolio that shows systems thinking and pixel craft. We are not looking for Landing pages or brand design examples.",
+    "Perfect blend of Product thinking and Visual design.",
+    "Able to explain design trade-offs in fully fluent English.",
+    "Genuine curiosity for robotics, AI, or aviation—or the hunger to learn fast.",
+    "Overlap ≥ 4 hrs/day with New York (UTC-4)."
+  ],
+  "niceToHave": [
+    "Motion chops (Principle, Rive, Lottie, After Effects).",
+    "Data visualization basics.",
+    "Agency or startup past life."
+  ],
+  "howWeWork": [
+    "Weekly “Design Together” sessions with clients—zero waiting weeks for feedback.",
+    "Twice-weekly Slack updates keep pulses steady.",
+    "Small senior team, flat hierarchy, big ownership.",
+    "We meet once a year in different parts of the world to connect, plan, and reset."
+  ],
+  "applySteps": [
+    "Portfolio link",
+    "CV or LinkedIn",
+    "One project you’re proud of & why (tweet length)"
+  ],
+  "outro": "If you’re ready to turn robots and AI into products humans adore, we’d love to meet you."
 }

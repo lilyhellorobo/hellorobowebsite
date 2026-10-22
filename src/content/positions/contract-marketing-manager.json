@@ -1,0 +1,41 @@
+{
+  "title": "Marketing Manager",
+  "location": "Remote",
+  "hours": "US-friendly time zones",
+  "type": "Contract to hire",
+  "order": 5,
+  "intro": [
+    "We’re growing fast, and our brand needs consistent visibility. This role ensures Hello Robo has a steady flow of smart, approachable content, well-run campaigns, and opportunities to amplify our voice in the AI & robotics community."
+  ],
+  "workOn": [
+    "Content Creation → Write and publish two high-quality posts per week that reflect Hello Robo’s voice and positioning.",
+    "Ad Campaign Management → Run and monitor LinkedIn ad campaigns, ensuring we reach the right audience.",
+    "Analytics & Optimization → Track performance, run experiments, and continually improve ad effectiveness.",
+    "PR Partnerships → Research and pitch PR opportunities for our founder, manage cross-promotional posts with partners.",
+    "Manage Hello Robo Newsletter",
+    "Manage Hello Robo mass outreach campaigns"
+  ],
+  "bring": [
+    "Proven experience in marketing for B2B tech, design, or SaaS companies.",
+    "Strong writing skills—you can make complex ideas simple and engaging.",
+    "Hands-on experience running LinkedIn campaigns.",
+    "Comfort with analytics tools and data-driven decision-making.",
+    "Excellent English, both verbal and written."
+  ],
+  "niceToHave": [
+    "Experience working with AI or robotics companies.",
+    "Existing relationships with PR outlets, podcasts, or industry platforms.",
+    "A design-savvy eye for visuals and branding."
+  ],
+  "howWeWork": [
+    "Remote-first, async-friendly, with weekly check-ins.",
+    "Collaborative—designers and marketing work together, not in silos.",
+    "Fast-moving, focused on market-ready execution."
+  ],
+  "applySteps": [
+    "Portfolio link",
+    "CV or LinkedIn",
+    "One project you’re proud of & why (tweet length)"
+  ],
+  "outro": "If you’re ready to turn robots and AI into products humans adore, we’d love to meet you."
+}

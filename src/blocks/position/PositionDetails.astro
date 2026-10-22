@@ -7,7 +7,7 @@
  */
 import type { CollectionEntry } from 'astro:content';
 import Button from '../../components/ui/Button.astro';
-import { studio } from '../../data/site';
+import { studio, oneBreath } from '../../data/site';
 
 interface Props {
   position: CollectionEntry<'positions'>;
@@ -25,7 +25,7 @@ const steps = data.applySteps.map((s, i) => ({ n: String(i + 1).padStart(2, '0')
 
   <div class="position-details__row">
     <h2 class="position-details__label t-h3">Hello Robo in one breath</h2>
-    <p class="t-h3">Hello Robo designs the human side of robotics. From brand to interface, we turn complex systems into products that operators trust, teams can ship, and investors notice.</p>
+    <p class="t-h3">{oneBreath}</p>
   </div>
 
   {data.workOn.length > 0 && (
@@ -39,6 +39,13 @@ const steps = data.applySteps.map((s, i) => ({ n: String(i + 1).padStart(2, '0')
     <div class="position-details__row">
       <h2 class="position-details__label t-h3">What you bring</h2>
       <ul class="position-details__list t-body">{data.bring.map((i) => <li>{i}</li>)}</ul>
+    </div>
+  )}
+
+  {data.niceToHave.length > 0 && (
+    <div class="position-details__row">
+      <h2 class="position-details__label t-h3">Nice-to-haves</h2>
+      <ul class="position-details__list t-body">{data.niceToHave.map((i) => <li>{i}</li>)}</ul>
     </div>
   )}
 
@@ -63,6 +70,7 @@ const steps = data.applySteps.map((s, i) => ({ n: String(i + 1).padStart(2, '0')
           ))}
         </ol>
       )}
+      {data.outro && <p class="t-body">{data.outro}</p>}
       <Button href={`mailto:${studio.email}?subject=${encodeURIComponent(data.title)}`} icon="hex">Apply now</Button>
     </div>
   </div>

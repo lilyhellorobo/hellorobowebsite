@@ -88,11 +88,21 @@ export function assetFile(ref: string): string | null {
   return file.startsWith(ASSETS_DIR + path.sep) ? file : null;
 }
 
+/** Whether the file (or, for a new file, the other files in its folder) ends with a newline */
+async function endsWithNewline(file: string): Promise<boolean> {
+  const dir = path.dirname(file);
+  const sample = existsSync(file)
+    ? file
+    : (await readdir(dir).catch(() => [])).filter((f) => f.endsWith('.json')).map((f) => path.join(dir, f))[0];
+  return sample ? (await readFile(sample, 'utf8')).endsWith('\n') : false;
+}
+
 async function writeJson(file: string, data: Data) {
   await mkdir(path.dirname(file), { recursive: true });
   const tmp = `${file}.${randomBytes(4).toString('hex')}.tmp`;
-  // Same format as the hand-written files: 2-space indent, no trailing newline
-  await writeFile(tmp, JSON.stringify(data, null, 2));
+  // Same format as the hand-written files: 2-space indent, and keep their trailing-newline style
+  const newline = (await endsWithNewline(file)) ? '\n' : '';
+  await writeFile(tmp, JSON.stringify(data, null, 2) + newline);
   await rename(tmp, file);
 }
 
@@ -238,9 +248,10 @@ function validateFields(fields: Field[], input: unknown, where: string, errors: 
         break;
       }
       case 'strings': {
-        out[f.key] = Array.isArray(v)
+        const list = Array.isArray(v)
           ? v.filter((s): s is string => typeof s === 'string').map((s) => s.trim()).filter(Boolean)
           : [];
+        if (list.length || !f.omitEmpty) out[f.key] = list;
         break;
       }
       case 'group': {

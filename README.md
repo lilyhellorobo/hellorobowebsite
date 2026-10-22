@@ -249,7 +249,7 @@ JSON file; adding a file adds a page or row.
 |---|---|---|
 | `projects` | name, intro, services, reveal (cover: image or video), background, micrographics (left, right), summary, facts, sections (media / text), testimonial, credits, next, order | `/work/[slug]` |
 | `team` | name, nameJa, role, quote, photo, object (which field object opens the card), model (3D .glb), order | `/team` |
-| `positions` | title, location, hours, type, intro, workOn, bring, howWeWork, applySteps, stamp, order | `/careers`, `/careers/[slug]` |
+| `positions` | title, location, hours, type, intro, workOn, bring, niceToHave, howWeWork, applySteps, outro, stamp, order | `/careers`, `/careers/[slug]` |
 | `episodes` | title, number, guest, guestTitle, description, youtube (video id), portfolioUrl, cover, poster, listed, order | `/robo-radio`, `/robo-radio/[slug]` |
 | `news` | text, image, size (wide / narrow), href, order | Home news row |
 
