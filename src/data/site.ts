@@ -9,9 +9,9 @@ export const mainNav = [
   { label: 'Careers', href: '/careers' },
 ];
 
-/** "Hello Robo in one breath" on every position page (copy from hellorobo.co/careers) */
+/** "Hello Robo in one breath" on every position page (Figma copy) */
 export const oneBreath =
-  'We make the world say yes to robotics companies through brand identity, UX/UI, and video production.';
+  'Hello Robo designs the human side of robotics. From brand to interface, we turn complex systems into products that operators trust, teams can ship, and investors notice.';
 
 export const studio = {
   city: 'New York,',
