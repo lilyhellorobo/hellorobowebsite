@@ -1,0 +1,57 @@
+---
+/**
+ * Project — Summary + facts
+ * Figma: "Frame 2147232893" (10100:12615), 1728×632, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12615
+ */
+import type { CollectionEntry } from 'astro:content';
+import ProjectTextRow from './ProjectTextRow.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { data } = Astro.props.project;
+---
+<section class="project-summary theme-dark">
+  <ProjectTextRow label={data.summary.label} text={data.summary.text} />
+  <div class="project-summary__facts container">
+    <dl class="project-summary__list t-body">
+      {data.facts.map((f) => (
+        <div class="project-summary__fact">
+          <dt>{f.label}</dt>
+          <dd>{f.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+
+<style>
+  .project-summary {
+    padding-bottom: 120px;
+  }
+  .project-summary :global(.project-text-row) {
+    padding-bottom: 0;
+  }
+  .project-summary__facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+    margin-top: 120px;
+  }
+  .project-summary__list {
+    grid-column: 2;
+  }
+  .project-summary__fact {
+    display: flex;
+    justify-content: space-between;
+  }
+  .project-summary__fact + .project-summary__fact {
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+  dd {
+    margin: 0;
+  }
+</style>

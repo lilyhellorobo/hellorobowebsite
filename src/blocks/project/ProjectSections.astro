@@ -1,0 +1,56 @@
+---
+/**
+ * Project — Body sections
+ * Figma: media rows "Frame 2147232899" (10100:12637, gap 48) and text rows
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12637
+ * Media row = 1, 2 or 3 images side by side (gap 12), radius 4. Videos in Figma are stills for now.
+ */
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import ProjectTextRow from './ProjectTextRow.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { sections, name } = Astro.props.project.data;
+---
+<div class="project-sections theme-dark">
+  {sections.map((s, i) =>
+    s.type === 'text' ? (
+      <ProjectTextRow label={s.label} text={s.text} />
+    ) : (
+      <div class:list={['project-media container', `project-media--${s.images.length}`, { 'is-after-media': i > 0 && sections[i - 1].type === 'media' }]}>
+        {s.images.map((img) => (
+          <Image
+            src={img}
+            alt={`${name} — project visual`}
+            widths={s.images.length === 1 ? [1648, 3310] : [818, 1636]}
+            sizes={s.images.length === 1 ? '(min-width: 1728px) 1648px, 95vw' : '(min-width: 1728px) 818px, 48vw'}
+            loading="lazy"
+          />
+        ))}
+      </div>
+    ),
+  )}
+</div>
+
+<style>
+  .project-media {
+    display: grid;
+    gap: var(--gutter);
+  }
+  .project-media.is-after-media {
+    margin-top: 48px;
+  }
+  .project-media--2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .project-media--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .project-media :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+</style>

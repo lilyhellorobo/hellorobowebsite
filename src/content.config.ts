@@ -6,15 +6,29 @@ import { z } from 'astro/zod';
 
 const projects = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/projects' }),
-  schema: z.object({
-    name: z.string(),
-    intro: z.string(),
-    industry: z.string(),
-    operatorSaidYes: z.string(),
-    worldSaidYes: z.string(),
-    services: z.array(z.string()),
-    order: z.number().default(0),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      name: z.string(),
+      intro: z.string(),
+      services: z.array(z.string()),
+      /** Full-bleed visual under the hero ("show logo") */
+      reveal: image(),
+      summary: z.object({ label: z.string(), text: z.string() }),
+      facts: z.array(z.object({ label: z.string(), value: z.string() })),
+      /** Page body: media rows (1–3 images side by side) and text rows, in order */
+      sections: z.array(
+        z.discriminatedUnion('type', [
+          z.object({ type: z.literal('media'), images: z.array(image()).min(1).max(3) }),
+          z.object({ type: z.literal('text'), label: z.string(), text: z.string() }),
+        ]),
+      ),
+      testimonial: z
+        .object({ quote: z.string(), author: z.string(), role: z.string() })
+        .optional(),
+      credits: z.array(z.object({ role: z.string(), name: z.string() })).default([]),
+      next: z.object({ name: z.string(), href: z.string(), image: image() }).optional(),
+      order: z.number().default(0),
+    }),
 });
 
 const team = defineCollection({

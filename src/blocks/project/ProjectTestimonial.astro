@@ -1,0 +1,79 @@
+---
+/**
+ * Project — Testimonial + credits
+ * Figma: "Frame 2147232982" (10100:12938), 1728×1427, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12938
+ */
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { testimonial, credits } = Astro.props.project.data;
+---
+<section class="project-testimonial theme-dark">
+  <div class="project-testimonial__grid container">
+    <img src="/images/project/badge-testimonial.svg" alt="" width="212" height="211" />
+    {testimonial && (
+      <figure class="project-testimonial__quote">
+        <blockquote class="t-h3">{testimonial.quote}</blockquote>
+        <figcaption class="t-body">{testimonial.author}<br />{testimonial.role}</figcaption>
+      </figure>
+    )}
+    {credits.length > 0 && (
+      <>
+        <p class="project-testimonial__label t-body">Ready for the<br />Real World</p>
+        <dl class="project-testimonial__credits t-body">
+          {credits.map((c) => (
+            <div class="project-testimonial__credit">
+              <dt>{c.role}</dt>
+              <dd>{c.name}</dd>
+            </div>
+          ))}
+        </dl>
+      </>
+    )}
+  </div>
+  <img class="project-testimonial__stamp" src="/images/home/stamp-radio-handmade.svg" alt="" width="404" height="222" loading="lazy" />
+</section>
+
+<style>
+  .project-testimonial {
+    padding-top: 180px;
+    padding-bottom: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .project-testimonial__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--gutter);
+    row-gap: 165px;
+    align-items: start;
+  }
+  .project-testimonial__quote blockquote {
+    margin: 0;
+    width: 814px;
+    max-width: 100%;
+  }
+  .project-testimonial__quote figcaption {
+    margin-top: 100px;
+  }
+  .project-testimonial__credit {
+    display: flex;
+    justify-content: space-between;
+  }
+  .project-testimonial__credit + .project-testimonial__credit {
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+  dd {
+    margin: 0;
+  }
+  .project-testimonial__stamp {
+    margin-top: 218px;
+    height: auto;
+  }
+</style>
