@@ -90,6 +90,10 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
     grid-template-columns: calc(138 * var(--px)) calc(277 * var(--px)) 1fr;
     margin-top: calc(-5 * var(--px));
   }
+  /* Keep each label on one line ("Contract to hire" is wider than the Figma column) */
+  .careers-positions__meta span {
+    white-space: nowrap;
+  }
   .careers-positions__link:hover .t-h2 {
     color: var(--color-orange);
   }
