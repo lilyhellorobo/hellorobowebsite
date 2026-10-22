@@ -3,9 +3,9 @@
  * Project — Body sections
  * Figma: media rows "Frame 2147232899" (10100:12637, gap 48) and text rows
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12637
- * Media row = 1, 2 or 3 images side by side (gap 12), radius 4. Videos in Figma are stills for now.
+ * Media row = 1, 2 or 3 images or videos side by side (gap 12), radius 4.
  */
-import { Image } from 'astro:assets';
+import Media from '../../components/ui/Media.astro';
 import type { CollectionEntry } from 'astro:content';
 import ProjectTextRow from './ProjectTextRow.astro';
 
@@ -21,8 +21,8 @@ const { sections, name } = Astro.props.project.data;
     ) : (
       <div class:list={['project-media container', `project-media--${s.images.length}`, { 'is-after-media': i > 0 && sections[i - 1].type === 'media' }]}>
         {s.images.map((img) => (
-          <Image
-            src={img}
+          <Media
+            media={img}
             alt={`${name} — project visual`}
             widths={s.images.length === 1 ? [1648, 3310] : [818, 1636]}
             sizes={s.images.length === 1 ? '(min-width: 1728px) 1648px, 95vw' : '(min-width: 1728px) 818px, 48vw'}
@@ -48,7 +48,8 @@ const { sections, name } = Astro.props.project.data;
   .project-media--3 {
     grid-template-columns: repeat(3, 1fr);
   }
-  .project-media :global(img) {
+  .project-media :global(img),
+  .project-media :global(video) {
     width: 100%;
     height: auto;
     border-radius: calc(4 * var(--px));

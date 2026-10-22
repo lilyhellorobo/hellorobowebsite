@@ -1,0 +1,116 @@
+---
+/**
+ * Add / edit form for one entry. The fields are built in the browser from the
+ * collection's field list (src/cms/collections.ts) by src/cms/client/editor.ts.
+ */
+import AdminLayout from './AdminLayout.astro';
+import type { CmsCollection } from './collections';
+import type { Entry } from './store';
+
+interface Props {
+  c: CmsCollection;
+  entry?: Entry;
+}
+const { c, entry } = Astro.props;
+const isNew = !entry;
+const title = entry ? String(entry.data[c.titleField] ?? entry.id) : `New ${c.singular}`;
+const saved = Astro.url.searchParams.get('saved') != null;
+const config = JSON.stringify({
+  section: c.slug,
+  titleField: c.titleField,
+  fields: c.fields,
+  id: entry?.id ?? null,
+  data: entry?.data ?? null,
+});
+---
+<AdminLayout title={title} active={c.slug}>
+  <header class="cms-head">
+    <div>
+      <a class="cms-crumb" href={`/admin/${c.slug}`}>← {c.label}</a>
+      <h1 data-title>{title}</h1>
+    </div>
+  </header>
+
+  {saved && <p class="cms-notice" role="status" data-saved>Saved.</p>}
+  <div class="cms-notice cms-notice--error" role="alert" data-errors hidden></div>
+
+  <form class="cms-editor" novalidate data-editor>
+    <div class="cms-card" data-fields>
+      <noscript><p>The editor needs JavaScript.</p></noscript>
+    </div>
+
+    <aside class="cms-editor__aside">
+      <div class="cms-field">
+        <label for="entry-id">File name</label>
+        {isNew ? (
+          <input
+            id="entry-id"
+            name="id"
+            type="text"
+            required
+            pattern="[a-z0-9]+(-[a-z0-9]+)*"
+            autocomplete="off"
+            spellcheck="false"
+            data-id
+          />
+        ) : (
+          <input id="entry-id" type="text" value={entry.id} readonly />
+        )}
+        <p class="cms-hint">
+          {isNew
+            ? 'Lowercase letters, numbers and dashes. Used in links; can’t be changed later.'
+            : 'Used in links, so it stays the same.'}
+        </p>
+      </div>
+      <button class="cms-btn cms-btn--block" type="submit" data-save>
+        {isNew ? `Add ${c.singular}` : 'Save changes'}
+      </button>
+      {!isNew && c.siteUrl && (
+        <a class="cms-btn cms-btn--ghost cms-btn--block" href={c.siteUrl(entry.id)} target="_blank" rel="noopener">
+          View on site ↗
+        </a>
+      )}
+      {!isNew && (
+        <button
+          class="cms-btn cms-btn--danger cms-btn--block"
+          type="button"
+          data-delete={entry.id}
+          data-title={title}
+        >
+          Delete {c.singular}
+        </button>
+      )}
+    </aside>
+  </form>
+
+  <dialog class="cms-dialog" id="confirm-delete" data-section={c.slug}>
+    <form method="dialog">
+      <h2>Delete this {c.singular}?</h2>
+      <p class="cms-muted"><span data-name></span> will be removed from the site, along with its images. This can’t be undone.</p>
+      <p class="cms-notice cms-notice--error" data-error hidden></p>
+      <div class="cms-dialog__actions">
+        <button class="cms-btn cms-btn--ghost" value="cancel">Cancel</button>
+        <button class="cms-btn cms-btn--danger cms-btn--solid" value="delete" data-confirm>Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="application/json" id="cms-config" set:html={config.replace(/</g, '\\u003c')} />
+</AdminLayout>
+
+<script>
+  import { mountEditor } from './client/editor';
+  import { confirmDelete } from './client/delete';
+
+  const config = JSON.parse(document.getElementById('cms-config')!.textContent!);
+  const { markSaved } = mountEditor(document.querySelector<HTMLFormElement>('[data-editor]')!, config);
+
+  const del = document.querySelector<HTMLButtonElement>('[data-delete]');
+  const dialog = document.querySelector<HTMLDialogElement>('#confirm-delete')!;
+  del?.addEventListener('click', async () => {
+    if (await confirmDelete(dialog, config.section, del.dataset.delete!, del.dataset.title!)) {
+      markSaved();
+      location.href = `/admin/${config.section}?deleted=${encodeURIComponent(del.dataset.title!)}`;
+    }
+  });
+</script>

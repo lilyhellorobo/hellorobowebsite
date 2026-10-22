@@ -1,0 +1,109 @@
+{
+  "name": "Transitive Robotics",
+  "intro": "Hello Robo partnered with Transitive Robotics to reimagine the brand and website of a platform that gives robotics companies the tools to build, operate, and scale their own robot fleets.",
+  "services": [
+    "Brand Strategy",
+    "Brand Identity",
+    "UX/UI"
+  ],
+  "reveal": "../../assets/projects/transitive-robotics/media-01.jpg",
+  "micrographics": {
+    "left": "/images/project/badge-25.svg",
+    "right": "/images/project/stamp-project-hero.svg"
+  },
+  "summary": {
+    "label": "What Made People Say Yes",
+    "text": "A new brand and website for the platform robotics teams use to build, operate, and scale their own robot fleets."
+  },
+  "facts": [
+    {
+      "label": "Industry",
+      "value": "Robotics software"
+    },
+    {
+      "label": "Services",
+      "value": "Brand, Website"
+    }
+  ],
+  "sections": [
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-02.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-03.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-04.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-05.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-06.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-07.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-08.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-09.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-10.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-11.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-12.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/media-13.jpg"
+      ]
+    }
+  ],
+  "credits": [],
+  "next": {
+    "name": "Weekly Robotics",
+    "href": "/work/weekly-robotics",
+    "image": "../../assets/projects/weekly-robotics/logo-reveal.png"
+  },
+  "order": 4
+}

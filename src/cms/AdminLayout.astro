@@ -1,0 +1,62 @@
+---
+/**
+ * CMS shell: left-hand nav (Team, Updates, Projects), signed-in user, page content.
+ * Separate from the site's BaseLayout so CMS styles never reach the site.
+ */
+import '../styles/fonts.css';
+import './admin.css';
+import RoboLogo from '../components/icons/RoboLogo.astro';
+import { CMS_COLLECTIONS } from './collections';
+
+interface Props {
+  title: string;
+  /** Slug of the CMS section to highlight in the nav */
+  active?: string;
+}
+const { title, active } = Astro.props;
+const user = Astro.locals.user;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} · Hello Robo CMS</title>
+  </head>
+  <body class="cms">
+    {user ? (
+      <div class="cms-shell">
+        <aside class="cms-side">
+          <a class="cms-brand" href="/admin">
+            <RoboLogo width={44} />
+            <span>Hello Robo <span class="cms-muted">CMS</span></span>
+          </a>
+          <nav class="cms-nav" aria-label="CMS">
+            <ul>
+              {CMS_COLLECTIONS.map((c) => (
+                <li>
+                  <a href={`/admin/${c.slug}`} aria-current={active === c.slug ? 'page' : undefined}>
+                    {c.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div class="cms-side__foot">
+            <a class="cms-link" href="/" target="_blank" rel="noopener">View site ↗</a>
+            <p class="cms-muted cms-small" title={user.email}>{user.email}</p>
+            <form method="post" action="/admin/logout">
+              <button class="cms-btn cms-btn--ghost cms-btn--small" type="submit">Log out</button>
+            </form>
+          </div>
+        </aside>
+        <main class="cms-main">
+          <slot />
+        </main>
+      </div>
+    ) : (
+      <slot />
+    )}
+  </body>
+</html>

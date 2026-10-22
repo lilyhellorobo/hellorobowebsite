@@ -3,24 +3,26 @@
  * Project — Hero + logo reveal
  * Figma: "Frame 2147232848" (10100:12388, 1728×814) and "Frame 2147232797" (10100:12374, 1728×944)
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12388
+ * The two micrographics (round badge, stamp) are picked per project in the CMS.
  */
-import { Image } from 'astro:assets';
+import Media from '../../components/ui/Media.astro';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
   project: CollectionEntry<'projects'>;
 }
 const { data } = Astro.props.project;
+const { micrographics } = data;
 ---
 <section class="project-hero theme-dark">
   <h1 class="project-hero__title t-h1 container">{data.name}</h1>
   <span class="project-hero__plus t-h1" aria-hidden="true">+</span>
-  <img class="project-hero__badge" src="/images/project/badge-25.svg" alt="" width="200" style="--w: 200" height="200" />
-  <img class="project-hero__stamp" src="/images/project/stamp-project-hero.svg" alt="" width="238" style="--w: 238" height="90" />
+  {micrographics.left && <img class="project-hero__badge" src={micrographics.left} alt="" width="200" />}
+  {micrographics.right && <img class="project-hero__stamp" src={micrographics.right} alt="" width="238" />}
   <p class="project-hero__intro t-body">{data.intro}</p>
 </section>
 <section class="project-reveal" aria-label={`${data.name} identity`}>
-  <Image src={data.reveal} alt="" widths={[1728, 3456]} sizes="100vw" loading="eager" />
+  <Media media={data.reveal} widths={[1728, 3456]} sizes="100vw" loading="eager" />
 </section>
 
 <style>
@@ -42,14 +44,15 @@ const { data } = Astro.props.project;
     position: absolute;
     height: auto;
   }
+  /* Anchored by their bottom edge (770 / 774 in Figma) so taller graphics grow upwards */
   .project-hero__badge {
     left: var(--page-margin);
-    top: calc(570 / 814 * 100%);
+    bottom: calc((814 - 770) / 814 * 100%);
     width: calc(200 / 1728 * 100%);
   }
   .project-hero__stamp {
     left: calc(286 / 1728 * 100%);
-    top: calc(684 / 814 * 100%);
+    bottom: calc((814 - 774) / 814 * 100%);
     width: calc(238 / 1728 * 100%);
   }
   .project-hero__intro {
@@ -64,7 +67,8 @@ const { data } = Astro.props.project;
     background: var(--color-ink);
     overflow: hidden;
   }
-  .project-reveal :global(img) {
+  .project-reveal :global(img),
+  .project-reveal :global(video) {
     width: 100%;
     height: 100%;
     object-fit: cover;

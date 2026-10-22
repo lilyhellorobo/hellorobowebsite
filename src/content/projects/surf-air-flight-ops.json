@@ -1,0 +1,133 @@
+{
+  "name": "Surf Air Flight Ops",
+  "intro": "Hello Robo partnered with Surf Air Mobility to redesign an app that helps pilots manage their daily tasks.",
+  "services": [
+    "Fleet Management Design",
+    "Brand Identity",
+    "Video Production"
+  ],
+  "reveal": "../../assets/projects/surf-air-flight-ops/reveal.png",
+  "micrographics": {
+    "left": "/images/project/badge-25.svg",
+    "right": "/images/project/stamp-project-hero.svg"
+  },
+  "summary": {
+    "label": "What Made People Say Yes",
+    "text": "Flight Ops is the first AI-based app built to help pilots manage their daily tasks — designed for a publicly traded airline operator."
+  },
+  "facts": [
+    {
+      "label": "Industry",
+      "value": "Aviation"
+    },
+    {
+      "label": "Client",
+      "value": "Surf Air Mobility"
+    }
+  ],
+  "sections": [
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-01.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-02.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-03.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-04.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-05.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-06.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-07.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-08.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-09.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-10.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-11.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-12.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-13.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-14.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-15.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-16.avif"
+      ]
+    }
+  ],
+  "credits": [],
+  "next": {
+    "name": "Bedrock Robotics",
+    "href": "/work/bedrock-robotics",
+    "image": "../../assets/projects/bedrock-robotics/reveal.png"
+  },
+  "order": 1
+}
