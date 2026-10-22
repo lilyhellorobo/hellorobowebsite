@@ -1,0 +1,888 @@
+/**
+ * Builds the entry form from a collection's field list and saves it.
+ * Each field renderer returns its element plus a `get()` that reads the current value;
+ * new images are sent as files and written into the data as "upload:<token>".
+ */
+import { youtubeId, type Field } from '../collections';
+
+type Value = unknown;
+type Data = Record<string, Value>;
+
+interface Control {
+  el: HTMLElement;
+  get(): Value;
+  /** Returns messages for empty required images (browser validation covers inputs) */
+  check?(): string[];
+}
+
+interface Config {
+  section: string;
+  titleField: string;
+  fields: Field[];
+  id: string | null;
+  data: Data | null;
+}
+
+const uploads = new Map<string, File>();
+let uid = 0;
+const nextId = (prefix: string) => `${prefix}-${++uid}`;
+
+function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  props: Record<string, unknown> = {},
+  ...children: (Node | string | null | false)[]
+): HTMLElementTagNameMap[K] {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = String(v);
+    else if (k === 'text') el.textContent = String(v);
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v as EventListener);
+    else if (k in el && typeof v !== 'string') (el as unknown as Data)[k] = v;
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const c of children) if (c) el.append(c);
+  return el;
+}
+
+function labelRow(text: string, forId?: string, required?: boolean, extra?: Node) {
+  return h(
+    'div',
+    { class: 'cms-field__label' },
+    h('label', { for: forId }, text, required ? h('span', { class: 'cms-req', text: ' *' }) : null),
+    extra ?? null,
+  );
+}
+
+const hint = (text?: string) => (text ? h('p', { class: 'cms-hint', text }) : null);
+
+function iconButton(label: string, symbol: string, onclick: () => void, danger = false) {
+  return h('button', {
+    type: 'button',
+    class: `cms-icon-btn${danger ? ' cms-icon-btn--danger' : ''}`,
+    'aria-label': label,
+    title: label,
+    text: symbol,
+    onclick,
+  });
+}
+
+// --- Images ---
+
+function mediaUrl(ref: string) {
+  return `/admin/media?ref=${encodeURIComponent(ref)}`;
+}
+
+type MediaValue = string | { video: string };
+const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,image/avif,image/svg+xml';
+const VIDEO_ACCEPT = 'video/mp4,video/webm,.mp4,.webm';
+const isVideoValue = (v: unknown): v is { video: string } =>
+  !!v && typeof v === 'object' && typeof (v as { video?: unknown }).video === 'string';
+
+/** One image (or, with allowVideo, video) slot: shows the current media, click or drop to replace */
+function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false) {
+  let ref: MediaValue = isVideoValue(initial) ? { video: initial.video } : typeof initial === 'string' ? initial : '';
+  let token = '';
+  let preview = '';
+  let previewIsVideo = false;
+  const kind = allowVideo ? 'an image or video' : 'an image';
+  const input = h('input', { type: 'file', accept: allowVideo ? `${IMAGE_ACCEPT},${VIDEO_ACCEPT}` : IMAGE_ACCEPT });
+  const box = h('div', { class: 'cms-image' });
+  const error = h('span', { class: 'cms-image__error' });
+
+  const render = () => {
+    box.replaceChildren();
+    const isVideo = preview ? previewIsVideo : isVideoValue(ref);
+    const src = preview || (isVideoValue(ref) ? mediaUrl(ref.video) : ref ? mediaUrl(ref) : '');
+    box.classList.toggle('cms-image--filled', !!src);
+    if (src && isVideo) {
+      box.append(
+        h('video', { src, muted: true, loop: true, autoplay: true, playsInline: true, preload: 'metadata' }),
+        h('span', { class: 'cms-image__tag', text: 'Video' }),
+      );
+    } else if (src) {
+      box.append(h('img', { src, alt: '' }));
+    } else {
+      box.append(h('span', { text: `Click or drop ${kind}` }));
+    }
+    if (error.textContent) box.append(error);
+    if (src && onRemove) {
+      box.append(
+        h('button', {
+          type: 'button',
+          class: 'cms-icon-btn cms-icon-btn--danger cms-image__remove',
+          'aria-label': 'Remove',
+          title: 'Remove',
+          text: '×',
+          onclick: (e: Event) => {
+            e.stopPropagation();
+            onRemove();
+          },
+        }),
+      );
+    }
+    box.append(input);
+  };
+
+  const setFile = (file: File | undefined) => {
+    if (!file) return;
+    const video = /^video\//.test(file.type) || /\.(mp4|webm|mov|m4v)$/i.test(file.name);
+    error.textContent = '';
+    if (video && !allowVideo) return;
+    if (video && !/\.(mp4|webm)$/i.test(file.name)) {
+      error.textContent = 'Use MP4 (H.264) or WebM';
+      render();
+      return;
+    }
+    if (!video && !file.type.startsWith('image/')) return;
+    if (token) uploads.delete(token);
+    if (preview) URL.revokeObjectURL(preview);
+    token = `upload:${crypto.randomUUID()}`;
+    uploads.set(token, file);
+    preview = URL.createObjectURL(file);
+    previewIsVideo = video;
+    box.closest('.cms-field')?.classList.remove('cms-field--invalid');
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+  };
+
+  input.addEventListener('change', () => setFile(input.files?.[0]));
+  box.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    box.classList.add('cms-image--dragover');
+  });
+  box.addEventListener('dragleave', () => box.classList.remove('cms-image--dragover'));
+  box.addEventListener('drop', (e) => {
+    e.preventDefault();
+    box.classList.remove('cms-image--dragover');
+    setFile(e.dataTransfer?.files[0]);
+  });
+  render();
+
+  return {
+    el: box,
+    input,
+    get: (): MediaValue => token || ref,
+    clear() {
+      if (token) uploads.delete(token);
+      ref = token = preview = '';
+      render();
+    },
+  };
+}
+
+// --- Micrographics library ---
+
+interface LibraryItem {
+  path: string;
+  name: string;
+  group: string;
+}
+
+let library: Promise<LibraryItem[]> | null = null;
+const loadLibrary = (fresh = false) => {
+  if (!library || fresh) {
+    library = fetch('/admin/api/library').then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))));
+  }
+  return library;
+};
+
+async function uploadToLibrary(file: File): Promise<LibraryItem> {
+  const body = new FormData();
+  body.set('file', file);
+  const res = await fetch('/admin/api/library', { method: 'POST', body });
+  const result = await res.json().catch(() => ({ error: res.statusText }));
+  if (!res.ok) throw new Error(result.error ?? 'Upload failed');
+  loadLibrary(true);
+  return result;
+}
+
+/** Opens the library dialog; resolves with the chosen item, or null if closed */
+function pickFromLibrary(current: string): Promise<LibraryItem | null> {
+  return new Promise((resolve) => {
+    let chosen: LibraryItem | null = null;
+    const search = h('input', { type: 'search', placeholder: 'Search the library…', 'aria-label': 'Search the library' });
+    const grid = h('div', { class: 'cms-library__grid' }, h('p', { class: 'cms-muted', text: 'Loading…' }));
+    const error = h('p', { class: 'cms-notice cms-notice--error', hidden: true });
+    const file = h('input', { type: 'file', accept: 'image/svg+xml,image/png,image/webp', hidden: true });
+    const dialog = h(
+      'dialog',
+      { class: 'cms-dialog cms-library' },
+      h(
+        'div',
+        { class: 'cms-library__head' },
+        h('h2', { text: 'Hello Robo library' }),
+        h('button', { type: 'button', class: 'cms-icon-btn', 'aria-label': 'Close', text: '×', onclick: () => dialog.close() }),
+      ),
+      h(
+        'div',
+        { class: 'cms-library__tools' },
+        search,
+        h('button', { type: 'button', class: 'cms-btn cms-btn--ghost cms-btn--small', text: 'Upload new', onclick: () => file.click() }),
+        file,
+      ),
+      error,
+      grid,
+    );
+
+    let items: LibraryItem[] = [];
+    const render = () => {
+      const q = search.value.trim().toLowerCase();
+      const shown = items.filter((i) => !q || i.name.toLowerCase().includes(q));
+      const groups = [...new Set(shown.map((i) => i.group))];
+      grid.replaceChildren(
+        ...(shown.length ? [] : [h('p', { class: 'cms-muted', text: 'Nothing matches.' })]),
+        ...groups.flatMap((g) => [
+          h('p', { class: 'cms-library__group', text: g }),
+          ...shown
+            .filter((i) => i.group === g)
+            .map((i) =>
+              h(
+                'button',
+                {
+                  type: 'button',
+                  class: `cms-library__item${i.path === current ? ' is-current' : ''}`,
+                  title: i.path,
+                  onclick: () => {
+                    chosen = i;
+                    dialog.close();
+                  },
+                },
+                h('span', { class: 'cms-graphic-tile' }, h('img', { src: i.path, alt: '', loading: 'lazy' })),
+                h('span', { class: 'cms-library__name', text: i.name }),
+              ),
+            ),
+        ]),
+      );
+    };
+    search.addEventListener('input', render);
+    file.addEventListener('change', async () => {
+      const f = file.files?.[0];
+      if (!f) return;
+      error.hidden = true;
+      try {
+        chosen = await uploadToLibrary(f);
+        dialog.close();
+      } catch (err) {
+        error.textContent = (err as Error).message;
+        error.hidden = false;
+      }
+    });
+    dialog.addEventListener('close', () => {
+      dialog.remove();
+      resolve(chosen);
+    });
+
+    document.body.append(dialog);
+    dialog.showModal();
+    loadLibrary()
+      .then((list) => {
+        items = list;
+        render();
+      })
+      .catch(() => grid.replaceChildren(h('p', { class: 'cms-muted', text: 'Couldn’t load the library.' })));
+  });
+}
+
+// --- 3D model preview ---
+
+const MODEL_VIEWER = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
+let modelViewer: Promise<unknown> | null = null;
+const loadModelViewer = () => {
+  if (!modelViewer) {
+    modelViewer = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.src = MODEL_VIEWER;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.append(s);
+    });
+  }
+  return modelViewer;
+};
+
+const formatSize = (bytes: number) =>
+  bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+// --- Field renderers ---
+
+function control(f: Field, value: Value, path: string): Control {
+  const id = nextId('f');
+  switch (f.kind) {
+    case 'text':
+    case 'textarea': {
+      const input =
+        f.kind === 'text'
+          ? h('input', { id, type: 'text', value: typeof value === 'string' ? value : '', lang: f.lang })
+          : h('textarea', { id, rows: 4 }, typeof value === 'string' ? value : '');
+      input.required = !!f.required;
+      input.dataset.path = path;
+      return {
+        el: h('div', { class: 'cms-field' }, labelRow(f.label, id, f.required), input, hint(f.hint)),
+        get: () => input.value,
+      };
+    }
+    case 'number': {
+      const input = h('input', { id, type: 'number', step: 'any', value: String(value ?? f.default ?? 0) });
+      return {
+        el: h('div', { class: 'cms-field' }, labelRow(f.label, id), input, hint(f.hint)),
+        get: () => (input.value === '' ? (f.default ?? 0) : Number(input.value)),
+      };
+    }
+    case 'select': {
+      const select = h(
+        'select',
+        { id, required: true },
+        h('option', { value: '', text: 'Choose…' }),
+        ...f.options.map((o) => h('option', { value: o.value, text: o.label, selected: o.value === value })),
+      );
+      return {
+        el: h('div', { class: 'cms-field' }, labelRow(f.label, id, true), select, hint(f.hint)),
+        get: () => select.value,
+      };
+    }
+    case 'boolean': {
+      const input = h('input', { id, type: 'checkbox', checked: typeof value === 'boolean' ? value : !!f.default });
+      return {
+        el: h('div', { class: 'cms-field' }, h('label', { class: 'cms-switch', for: id }, input, f.label), hint(f.hint)),
+        get: () => input.checked,
+      };
+    }
+    case 'color': {
+      const HEX = /^#[0-9a-fA-F]{6}$/;
+      const initial = typeof value === 'string' ? value : '';
+      const text = h('input', { id, type: 'text', value: initial, placeholder: f.placeholder, spellcheck: false, 'aria-label': `${f.label} (hex)` });
+      const swatch = h('input', { type: 'color', value: HEX.test(initial) ? initial : (f.placeholder ?? '#000000'), 'aria-label': `${f.label} picker` });
+      const clear = h('button', { type: 'button', class: 'cms-btn cms-btn--ghost cms-btn--small', text: 'Default' });
+      const sync = () => {
+        const v = text.value.trim();
+        text.setCustomValidity(v && !HEX.test(v) ? 'Use a hex color like #FF6B03' : '');
+        // Micrographic previews (here and in the library dialog) sit on the project's background
+        document.documentElement.style.setProperty('--cms-graphic-bg', HEX.test(v) ? v : '');
+      };
+      swatch.addEventListener('input', () => {
+        text.value = swatch.value.toUpperCase();
+        text.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      text.addEventListener('input', () => {
+        if (HEX.test(text.value.trim())) swatch.value = text.value.trim();
+        sync();
+      });
+      clear.addEventListener('click', () => {
+        text.value = '';
+        swatch.value = f.placeholder ?? '#000000';
+        text.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      requestAnimationFrame(sync);
+      return {
+        el: h(
+          'div',
+          { class: 'cms-field' },
+          labelRow(f.label, id),
+          h('div', { class: 'cms-color' }, swatch, text, clear),
+          hint(f.hint),
+        ),
+        get: () => text.value.trim(),
+      };
+    }
+    case 'graphic': {
+      let current = typeof value === 'string' ? value : '';
+      const tile = h('button', {
+        type: 'button',
+        class: 'cms-graphic-tile cms-graphic-tile--large',
+        'aria-label': `${f.label}: choose from library`,
+      });
+      const name = h('span', { class: 'cms-hint' });
+      const error = h('p', { class: 'cms-hint cms-graphic__error', hidden: true });
+      const remove = h('button', { type: 'button', class: 'cms-btn cms-btn--danger cms-btn--small', text: 'None' });
+      const file = h('input', { type: 'file', accept: 'image/svg+xml,image/png,image/webp', hidden: true });
+      const render = () => {
+        tile.replaceChildren(current ? h('img', { src: current, alt: '' }) : h('span', { text: 'None' }));
+        name.textContent = current ? current.split('/').pop()! : 'No graphic';
+        remove.hidden = !current;
+      };
+      const set = (path: string) => {
+        current = path;
+        error.hidden = true;
+        render();
+        tile.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      const choose = async () => {
+        const item = await pickFromLibrary(current);
+        if (item) set(item.path);
+      };
+      tile.addEventListener('click', choose);
+      remove.addEventListener('click', () => set(''));
+      file.addEventListener('change', async () => {
+        const f = file.files?.[0];
+        file.value = '';
+        if (!f) return;
+        try {
+          set((await uploadToLibrary(f)).path);
+        } catch (err) {
+          error.textContent = (err as Error).message;
+          error.hidden = false;
+        }
+      });
+      render();
+      return {
+        el: h(
+          'div',
+          { class: 'cms-field' },
+          labelRow(f.label),
+          h(
+            'div',
+            { class: 'cms-graphic' },
+            tile,
+            h(
+              'div',
+              { class: 'cms-graphic__side' },
+              name,
+              h(
+                'div',
+                { class: 'cms-add-row' },
+                h('button', { type: 'button', class: 'cms-btn cms-btn--ghost cms-btn--small', text: 'Choose from library', onclick: choose }),
+                h('button', { type: 'button', class: 'cms-btn cms-btn--ghost cms-btn--small', text: 'Upload new', onclick: () => file.click() }),
+                remove,
+                file,
+              ),
+              error,
+            ),
+          ),
+          hint(f.hint),
+        ),
+        get: () => current,
+      };
+    }
+    case 'model': {
+      let ref = typeof value === 'string' ? value : '';
+      let token = '';
+      let preview = '';
+      let info = '';
+      const stage = h('div', { class: 'cms-model__stage' });
+      const name = h('span', { class: 'cms-model__name' });
+      const meta = h('span', { class: 'cms-hint' });
+      const error = h('p', { class: 'cms-hint cms-graphic__error', hidden: true });
+      const file = h('input', { id, type: 'file', accept: '.glb,model/gltf-binary', hidden: true });
+      const pick = h('button', { type: 'button', class: 'cms-btn cms-btn--ghost cms-btn--small', onclick: () => file.click() });
+      const remove = h('button', { type: 'button', class: 'cms-btn cms-btn--danger cms-btn--small', text: 'Remove' });
+
+      const render = () => {
+        const src = preview || (ref ? mediaUrl(ref) : '');
+        stage.replaceChildren();
+        if (src) {
+          const viewer = document.createElement('model-viewer');
+          Object.entries({
+            src,
+            alt: `${f.label} preview`,
+            'camera-controls': '',
+            'auto-rotate': '',
+            'shadow-intensity': '0.6',
+            exposure: '1',
+          }).forEach(([k, v]) => viewer.setAttribute(k, v));
+          stage.append(viewer, h('span', { class: 'cms-model__help', text: 'Drag to rotate · scroll to zoom' }));
+          loadModelViewer().catch(() => {
+            stage.replaceChildren(h('span', { class: 'cms-muted', text: 'Preview unavailable' }));
+          });
+        } else {
+          stage.append(h('span', { class: 'cms-muted', text: 'No 3D object yet' }));
+        }
+        name.textContent = src ? (token ? uploads.get(token)!.name : ref.split('/').pop()!) : '';
+        meta.textContent = info;
+        pick.textContent = src ? 'Replace .glb' : 'Upload .glb';
+        remove.hidden = !src;
+      };
+
+      const setFile = (f2: File | undefined) => {
+        if (!f2) return;
+        error.hidden = true;
+        if (!/\.glb$/i.test(f2.name)) {
+          error.textContent = /\.(obj|fbx|gltf|stl|usdz|dae|blend)$/i.test(f2.name)
+            ? 'Please export it as GLB: glTF 2.0 → “glTF Binary (.glb)” (Blender: File → Export → glTF 2.0).'
+            : 'Choose a .glb file.';
+          error.hidden = false;
+          return;
+        }
+        if (token) uploads.delete(token);
+        if (preview) URL.revokeObjectURL(preview);
+        token = `upload:${crypto.randomUUID()}`;
+        uploads.set(token, f2);
+        preview = URL.createObjectURL(f2);
+        info = `${formatSize(f2.size)} · uploads when you save${f2.size > 5 * 1024 * 1024 ? ' · large for the web, consider compressing' : ''}`;
+        stage.dispatchEvent(new Event('input', { bubbles: true }));
+        render();
+      };
+
+      file.addEventListener('change', () => {
+        setFile(file.files?.[0]);
+        file.value = '';
+      });
+      stage.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        stage.classList.add('cms-image--dragover');
+      });
+      stage.addEventListener('dragleave', () => stage.classList.remove('cms-image--dragover'));
+      stage.addEventListener('drop', (e) => {
+        e.preventDefault();
+        stage.classList.remove('cms-image--dragover');
+        setFile(e.dataTransfer?.files[0]);
+      });
+      remove.addEventListener('click', () => {
+        if (token) uploads.delete(token);
+        if (preview) URL.revokeObjectURL(preview);
+        ref = token = preview = info = '';
+        stage.dispatchEvent(new Event('input', { bubbles: true }));
+        render();
+      });
+      render();
+
+      return {
+        el: h(
+          'div',
+          { class: 'cms-field' },
+          labelRow(f.label, id, f.required),
+          h(
+            'div',
+            { class: 'cms-model' },
+            stage,
+            h('div', { class: 'cms-graphic__side' }, name, meta, h('div', { class: 'cms-add-row' }, pick, remove, file), error),
+          ),
+          hint(f.hint),
+        ),
+        get: () => token || ref,
+        check: () => (f.required && !token && !ref ? [`${f.label} is required`] : []),
+      };
+    }
+    case 'youtube': {
+      const input = h('input', {
+        id,
+        type: 'text',
+        inputmode: 'url',
+        placeholder: 'https://www.youtube.com/watch?v=…',
+        value: typeof value === 'string' && value ? `https://www.youtube.com/watch?v=${value}` : '',
+      });
+      input.required = !!f.required;
+      const preview = h('a', { class: 'cms-youtube', target: '_blank', rel: 'noopener' });
+      const sync = () => {
+        const vid = youtubeId(input.value);
+        input.setCustomValidity(input.value.trim() && !vid ? 'Paste a YouTube video link' : '');
+        preview.hidden = !vid;
+        if (vid) {
+          preview.href = `https://www.youtube.com/watch?v=${vid}`;
+          preview.replaceChildren(
+            h('img', { src: `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`, alt: '' }),
+            h('span', { text: 'Open on YouTube ↗' }),
+          );
+        }
+      };
+      input.addEventListener('input', sync);
+      sync();
+      return {
+        el: h('div', { class: 'cms-field' }, labelRow(f.label, id, f.required), input, preview, hint(f.hint)),
+        get: () => input.value,
+      };
+    }
+    case 'image': {
+      let slot: ReturnType<typeof imageSlot>;
+      slot = imageSlot(value, f.required ? undefined : () => slot.clear(), f.video);
+      slot.input.id = id;
+      const el = h('div', { class: 'cms-field' }, labelRow(f.label, id, f.required), slot.el, hint(f.hint));
+      return {
+        el,
+        get: slot.get,
+        check: () => {
+          const missing = f.required && !slot.get();
+          el.classList.toggle('cms-field--invalid', !!missing);
+          return missing ? [`${f.label} is required`] : [];
+        },
+      };
+    }
+    case 'images': {
+      // Filled slots plus one empty slot at the end (until there are `max` images)
+      const wrap = h('div', { class: 'cms-images' });
+      const slots: ReturnType<typeof imageSlot>[] = [];
+      const el = h('div', { class: 'cms-field' }, labelRow(f.label, undefined, true), wrap, hint(f.hint));
+      const ensureEmpty = () => {
+        if (slots.length < f.max && slots.every((s) => s.get())) add('');
+      };
+      const add = (ref: unknown) => {
+        const slot = imageSlot(ref, () => {
+          slots.splice(slots.indexOf(slot), 1);
+          slot.el.remove();
+          ensureEmpty();
+        }, f.video);
+        slot.el.addEventListener('input', ensureEmpty);
+        slots.push(slot);
+        wrap.append(slot.el);
+      };
+      (Array.isArray(value) ? value : []).slice(0, f.max).forEach((ref) => add(ref));
+      ensureEmpty();
+      return {
+        el,
+        get: () => slots.map((s) => s.get()).filter(Boolean),
+        check: () => {
+          const missing = !slots.some((s) => s.get());
+          el.classList.toggle('cms-field--invalid', missing);
+          return missing ? [`${f.label}: add at least one ${f.video ? 'image or video' : 'image'}`] : [];
+        },
+      };
+    }
+    case 'strings': {
+      const rows = h('div', { class: 'cms-items' });
+      const inputs: (HTMLInputElement | HTMLTextAreaElement)[] = [];
+      const add = (v = '', focus = false) => {
+        const input = f.multiline
+          ? h('textarea', { rows: 3, 'aria-label': f.item }, v)
+          : h('input', { type: 'text', value: v, 'aria-label': f.item });
+        const row = h(
+          'div',
+          { class: 'cms-string-row' },
+          input,
+          iconButton(`Remove ${f.item}`, '×', () => {
+            inputs.splice(inputs.indexOf(input), 1);
+            row.remove();
+          }, true),
+        );
+        inputs.push(input);
+        rows.append(row);
+        if (focus) input.focus();
+      };
+      (Array.isArray(value) ? value : []).forEach((v) => add(String(v)));
+      return {
+        el: h(
+          'div',
+          { class: 'cms-field' },
+          labelRow(f.label),
+          rows,
+          h('div', { class: 'cms-add-row' },
+            h('button', { type: 'button', class: 'cms-btn cms-btn--ghost cms-btn--small', text: `+ Add ${f.item}`, onclick: () => add('', true) }),
+          ),
+          hint(f.hint),
+        ),
+        get: () => inputs.map((i) => i.value),
+      };
+    }
+    case 'group': {
+      const inner = fieldsControl(f.fields, (value as Data) ?? {}, path);
+      const set = h('fieldset', { class: 'cms-fieldset' });
+      if (f.optional) {
+        const toggle = h('input', { type: 'checkbox', checked: value != null });
+        const sync = () => {
+          set.toggleAttribute('data-off', !toggle.checked);
+          set.disabled = !toggle.checked;
+        };
+        toggle.addEventListener('change', sync);
+        set.append(h('legend', {}, h('label', { class: 'cms-switch' }, toggle, f.label)));
+        set.append(hint(f.hint) ?? '', ...inner.els);
+        sync();
+        return { el: set, get: () => (toggle.checked ? inner.get() : null), check: () => (toggle.checked ? inner.check() : []) };
+      }
+      set.append(h('legend', { text: f.label }), hint(f.hint) ?? '', ...inner.els);
+      return { el: set, get: inner.get, check: inner.check };
+    }
+    case 'list':
+    case 'blocks':
+      return repeater(f, value, path);
+  }
+}
+
+/** Repeatable items (list of objects, or typed blocks) with move / remove */
+function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, path: string): Control {
+  const items = h('div', { class: 'cms-items' });
+  const entries: { el: HTMLElement; type?: string; inner: ReturnType<typeof fieldsControl> }[] = [];
+
+  const renumber = () => {
+    entries.forEach((e, i) => {
+      const bar = e.el.querySelector('.cms-item__bar span')!;
+      const variant = f.kind === 'blocks' ? f.variants.find((v) => v.type === e.type)?.label : f.item;
+      bar.textContent = `${variant} ${i + 1}`;
+      const [up, down] = e.el.querySelectorAll<HTMLButtonElement>('[data-move]');
+      up.disabled = i === 0;
+      down.disabled = i === entries.length - 1;
+    });
+  };
+
+  const add = (data: Data, type?: string) => {
+    const fields = f.kind === 'blocks' ? (f.variants.find((v) => v.type === type)?.fields ?? []) : f.fields;
+    const inner = fieldsControl(fields, data, path);
+    const entry = { el: h('div', { class: 'cms-item' }), type, inner };
+    const move = (by: number) => {
+      const i = entries.indexOf(entry);
+      const j = i + by;
+      if (j < 0 || j >= entries.length) return;
+      entries.splice(i, 1);
+      entries.splice(j, 0, entry);
+      items.replaceChildren(...entries.map((e) => e.el));
+      renumber();
+    };
+    const up = iconButton('Move up', '↑', () => move(-1));
+    const down = iconButton('Move down', '↓', () => move(1));
+    up.dataset.move = down.dataset.move = '';
+    entry.el.append(
+      h(
+        'div',
+        { class: 'cms-item__bar' },
+        h('span'),
+        h(
+          'div',
+          { class: 'cms-item__tools' },
+          up,
+          down,
+          iconButton('Remove', '×', () => {
+            entries.splice(entries.indexOf(entry), 1);
+            entry.el.remove();
+            renumber();
+          }, true),
+        ),
+      ),
+      ...inner.els,
+    );
+    entries.push(entry);
+    items.append(entry.el);
+    renumber();
+    return entry;
+  };
+
+  for (const item of Array.isArray(value) ? (value as Data[]) : []) {
+    add(item, f.kind === 'blocks' ? String(item.type) : undefined);
+  }
+
+  const addButtons =
+    f.kind === 'blocks'
+      ? f.variants.map((v) =>
+          h('button', {
+            type: 'button',
+            class: 'cms-btn cms-btn--ghost cms-btn--small',
+            text: `+ ${v.label}`,
+            onclick: () => add({}, v.type).el.scrollIntoView({ block: 'nearest' }),
+          }),
+        )
+      : [
+          h('button', {
+            type: 'button',
+            class: 'cms-btn cms-btn--ghost cms-btn--small',
+            text: `+ Add ${f.item}`,
+            onclick: () => add({}).el.scrollIntoView({ block: 'nearest' }),
+          }),
+        ];
+
+  return {
+    el: h(
+      'fieldset',
+      { class: 'cms-fieldset' },
+      h('legend', { text: f.label }),
+      hint(f.hint),
+      items,
+      h('div', { class: 'cms-add-row' }, ...addButtons),
+    ),
+    get: () => entries.map((e) => (e.type ? { type: e.type, ...e.inner.get() } : e.inner.get())),
+    check: () => entries.flatMap((e) => e.inner.check()),
+  };
+}
+
+function fieldsControl(fields: Field[], data: Data, path: string) {
+  const controls = fields.map((f) => ({ f, c: control(f, data[f.key], path ? `${path}.${f.key}` : f.key) }));
+  return {
+    els: controls.map(({ c }) => c.el),
+    get: () => Object.fromEntries(controls.map(({ f, c }) => [f.key, c.get()])) as Data,
+    check: () => controls.flatMap(({ c }) => c.check?.() ?? []),
+  };
+}
+
+// --- Mount ---
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+    .replace(/-+$/, '');
+}
+
+export function mountEditor(form: HTMLFormElement, config: Config) {
+  const fieldsEl = form.querySelector<HTMLElement>('[data-fields]')!;
+  const errorsEl = document.querySelector<HTMLElement>('[data-errors]')!;
+  const saveBtn = form.querySelector<HTMLButtonElement>('[data-save]')!;
+  const idInput = form.querySelector<HTMLInputElement>('[data-id]');
+  const isNew = !config.id;
+
+  const root = fieldsControl(config.fields, config.data ?? {}, '');
+  fieldsEl.replaceChildren(...root.els);
+
+  let dirty = false;
+  let idTouched = false;
+  form.addEventListener('input', (e) => {
+    dirty = true;
+    document.querySelector('[data-saved]')?.remove();
+    const target = e.target as HTMLElement;
+    if (target === idInput) idTouched = true;
+    else if (idInput && !idTouched && target.dataset.path === config.titleField) {
+      idInput.value = slugify((target as HTMLInputElement).value);
+    }
+  });
+  form.addEventListener('change', () => (dirty = true));
+  window.addEventListener('beforeunload', (e) => {
+    if (dirty) e.preventDefault();
+  });
+
+  const showErrors = (title: string, list: string[] = []) => {
+    errorsEl.replaceChildren(
+      h('strong', { text: title }),
+      list.length ? h('ul', {}, ...list.map((m) => h('li', { text: m }))) : '',
+    );
+    errorsEl.hidden = false;
+    errorsEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorsEl.hidden = true;
+    const imageErrors = root.check();
+    if (!form.checkValidity() || imageErrors.length) {
+      form.reportValidity();
+      if (imageErrors.length) showErrors('Please fix these fields:', imageErrors);
+      return;
+    }
+
+    const data = root.get();
+    const body = new FormData();
+    body.set('data', JSON.stringify(data));
+    if (isNew) body.set('id', idInput!.value);
+    // Send only the files this entry still uses
+    const used = JSON.stringify(data);
+    for (const [token, file] of uploads) if (used.includes(token)) body.set(token, file);
+
+    saveBtn.disabled = true;
+    const label = saveBtn.textContent;
+    saveBtn.textContent = 'Saving…';
+    try {
+      const res = await fetch(isNew ? `/admin/api/${config.section}` : `/admin/api/${config.section}/${config.id}`, {
+        method: isNew ? 'POST' : 'PUT',
+        body,
+      });
+      const result = await res.json().catch(() => ({ error: res.statusText }));
+      if (!res.ok) {
+        if (res.status === 401) location.href = `/admin/login?next=${encodeURIComponent(location.pathname)}`;
+        showErrors(result.error ?? 'Could not save', result.errors);
+        return;
+      }
+      dirty = false;
+      location.href = `/admin/${config.section}/${result.id}?saved`;
+    } catch {
+      showErrors('Could not reach the server. Check your connection and try again.');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = label;
+    }
+  });
+
+  return {
+    markSaved: () => {
+      dirty = false;
+    },
+  };
+}

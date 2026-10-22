@@ -1,0 +1,36 @@
+{
+  "name": "Cosmic Robotics",
+  "intro": "Cosmic Robotics builds autonomous construction equipment to build critical infrastructure. Starting here on Earth and eventually to build a city on Mars.",
+  "services": [
+    "UX/UI",
+    "User Research",
+    "Product Strategy"
+  ],
+  "reveal": "../../assets/projects/cosmic-robotics/media-01.webp",
+  "micrographics": {
+    "left": "/images/project/badge-25.svg",
+    "right": "/images/project/stamp-project-hero.svg"
+  },
+  "summary": {
+    "label": "What Made People Say Yes",
+    "text": "We designed Constellation, their digital twin and robot management software platform, built to give operators a clear, confident view into their fleet."
+  },
+  "facts": [
+    {
+      "label": "Industry",
+      "value": "Construction robotics"
+    },
+    {
+      "label": "Product",
+      "value": "Constellation"
+    }
+  ],
+  "sections": [],
+  "credits": [],
+  "next": {
+    "name": "Transitive Robotics",
+    "href": "/work/transitive-robotics",
+    "image": "../../assets/projects/transitive-robotics/media-01.jpg"
+  },
+  "order": 3
+}

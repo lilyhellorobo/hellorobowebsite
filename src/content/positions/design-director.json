@@ -3,10 +3,15 @@
   "location": "US Based",
   "hours": "EDT / PDT",
   "type": "Full time",
-  "order": 4,
+  "intro": [],
+  "workOn": [],
+  "bring": [],
+  "howWeWork": [],
+  "applySteps": [],
   "stamp": {
     "src": "/images/careers/stamp-role-design-director.svg",
     "w": 238,
     "h": 70
-  }
+  },
+  "order": 4
 }

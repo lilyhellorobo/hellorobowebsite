@@ -12,11 +12,34 @@ export async function getStaticPaths() {
   return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
 }
 const { project } = Astro.props as { project: CollectionEntry<'projects'> };
+
+// Background color from the CMS for the dark sections; text flips to black on light colors
+const bg = project.data.background;
+const isLight = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) > 0.4;
+};
+const theme = bg
+  ? isLight(bg)
+    ? `--project-bg: ${bg}; --project-fg: var(--color-black); --project-muted: rgb(0 0 0 / 0.6); --line-on-dark: var(--line-on-light)`
+    : `--project-bg: ${bg}; --project-fg: var(--color-white); --project-muted: rgb(255 255 255 / 0.6)`
+  : undefined;
 ---
 <BaseLayout title={project.data.name} headerVariant="light" prefooter="building">
-  <ProjectHero project={project} />
-  <ProjectSummary project={project} />
-  <ProjectSections project={project} />
-  <ProjectTestimonial project={project} />
-  <ProjectNext project={project} />
+  <div class="project-page" style={theme}>
+    <ProjectHero project={project} />
+    <ProjectSummary project={project} />
+    <ProjectSections project={project} />
+    <ProjectTestimonial project={project} />
+    <ProjectNext project={project} />
+  </div>
 </BaseLayout>
+
+<style>
+  .project-page[style] :global(.theme-dark) {
+    background: var(--project-bg);
+    color: var(--project-fg);
+    --color-muted: var(--project-muted);
+  }
+</style>

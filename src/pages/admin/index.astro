@@ -1,0 +1,7 @@
+---
+import { CMS_COLLECTIONS } from '../../cms/collections';
+
+export const prerender = false;
+
+return Astro.redirect(`/admin/${CMS_COLLECTIONS[0].slug}`);
+---

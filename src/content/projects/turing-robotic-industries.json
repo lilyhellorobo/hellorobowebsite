@@ -1,0 +1,86 @@
+{
+  "name": "Turing Robotic Industries",
+  "intro": "TRI is a smartphone company founded by former Nokia employees and backed by Chinese investors.",
+  "services": [
+    "Brand Identity",
+    "Brand Strategy",
+    "Web Design",
+    "Development"
+  ],
+  "reveal": "../../assets/projects/turing-robotic-industries/media-01.avif",
+  "micrographics": {
+    "left": "/images/project/badge-25.svg",
+    "right": "/images/project/stamp-project-hero.svg"
+  },
+  "summary": {
+    "label": "What Made People Say Yes",
+    "text": "A brand identity, strategy and website for a new smartphone maker built by former Nokia engineers."
+  },
+  "facts": [
+    {
+      "label": "Industry",
+      "value": "Consumer electronics"
+    },
+    {
+      "label": "Services",
+      "value": "Brand, Website"
+    }
+  ],
+  "sections": [
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-02.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-03.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-04.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-05.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-06.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-07.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-08.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/media-09.avif"
+      ]
+    }
+  ],
+  "credits": [],
+  "next": {
+    "name": "Surf Air Flight Ops",
+    "href": "/work/surf-air-flight-ops",
+    "image": "../../assets/projects/surf-air-flight-ops/reveal.png"
+  },
+  "order": 6
+}

@@ -1,11 +1,15 @@
 {
   "name": "Weekly Robotics",
-  "intro": "We design the human side of robotics. Robo Radio is where that belief becomes a conversation — through intimate discussions with the people shaping the field.",
+  "intro": "Hello Robo partnered with Weekly Robotics to reimagine their brand and website and a technical newsletter that curates the latest news, research, and projects in robotics.",
   "services": [
     "UX/UI",
     "Brand Identity"
   ],
   "reveal": "../../assets/projects/weekly-robotics/logo-reveal.png",
+  "micrographics": {
+    "left": "/images/project/badge-25.svg",
+    "right": "/images/project/stamp-project-hero.svg"
+  },
   "summary": {
     "label": "What Made People Say Yes",
     "text": "We redesigned the Robotics media ecosystem around how people actually consume content — making it easier to read, navigate, and discover across platforms. A unified system built for growth."
@@ -116,9 +120,9 @@
     }
   ],
   "next": {
-    "name": "Transitive Robotics",
-    "href": "/work",
-    "image": "../../assets/projects/weekly-robotics/next-transitive.png"
+    "name": "Turing Robotic Industries",
+    "href": "/work/turing-robotic-industries",
+    "image": "../../assets/projects/turing-robotic-industries/media-01.avif"
   },
-  "order": 1
+  "order": 5
 }

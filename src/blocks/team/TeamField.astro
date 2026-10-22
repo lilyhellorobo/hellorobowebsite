@@ -5,6 +5,8 @@
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10104-170
  * The field is marked "3d web gl": the poster includes the objects and their labels.
  * Each object is a link to #<person>; the card opens with :target (no JS yet).
+ * WebGL: each object <li> carries data-person, data-object and, when uploaded in the CMS,
+ * data-model (a .glb URL in public/models/team/) for the interactive gallery.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
@@ -37,7 +39,12 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     {people.map((p) => {
       const o = objects[p.data.object];
       return o ? (
-        <li style={`left:${pct(o.x, 1728)};top:${pct(o.y, 1117)};width:${pct(o.w, 1728)};height:${pct(o.h, 1117)}`}>
+        <li
+          style={`left:${pct(o.x, 1728)};top:${pct(o.y, 1117)};width:${pct(o.w, 1728)};height:${pct(o.h, 1117)}`}
+          data-person={p.id}
+          data-object={p.data.object}
+          data-model={p.data.model}
+        >
           <a class="team-field__hit" href={`#${p.id}`} aria-label={`${p.data.name}, ${p.data.role} (${o.label})`}></a>
         </li>
       ) : null;

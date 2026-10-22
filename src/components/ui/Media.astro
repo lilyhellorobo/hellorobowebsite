@@ -1,0 +1,57 @@
+---
+/**
+ * Media — renders a CMS media value: an image (optimized by astro:assets), an
+ * animated GIF (served as-is so it keeps moving) or a video ({ video: "/videos/..." },
+ * muted, looping, inline — it behaves like a moving image).
+ * Style it like an image: the class lands on the <img> / <video>.
+ */
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+interface Props {
+  media: ImageMetadata | { video: string };
+  alt?: string;
+  widths?: number[];
+  sizes?: string;
+  loading?: 'eager' | 'lazy';
+  class?: string;
+}
+const { media, alt = '', widths, sizes, loading = 'lazy', class: className } = Astro.props;
+const isVideo = 'video' in media;
+const type = isVideo && media.video.endsWith('.webm') ? 'video/webm' : 'video/mp4';
+---
+{isVideo ? (
+  <video
+    class:list={['media-video', className]}
+    muted
+    loop
+    autoplay
+    playsinline
+    preload={loading === 'eager' ? 'auto' : 'metadata'}
+    aria-label={alt || undefined}
+    aria-hidden={alt ? undefined : 'true'}
+  >
+    <source src={media.video} type={type} />
+  </video>
+) : media.format === 'gif' ? (
+  <img class={className} src={media.src} width={media.width} height={media.height} alt={alt} loading={loading} decoding="async" />
+) : (
+  <Image class={className} src={media} alt={alt} widths={widths} sizes={sizes} loading={loading} />
+)}
+
+<script>
+  // Respect reduced motion: hold videos on their first frame
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll<HTMLVideoElement>('video.media-video').forEach((v) => {
+      v.autoplay = false;
+      v.pause();
+    });
+  }
+</script>
+
+<style>
+  .media-video {
+    display: block;
+    max-width: 100%;
+  }
+</style>

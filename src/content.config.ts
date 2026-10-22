@@ -4,6 +4,14 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
+/**
+ * An image (path in src/assets, optimized by astro:assets; GIFs keep their animation)
+ * or a video in public/videos/, written as { "video": "/videos/..." }.
+ * Rendered by src/components/ui/Media.astro.
+ */
+const media = (image: () => z.ZodTypeAny) =>
+  z.union([image(), z.object({ video: z.string().regex(/^\/videos\//) })]);
+
 const projects = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/projects' }),
   schema: ({ image }) =>
@@ -11,14 +19,20 @@ const projects = defineCollection({
       name: z.string(),
       intro: z.string(),
       services: z.array(z.string()),
-      /** Full-bleed visual under the hero ("show logo") */
-      reveal: image(),
+      /** Cover: the full-bleed image or video under the hero ("show logo") */
+      reveal: media(image),
+      /** Page background for the dark sections; text turns black on light colors */
+      background: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+      /** The two hero micrographics (public paths from the CMS asset library); left one is round */
+      micrographics: z
+        .object({ left: z.string().optional(), right: z.string().optional() })
+        .default({}),
       summary: z.object({ label: z.string(), text: z.string() }),
       facts: z.array(z.object({ label: z.string(), value: z.string() })),
       /** Page body: media rows (1–3 images side by side) and text rows, in order */
       sections: z.array(
         z.discriminatedUnion('type', [
-          z.object({ type: z.literal('media'), images: z.array(image()).min(1).max(3) }),
+          z.object({ type: z.literal('media'), images: z.array(media(image)).min(1).max(3) }),
           z.object({ type: z.literal('text'), label: z.string(), text: z.string() }),
         ]),
       ),
@@ -42,6 +56,8 @@ const team = defineCollection({
       photo: image(),
       /** The 3D object on the Team field that opens this card */
       object: z.string().describe('Object id on the Team field, e.g. hello_robo'),
+      /** 3D model of their object for the WebGL team gallery: a .glb in public/models/team/ */
+      model: z.string().optional(),
       order: z.number().default(0),
     }),
 });
@@ -70,8 +86,11 @@ const episodes = defineCollection({
     title: z.string(),
     number: z.number().optional(),
     guest: z.string(),
-    guestLine: z.string(),
+    /** What the guest does, e.g. "Head of Design at Humanoid" */
+    guestTitle: z.string(),
     description: z.string(),
+    /** YouTube video id (the 11 characters after watch?v=) */
+    youtube: z.string().regex(/^[\w-]{11}$/).optional(),
     portfolioUrl: z.string().optional(),
     /** 16:9-ish cover used in "All of the episodes" */
     cover: image().optional(),

@@ -1,0 +1,118 @@
+---
+/** CMS list: every entry of a section, with edit / delete */
+import AdminLayout from '../../../cms/AdminLayout.astro';
+import { getCmsCollection } from '../../../cms/collections';
+import { listEntries } from '../../../cms/store';
+
+export const prerender = false;
+
+const c = getCmsCollection(Astro.params.section);
+if (!c) return new Response('Not found', { status: 404 });
+
+const entries = await listEntries(c);
+const text = (v: unknown) => (Array.isArray(v) ? v.join(', ') : typeof v === 'string' ? v : '');
+const saved = Astro.url.searchParams.get('saved');
+const deleted = Astro.url.searchParams.get('deleted');
+---
+<AdminLayout title={c.label} active={c.slug}>
+  <header class="cms-head">
+    <div>
+      <h1>{c.label}</h1>
+      <p class="cms-muted">
+        {entries.length} {entries.length === 1 ? c.singular : `${c.singular}s`}
+        {c.sortable && entries.length > 1 && ' · drag ⠿ to change the order on the site'}
+      </p>
+    </div>
+    <div class="cms-head__actions">
+      <a class="cms-btn" href={`/admin/${c.slug}/new`}>+ Add {c.singular}</a>
+    </div>
+  </header>
+
+  {saved && <p class="cms-notice" role="status">Saved “{saved}”.</p>}
+  {deleted && <p class="cms-notice" role="status">Deleted “{deleted}”.</p>}
+
+  {entries.length ? (
+    <p class="cms-sort-status" role="status" data-sort-status></p>
+    <ul
+      class:list={['cms-list', { 'cms-list--no-thumbs': !c.thumbField, 'cms-list--sortable': c.sortable }]}
+      data-sortable={c.sortable ? c.slug : undefined}
+    >
+      {entries.map(({ id, data }) => {
+        const title = text(data[c.titleField]) || id;
+        const thumbValue = c.thumbField ? data[c.thumbField] : undefined;
+        const thumbVideo = (thumbValue as { video?: string } | undefined)?.video;
+        const thumb = thumbVideo ?? text(thumbValue);
+        return (
+          <li class="cms-row" data-id={id}>
+            {c.sortable && (
+              <button class="cms-drag" type="button" data-drag-handle aria-label={`Move “${title}”. Use the up and down arrow keys.`} title="Drag to reorder">
+                <span aria-hidden="true">⠿</span>
+              </button>
+            )}
+            {c.thumbField && (thumbVideo ? (
+              <video class="cms-row__thumb" src={`/admin/media?ref=${encodeURIComponent(thumbVideo)}#t=0.5`} muted preload="metadata" />
+            ) : thumb ? (
+              <img class="cms-row__thumb" src={`/admin/media?ref=${encodeURIComponent(thumb)}`} alt="" loading="lazy" />
+            ) : (
+              <span class="cms-row__thumb" />
+            ))}
+            <a class="cms-row__main" href={`/admin/${c.slug}/${id}`}>
+              <p class="cms-row__title">{title}</p>
+              <p class="cms-row__sub cms-muted cms-small">
+                {c.subtitleField && text(data[c.subtitleField])}
+              </p>
+            </a>
+            <div class="cms-row__actions">
+              <span class="cms-badge" title="Order">{String(data.order ?? 0)}</span>
+              <a class="cms-btn cms-btn--ghost cms-btn--small" href={`/admin/${c.slug}/${id}`}>Edit</a>
+              <button
+                class="cms-btn cms-btn--danger cms-btn--small"
+                type="button"
+                data-delete={id}
+                data-title={title}
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <div class="cms-empty">
+      <p class="cms-muted">No {c.singular}s yet.</p>
+      <a class="cms-btn" href={`/admin/${c.slug}/new`}>+ Add {c.singular}</a>
+    </div>
+  )}
+
+  <dialog class="cms-dialog" id="confirm-delete" data-section={c.slug} data-singular={c.singular}>
+    <form method="dialog">
+      <h2>Delete this {c.singular}?</h2>
+      <p class="cms-muted"><span data-name></span> will be removed from the site, along with its images. This can’t be undone.</p>
+      <p class="cms-notice cms-notice--error" data-error hidden></p>
+      <div class="cms-dialog__actions">
+        <button class="cms-btn cms-btn--ghost" value="cancel">Cancel</button>
+        <button class="cms-btn cms-btn--danger cms-btn--solid" value="delete" data-confirm>Delete</button>
+      </div>
+    </form>
+  </dialog>
+</AdminLayout>
+
+<script>
+  import { confirmDelete } from '../../../cms/client/delete';
+  import { makeSortable } from '../../../cms/client/sortable';
+
+  const sortable = document.querySelector<HTMLElement>('[data-sortable]');
+  if (sortable) makeSortable(sortable, sortable.dataset.sortable!, document.querySelector('[data-sort-status]')!);
+
+  const dialog = document.querySelector<HTMLDialogElement>('#confirm-delete')!;
+  document.querySelectorAll<HTMLButtonElement>('[data-delete]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.delete!;
+      const title = btn.dataset.title!;
+      if (await confirmDelete(dialog, dialog.dataset.section!, id, title)) {
+        location.href = `${location.pathname}?deleted=${encodeURIComponent(title)}`;
+      }
+    });
+  });
+</script>

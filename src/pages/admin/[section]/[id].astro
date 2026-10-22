@@ -1,0 +1,13 @@
+---
+import Editor from '../../../cms/Editor.astro';
+import { getCmsCollection } from '../../../cms/collections';
+import { getEntry, isValidId } from '../../../cms/store';
+
+export const prerender = false;
+
+const c = getCmsCollection(Astro.params.section);
+const id = Astro.params.id ?? '';
+const entry = c && isValidId(id) ? await getEntry(c, id) : null;
+if (!c || !entry) return new Response('Not found', { status: 404 });
+---
+<Editor c={c} entry={entry} />

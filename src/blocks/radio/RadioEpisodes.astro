@@ -19,7 +19,7 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
         <li class="radio-episodes__row">
           <div class="radio-episodes__text">
             <h3 class="t-h2">{e.data.title}</h3>
-            <p class="radio-episodes__line t-body">{e.data.guestLine}</p>
+            <p class="radio-episodes__line t-body">{e.data.guest}, {e.data.guestTitle}</p>
             <Button href={`/robo-radio/${e.id}`} variant="light" icon="arrow">Watch</Button>
           </div>
           <div class="radio-episodes__cover">

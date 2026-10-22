@@ -8,9 +8,11 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "svg": "svgo -r -f public/images --config svgo.config.mjs"
+    "svg": "svgo -r -f public/images --config svgo.config.mjs",
+    "cms:user": "node scripts/cms-user.mjs"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.9",
     "astro": "^7.4.2"
   },
   "devDependencies": {

@@ -3,5 +3,10 @@
   "location": "Remote",
   "hours": "US-friendly hours",
   "type": "Full time",
+  "intro": [],
+  "workOn": [],
+  "bring": [],
+  "howWeWork": [],
+  "applySteps": [],
   "order": 2
 }

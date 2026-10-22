@@ -53,7 +53,7 @@ icons, lines) and `/blocks` (every block and page).
 | Route | Page | Figma frame | Content |
 |---|---|---|---|
 | `/` | Home | 1.0 home | static + `news` collection |
-| `/work` | Work — project wheel (full screen, no footer) | Portfolio page | static (CMS later) |
+| `/work` | Work — project wheel (full screen, no footer) | Portfolio page | `projects` collection |
 | `/work/[slug]` | Project, e.g. `/work/weekly-robotics` | Project (Weekly Robotics) | `projects` collection |
 | `/services` | Services | Services | static |
 | `/team` | Team field + person cards (`/team#lily-a`) | team + card | `team` collection |
@@ -247,11 +247,77 @@ JSON file; adding a file adds a page or row.
 
 | Collection | Fields | Used by |
 |---|---|---|
-| `projects` | name, intro, services, reveal, summary, facts, sections (media / text), testimonial, credits, next, order | `/work/[slug]` |
-| `team` | name, nameJa, role, quote, photo, object (which field object opens the card), order | `/team` |
+| `projects` | name, intro, services, reveal (cover: image or video), background, micrographics (left, right), summary, facts, sections (media / text), testimonial, credits, next, order | `/work/[slug]` |
+| `team` | name, nameJa, role, quote, photo, object (which field object opens the card), model (3D .glb), order | `/team` |
 | `positions` | title, location, hours, type, intro, workOn, bring, howWeWork, applySteps, stamp, order | `/careers`, `/careers/[slug]` |
-| `episodes` | title, number, guest, guestLine, description, portfolioUrl, cover, poster, listed, order | `/robo-radio`, `/robo-radio/[slug]` |
+| `episodes` | title, number, guest, guestTitle, description, youtube (video id), portfolioUrl, cover, poster, listed, order | `/robo-radio`, `/robo-radio/[slug]` |
 | `news` | text, image, size (wide / narrow), href, order | Home news row |
+
+## CMS (`/admin`)
+
+A small built-in CMS at `/admin` edits **Team**, **Updates** (the `news` collection),
+**Projects**, **Careers** (the `positions` collection) and **Robo Radio** (the `episodes`
+collection). It writes the same JSON files in `src/content/` and uploads images
+into `src/assets/<collection>/`, so the pages need no changes: in `npm run dev` a save
+shows up on the site right away.
+
+**Setup (once per machine):** logins live in the git-ignored `.env`, never in the repo.
+
+```bash
+npm run cms:user -- add lily@hellorobo.co     # asks for a password; run again to reset it
+npm run cms:user -- remove someone@hellorobo.co
+npm run cms:user -- list
+```
+
+The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321/admin.
+
+**How it fits together**
+
+- Site pages stay static (prerendered). Only `/admin` renders on demand, via the
+  Node adapter (`@astrojs/node`). `src/middleware.ts` sends anyone not signed in to
+  `/admin/login`.
+- `src/cms/collections.ts` lists the editable fields per section. **If you change a
+  schema in `src/content.config.ts`, update the matching fields there.** The Team
+  field object ids also mirror `objects` in `src/blocks/team/TeamField.astro`.
+- Passwords are stored as scrypt hashes; sessions are signed cookies (7 days).
+  Removing a user from `.env` signs them out.
+- Deleting an entry (or replacing an image) also deletes images nothing else uses.
+- The Work wheel (Home + `/work`) lists the projects by `order`; the first one is the
+  active project and its reveal image is the wheel background.
+- Projects have a **background color** (the dark sections of the project page; text,
+  lines and muted text turn black on light colors) and two hero **micrographics**.
+  Micrographics come from the asset library (`src/cms/library.ts`): every
+  `stamp-*` / `badge-*` / globe / micrographic SVG in `public/images`, plus uploads,
+  which go to `public/images/micrographics/` and are available to every project.
+  SVG uploads with scripts or event handlers are refused.
+- Projects, Updates and Robo Radio can be **dragged into order** on their list page
+  (drag the ⠿ handle, or focus it and use ↑ / ↓). Dropping saves right away by
+  rewriting each entry's `order` (1, 2, 3…); `sortable: true` in `collections.ts`
+  turns it on for a section.
+- Project **cover** (`reveal`) and **media rows** take an image (JPG, PNG, GIF) or a video
+  (MP4 / WebM). Videos are uploaded to `public/videos/projects/<id>/` and stored as
+  `{ "video": "/videos/..." }`; images stay in `src/assets`. `components/ui/Media.astro`
+  renders either: optimized image, GIF as-is (keeps animating), or a muted looping inline
+  video (paused for reduced motion).
+- Team members can have a **3D object** (`model`) for the WebGL team gallery: a GLB
+  (binary glTF, textures embedded) uploaded in the CMS to `public/models/team/` and
+  stored as its URL. OBJ/FBX/etc. are refused with export instructions. On `/team`
+  each object `<li>` carries `data-person`, `data-object` and `data-model` for the
+  WebGL scene to load (e.g. three.js `GLTFLoader`).
+- Episodes store the YouTube video id; any YouTube link pasted in the CMS is converted.
+  The episode page plays it on the TV screen (`RadioTV`, loaded only on click).
+
+| Path | What |
+|---|---|
+| `src/cms/` | auth, field definitions, file store, admin layout + styles, browser editor |
+| `src/pages/admin/` | login, logout, list / new / edit pages, `api/` (save, delete), `media` (image previews) |
+| `scripts/cms-user.mjs` | `npm run cms:user` |
+
+**Production:** `npm run build` outputs the static site plus a Node server
+(`node dist/server/entry.mjs`). Set `CMS_USERS` and `CMS_SESSION_SECRET` (copy them from
+`.env`) as environment variables on the host. Saves write to the server's copy of
+`src/content/`, so publishing edits to the live site still needs a decision on
+hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open items.
 
 ## Assets
 
@@ -269,6 +335,7 @@ JSON file; adding a file adds a page or row.
 - Placeholder copy in Figma: Team (Paulina, Greg quotes; Alex's names swapped); episode rows share one description.
 - Heavy SVGs to simplify with the designer: approved stamp (~965 KB), department stamp (~738 KB), logo rows (~990 KB), menu micrographic (~518 KB). Bedrock logo only exists as PNG.
 - Motion step: menu reveal, project wheel scroll, news carousel, value tabs, contact form logic and copy-email.
+- CMS publishing: choose hosting for hellorobo.co and how CMS saves reach the live site.
 
 ---
 
@@ -281,7 +348,7 @@ JSON file; adding a file adds a page or row.
 - **Graphics are SVG only**; photos and video stay raster.
 - **WebGL and video** areas use `WebGLSlot` / `VideoSlot`, so the layout never waits for 3D or video.
 - **No JS for layout.** Static states use CSS (`:target` for team cards and contact steps).
-  The only script is the menu toggle in `NavPill`.
+  Scripts: the menu toggle in `NavPill`, and the click-to-play YouTube embed in `RadioTV`.
 
 ## How we work
 

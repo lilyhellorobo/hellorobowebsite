@@ -1,0 +1,11 @@
+{
+  "title": "Robo Radio 10: Jason Kline",
+  "number": 10,
+  "guest": "Jason Kline",
+  "guestTitle": "Head of Design at Humanoid",
+  "cover": "../../assets/radio/poster-jason-kline.png",
+  "youtube": "9OIdShlPGCM",
+  "description": "This month Hello Robo hosted Jason Kline, Head of Design at Humanoid. We talked about where the design challenges actually are, what's overhyped, and what's quietly getting closer to real deployment.",
+  "listed": true,
+  "order": 5
+}

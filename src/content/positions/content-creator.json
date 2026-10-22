@@ -3,7 +3,6 @@
   "location": "Remote",
   "hours": "US-friendly hours",
   "type": "Contract",
-  "order": 1,
   "intro": [
     "We are looking for someone to grow our social presence end to end — LinkedIn and Instagram for Hello Robo. You'll produce content every day.",
     "If you live on these platforms, obsess over what's working this week (not last year), know how to use AI to generate and accelerate content, and can turn a studio's work and ideas into a feed people actually follow — this is for you."
@@ -22,11 +21,6 @@
     "Fast, prolific, and low-ego about volume — you'd rather ship 5 things and learn than perfect 1.",
     "Sharp writer with a voice. Hooks, captions, copy."
   ],
-  "stamp": {
-    "src": "/images/careers/stamp-role-content-creator.svg",
-    "w": 231,
-    "h": 70
-  },
   "howWeWork": [
     "Remote-first, async-friendly, with weekly check-ins. Collaborative — you'll work closely with our design team on visuals and concepts.",
     "Fast-moving — we ship content fast and iterate based on what the data tells us."
@@ -35,5 +29,11 @@
     "Links to 3 pieces of content you've made (social posts, videos, anything)",
     "Your CV or LinkedIn",
     "One trend you think is underrated right now (tweet length)"
-  ]
+  ],
+  "stamp": {
+    "src": "/images/careers/stamp-role-content-creator.svg",
+    "w": 231,
+    "h": 70
+  },
+  "order": 1
 }

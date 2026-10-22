@@ -1,0 +1,56 @@
+---
+import AdminLayout from '../../cms/AdminLayout.astro';
+import RoboLogo from '../../components/icons/RoboLogo.astro';
+import { clearFailures, isThrottled, recordFailure, startSession, verifyLogin } from '../../cms/auth';
+
+export const prerender = false;
+
+// Only send people back to a CMS page after login
+const nextParam = Astro.url.searchParams.get('next') ?? '';
+const next = /^\/admin(\/[\w\-/]*)?$/.test(nextParam) && !nextParam.startsWith('/admin/login') ? nextParam : '/admin';
+
+if (Astro.locals.user) return Astro.redirect(next);
+
+let error = '';
+let email = '';
+if (Astro.request.method === 'POST') {
+  const ip = Astro.clientAddress;
+  const form = await Astro.request.formData();
+  email = String(form.get('email') ?? '');
+  const password = String(form.get('password') ?? '');
+  if (isThrottled(ip)) {
+    error = 'Too many attempts. Try again in 15 minutes.';
+  } else {
+    const user = email && password ? verifyLogin(email, password) : null;
+    if (user) {
+      clearFailures(ip);
+      startSession(Astro.cookies, user, Astro.url.protocol === 'https:');
+      return Astro.redirect(next);
+    }
+    recordFailure(ip);
+    error = 'That email and password don’t match.';
+  }
+  Astro.response.status = 401;
+}
+---
+<AdminLayout title="Log in">
+  <div class="cms-login">
+    <form class="cms-login__card" method="post">
+      <div class="cms-login__brand">
+        <RoboLogo width={52} />
+        <span>Hello Robo <span class="cms-muted">CMS</span></span>
+      </div>
+      <h1>Log in</h1>
+      {error && <p class="cms-notice cms-notice--error" role="alert">{error}</p>}
+      <div class="cms-field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required value={email} autofocus={!email} />
+      </div>
+      <div class="cms-field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required autofocus={!!email} />
+      </div>
+      <button class="cms-btn cms-btn--block" type="submit">Log in</button>
+    </form>
+  </div>
+</AdminLayout>

@@ -3,5 +3,10 @@
   "location": "CA",
   "hours": "PDT",
   "type": "Contract",
+  "intro": [],
+  "workOn": [],
+  "bring": [],
+  "howWeWork": [],
+  "applySteps": [],
   "order": 6
 }
