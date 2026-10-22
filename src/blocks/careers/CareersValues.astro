@@ -14,7 +14,7 @@ const tabs = ['01', '02', '03'];
 ---
 <section class="careers-values container">
   <header class="careers-values__intro">
-    <img src="/images/careers/stamp-values.svg" alt="" width="149" height="152" />
+    <img src="/images/careers/stamp-values.svg" alt="" width="149" style="--w: 149" height="152" />
     <p class="t-body">Our values</p>
     <h2 class="careers-values__statement t-h3">
       Robots are complex. Working together shouldn’t be. We stay curious, share openly and give great ideas room to grow.
@@ -42,25 +42,25 @@ const tabs = ['01', '02', '03'];
 
 <style>
   .careers-values {
-    padding-top: 119px;
-    padding-bottom: 67px;
+    padding-top: calc(119 * var(--px));
+    padding-bottom: calc(67 * var(--px));
   }
   .careers-values__intro {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    gap: calc(30 * var(--px));
     text-align: center;
   }
   .careers-values__statement {
-    width: 957px;
+    width: calc(957 * var(--px));
     max-width: 100%;
   }
   .careers-values__value {
     display: grid;
-    grid-template-columns: 1fr 816px;
+    grid-template-columns: 1fr calc(816 * var(--px));
     gap: var(--gutter);
-    margin-top: 308px;
+    margin-top: calc(308 * var(--px));
   }
   .careers-values__text {
     display: flex;
@@ -71,20 +71,20 @@ const tabs = ['01', '02', '03'];
   }
   .careers-values__copy {
     display: grid;
-    gap: 30px;
-    width: 680px;
+    gap: calc(30 * var(--px));
+    width: calc(680 * var(--px));
     max-width: 100%;
     margin-top: auto;
   }
   .careers-values__tabs {
     display: grid;
-    grid-template-columns: repeat(3, 265px);
+    grid-template-columns: repeat(3, calc(265 * var(--px)));
     gap: var(--gutter);
-    margin-top: 120px;
+    margin-top: calc(120 * var(--px));
   }
   .careers-values__tab {
     position: relative;
-    padding-bottom: 10px;
+    padding-bottom: calc(10 * var(--px));
     text-align: center;
     color: var(--color-grey-350);
     border-bottom: var(--line-width) solid var(--line-on-light);
@@ -92,7 +92,7 @@ const tabs = ['01', '02', '03'];
   .careers-values__tab.is-active {
     color: var(--color-black);
   }
-  /* Active tab: black segment over the first 103px of the line */
+  /* Active tab: black segment over the first calc(103 * var(--px)) of the line */
   .careers-values__tab.is-active::after {
     content: '';
     position: absolute;

@@ -36,7 +36,7 @@ const cells = [
         {c.poster ? (
           <Image src={c.poster} alt={c.alt} widths={[541, 1080]} sizes="(min-width: 1728px) 541px, 31vw" loading="lazy" />
         ) : (
-          <img class="radio-collage__stamp" src={c.stamp} alt="" width={c.w} height={c.h} style={`width: calc(${c.w} / 541 * 100%)`} loading="lazy" />
+          <img class="radio-collage__stamp" src={c.stamp} alt="" width={c.w} height={c.h} style={`--w: ${c.w}; width: calc(${c.w} / 541 * 100%)`} loading="lazy" />
         )}
       </li>
     ))}
@@ -45,7 +45,7 @@ const cells = [
 
 <style>
   .radio-collage {
-    padding-top: 160px;
+    padding-top: calc(160 * var(--px));
     padding-bottom: var(--space-40);
   }
   .radio-collage__head {
@@ -56,13 +56,13 @@ const cells = [
     text-align: center;
   }
   .radio-collage__intro {
-    width: 553px;
+    width: calc(553 * var(--px));
     max-width: 100%;
   }
   .radio-collage__grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: calc(12 * var(--px));
     margin-top: var(--space-80);
   }
   .radio-collage__cell {

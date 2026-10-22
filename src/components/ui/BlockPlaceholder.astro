@@ -58,13 +58,13 @@ const figmaUrl = `https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo
   }
   .block-placeholder__meta a {
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: calc(3 * var(--px));
   }
   .kind {
-    font-size: 14px;
+    font-size: calc(14 * var(--px));
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 2px 8px;
+    padding: 2px calc(8 * var(--px));
     border-radius: var(--radius-ui);
     background: var(--color-white);
     color: var(--color-black);

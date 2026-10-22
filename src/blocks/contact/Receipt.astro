@@ -13,8 +13,8 @@ interface Props {
 const { class: className } = Astro.props;
 ---
 <figure class:list={['receipt', className]} aria-label="Inquiry receipt">
-  <img src="/images/contact/receipt.svg" alt="" width="546" height="1651" />
-  <img class="receipt__photo" src="/images/contact/receipt-photo.png" alt="" width="495" height="322" />
+  <img src="/images/contact/receipt.svg" alt="" width="546" style="--w: 546" height="1651" />
+  <img class="receipt__photo" src="/images/contact/receipt-photo.png" alt="" width="495" style="--w: 495" height="322" />
 </figure>
 
 <style>

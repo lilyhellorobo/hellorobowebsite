@@ -25,7 +25,7 @@ const controls = variant === 'hero' ? { x: 100, y: 843 } : { x: 105, y: 759 };
     <Image src={poster} alt="" widths={[1730, 3460]} sizes="100vw" loading={variant === 'hero' ? 'eager' : 'lazy'} />
   </WebGLSlot>
   <div class="radio-tv__controls" style={`left:${(controls.x / 1730) * 100}%;top:${(controls.y / h) * 100}%`}>
-    <img src="/images/radio/player-controls.svg" alt="" width="510" height="80" />
+    <img src="/images/radio/player-controls.svg" alt="" width="510" style="--w: 510" height="80" />
   </div>
 </section>
 

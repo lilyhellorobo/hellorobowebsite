@@ -15,8 +15,8 @@ const { data } = Astro.props.project;
 <section class="project-hero theme-dark">
   <h1 class="project-hero__title t-h1 container">{data.name}</h1>
   <span class="project-hero__plus t-h1" aria-hidden="true">+</span>
-  <img class="project-hero__badge" src="/images/project/badge-25.svg" alt="" width="200" height="200" />
-  <img class="project-hero__stamp" src="/images/project/stamp-project-hero.svg" alt="" width="238" height="90" />
+  <img class="project-hero__badge" src="/images/project/badge-25.svg" alt="" width="200" style="--w: 200" height="200" />
+  <img class="project-hero__stamp" src="/images/project/stamp-project-hero.svg" alt="" width="238" style="--w: 238" height="90" />
   <p class="project-hero__intro t-body">{data.intro}</p>
 </section>
 <section class="project-reveal" aria-label={`${data.name} identity`}>
@@ -55,8 +55,9 @@ const { data } = Astro.props.project;
   .project-hero__intro {
     position: absolute;
     left: calc(1147 / 1728 * 100%);
-    top: calc(701 / 814 * 100%);
-    width: 541px;
+    /* Anchored by its bottom (773 in Figma) so longer wraps grow upwards */
+    bottom: calc((814 - 773) / 814 * 100%);
+    width: calc(541 * var(--px));
   }
   .project-reveal {
     aspect-ratio: 1728 / 944;

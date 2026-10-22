@@ -40,7 +40,7 @@ const { sections, name } = Astro.props.project.data;
     gap: var(--gutter);
   }
   .project-media.is-after-media {
-    margin-top: 48px;
+    margin-top: calc(48 * var(--px));
   }
   .project-media--2 {
     grid-template-columns: 1fr 1fr;
@@ -51,7 +51,7 @@ const { sections, name } = Astro.props.project.data;
   .project-media :global(img) {
     width: 100%;
     height: auto;
-    border-radius: 4px;
+    border-radius: calc(4 * var(--px));
   }
 
   /* Mobile: 3-up rows become one column; 2-up rows stay side by side */

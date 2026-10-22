@@ -6,7 +6,7 @@
  */
 ---
 <section class="radio-intro">
-  <img src="/images/radio/stamp-radio-intro.svg" alt="" width="320" height="165" />
+  <img src="/images/radio/stamp-radio-intro.svg" alt="" width="320" style="--w: 320" height="165" />
   <!-- Line breaks as set in Figma (desktop); revisit in the responsive step -->
   <p class="radio-intro__text t-h3">
     We design the human side of robotics. <br />
@@ -23,15 +23,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding-top: 211px;
-    padding-bottom: 360px;
+    gap: calc(14 * var(--px));
+    padding-top: calc(211 * var(--px));
+    padding-bottom: calc(360 * var(--px));
     text-align: center;
     background: var(--color-white);
     color: var(--color-black);
   }
   .radio-intro__text {
-    width: 1011px;
+    width: calc(1011 * var(--px));
     max-width: 100%;
   }
 

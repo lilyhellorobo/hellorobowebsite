@@ -34,6 +34,14 @@ img, video, svg {
   display: block;
   max-width: 100%;
 }
+/* Images take their Figma width from the width attribute (copied to --w), scaled
+   with the page. A block's own CSS width always wins over this. */
+img[style*="--w"],
+.icon,
+.robo-logo {
+  width: calc(var(--w) * var(--px));
+  height: auto;
+}
 a {
   color: inherit;
   text-decoration: none;

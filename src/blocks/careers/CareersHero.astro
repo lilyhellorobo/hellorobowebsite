@@ -9,8 +9,8 @@ import strip from '../../assets/careers/team-strip.png';
 ---
 <section class="careers-hero theme-dark">
   <h1 class="careers-hero__title t-h1 container">Careers</h1>
-  <img class="careers-hero__stamp careers-hero__stamp--hello" src="/images/careers/stamp-hello.svg" alt="" width="332" height="172" />
-  <img class="careers-hero__stamp careers-hero__stamp--nature" src="/images/careers/stamp-human-nature.svg" alt="" width="412" height="80" />
+  <img class="careers-hero__stamp careers-hero__stamp--hello" src="/images/careers/stamp-hello.svg" alt="" width="332" style="--w: 332" height="172" />
+  <img class="careers-hero__stamp careers-hero__stamp--nature" src="/images/careers/stamp-human-nature.svg" alt="" width="412" style="--w: 412" height="80" />
   <p class="careers-hero__text t-body">
     We design for robots, yet we show up as humans first — for each other and the community. Because in the end it was always the humans who made the world say yes to your robot.
   </p>
@@ -46,10 +46,11 @@ import strip from '../../assets/careers/team-strip.png';
   .careers-hero__text {
     position: absolute;
     left: calc(1006 / 1728 * 100%);
-    top: calc(674 / 1026 * 100%);
-    width: 680px;
+    /* Anchored by its bottom (746 in Figma) so longer wraps grow upwards, never into the strip */
+    bottom: calc((1026 - 746) / 1026 * 100%);
+    width: calc(680 * var(--px));
   }
-  /* 8 photos, 2204 wide, starting 236px off the left edge */
+  /* 8 photos, 2204 wide, starting calc(236 * var(--px)) off the left edge */
   .careers-hero__strip {
     position: absolute;
     left: calc(-236 / 1728 * 100%);
@@ -85,6 +86,7 @@ import strip from '../../assets/careers/team-strip.png';
       margin: var(--space-24) var(--page-margin) 0;
     }
     .careers-hero__text {
+      bottom: auto;
       width: auto;
       margin: 64px var(--page-margin) 0;
     }

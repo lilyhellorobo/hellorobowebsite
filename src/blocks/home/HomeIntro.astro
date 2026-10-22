@@ -10,7 +10,7 @@
     class="home-intro__stamp"
     src="/images/home/stamp-intro.svg"
     alt=""
-    width="342"
+    width="342" style="--w: 342"
     height="144"
     loading="lazy"
   />
@@ -26,18 +26,18 @@
     flex-direction: column;
     align-items: center;
     /* stamp at 213, text at 390, block 1012 tall */
-    padding-top: 213px;
-    padding-bottom: 390px;
-    gap: 33px;
+    padding-top: calc(213 * var(--px));
+    padding-bottom: calc(390 * var(--px));
+    gap: calc(33 * var(--px));
     text-align: center;
   }
   .home-intro__stamp {
-    width: 342px;
+    width: calc(342 * var(--px));
     height: auto;
   }
   /* Figma box is 807; browsers set Alliance ~1% tighter, 795 reproduces Figma's line breaks */
   .home-intro__text {
-    width: 795px;
+    width: calc(795 * var(--px));
     max-width: 100%;
   }
 

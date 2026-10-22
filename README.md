@@ -86,6 +86,13 @@ with a link to the Figma node.
   original at 4× zoom before committing. Photos and video stay raster.
 - **WebGL and video** areas use `WebGLSlot` / `VideoSlot` so the layout never
   waits for 3D or video files.
+- **Scaling (desktop + tablet):** write every desktop size as
+  `calc(N * var(--px))`, where N is the Figma px value. `--px` is 1px at 1728
+  and shrinks with the screen, so 1440 / 1280 / 1024 / 768 look like the Figma
+  frame scaled down. Text never goes below a readable size (floors in
+  `tokens.css`). Images get their size from the `width` attribute copied to
+  `style="--w: N"`. Hairlines (1–2px) stay as they are. Tablet-only fixes go in
+  `@media (min-width: 768px) and (max-width: 1199px)`.
 - **Mobile:** one breakpoint, `@media (max-width: 767px)`, at the end of each
   block's `<style>`. The text styles switch to Figma's Mobile/* sizes in
   `tokens.css`, so blocks only change layout. Mobile/Body2 (12px) is

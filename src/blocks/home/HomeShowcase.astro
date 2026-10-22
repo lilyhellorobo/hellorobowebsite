@@ -35,8 +35,8 @@ const services = [
       <Divider tone="dark" accent class="home-showcase__rule" />
       <div class="home-showcase__row">
         <div class="home-showcase__marks" aria-hidden="true">
-          <img src="/images/home/showcase-globe.svg" alt="" width="68" height="72" />
-          <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" height="14" />
+          <img src="/images/home/showcase-globe.svg" alt="" width="68" style="--w: 68" height="72" />
+          <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" style="--w: 62" height="14" />
         </div>
         <p class="home-showcase__title t-h2">Make the world say yes</p>
         <ul class="home-showcase__services t-body t-body2-mobile">
@@ -49,16 +49,16 @@ const services = [
 
 <style>
   .home-showcase {
-    padding-top: 160px;
-    padding-bottom: 82px;
+    padding-top: calc(160 * var(--px));
+    padding-bottom: calc(82 * var(--px));
   }
   .home-showcase__intro {
-    width: 818px;
+    width: calc(818 * var(--px));
     max-width: 100%;
   }
   .home-showcase__media {
     position: relative;
-    margin-top: 80px;
+    margin-top: calc(80 * var(--px));
     aspect-ratio: 1648 / 1117;
     overflow: hidden;
     color: var(--color-white);
@@ -87,24 +87,24 @@ const services = [
     /* columns from the 1568-wide row: marks 108 · title 947 · services 403 · rest */
     grid-template-columns: calc(108 / 1568 * 100%) calc(947 / 1568 * 100%) calc(403 / 1568 * 100%) 1fr;
     gap: 0;
-    margin-top: 33px;
+    margin-top: calc(33 * var(--px));
   }
   .home-showcase__marks {
     position: relative;
   }
   .home-showcase__y2k {
     position: absolute;
-    left: 5px;
-    top: 62px;
+    left: calc(5 * var(--px));
+    top: calc(62 * var(--px));
   }
   .home-showcase__title {
-    width: 542px;
-    margin-top: 7px;
+    width: calc(542 * var(--px));
+    margin-top: calc(7 * var(--px));
   }
   .home-showcase__services {
     display: grid;
     gap: var(--space-24);
-    margin-top: 11px;
+    margin-top: calc(11 * var(--px));
   }
 
   /* ── Mobile: intro (Figma 10098:3679) + slide "block 1" (10101:14507, 390×694) ── */

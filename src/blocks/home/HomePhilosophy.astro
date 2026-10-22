@@ -12,7 +12,7 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
     class="home-philosophy__stamp"
     src="/images/home/stamp-philosophy.svg"
     alt=""
-    width="257"
+    width="257" style="--w: 257"
     height="150"
     loading="lazy"
   />
@@ -21,7 +21,7 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
     In the last two years over 300 robotics companies launched in the U.S.
   </p>
   <WebGLSlot name="home-bars" class="home-philosophy__bars">
-    <img src="/images/home/philosophy-bars.svg" alt="" width="681" height="368" loading="lazy" />
+    <img src="/images/home/philosophy-bars.svg" alt="" width="681" style="--w: 681" height="368" loading="lazy" />
   </WebGLSlot>
 </section>
 
@@ -31,27 +31,27 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
     flex-direction: column;
     align-items: center;
     /* stamp 50→200, text at 220, bars 580→948, block 1110 tall */
-    padding-top: 50px;
-    padding-bottom: 162px;
+    padding-top: calc(50 * var(--px));
+    padding-bottom: calc(162 * var(--px));
     text-align: center;
   }
   .home-philosophy__stamp {
-    width: 257px;
+    width: calc(257 * var(--px));
     height: auto;
   }
   .home-philosophy__text {
-    width: 818px;
+    width: calc(818 * var(--px));
     max-width: 100%;
     margin-top: var(--space-20);
   }
   .home-philosophy :global(.home-philosophy__bars) {
-    width: 681px;
+    width: calc(681 * var(--px));
     max-width: 100%;
     aspect-ratio: 681 / 368;
     margin-top: auto;
   }
   .home-philosophy {
-    min-height: 1110px;
+    min-height: calc(1110 * var(--px));
   }
 
   /* ── Mobile: Figma 10101:7108 — stamp 123 wide, label, text 326 wide, bars 360×194 ── */

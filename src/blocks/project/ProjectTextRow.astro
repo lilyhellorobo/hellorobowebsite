@@ -20,11 +20,11 @@ const { label, text } = Astro.props;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--gutter);
-    padding-block: 120px;
+    padding-block: calc(120 * var(--px));
   }
-  /* Label wraps onto two lines in Figma (≈170px box) */
+  /* Label wraps onto two lines in Figma (≈calc(170 * var(--px)) box) */
   .project-text-row__label {
-    max-width: 170px;
+    max-width: max(calc(170 * var(--px)), 140px);
   }
 
   /* Mobile: label above text */

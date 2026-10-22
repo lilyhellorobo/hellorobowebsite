@@ -36,7 +36,7 @@ const { back } = Astro.props;
     transform: translateX(-50%);
     z-index: var(--z-nav);
     display: flex;
-    gap: 8px;
+    gap: calc(8 * var(--px));
   }
   .nav-pill__back,
   .nav-pill__menu {

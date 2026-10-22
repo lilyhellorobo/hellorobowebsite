@@ -28,7 +28,7 @@ const { data } = Astro.props.project;
 
 <style>
   .project-summary {
-    padding-bottom: 120px;
+    padding-bottom: calc(120 * var(--px));
   }
   .project-summary :global(.project-text-row) {
     padding-bottom: 0;
@@ -37,7 +37,7 @@ const { data } = Astro.props.project;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--gutter);
-    margin-top: 120px;
+    margin-top: calc(120 * var(--px));
   }
   .project-summary__list {
     grid-column: 2;
@@ -47,8 +47,8 @@ const { data } = Astro.props.project;
     justify-content: space-between;
   }
   .project-summary__fact + .project-summary__fact {
-    margin-top: 32px;
-    padding-top: 32px;
+    margin-top: calc(32 * var(--px));
+    padding-top: calc(32 * var(--px));
     border-top: var(--line-width) solid var(--line-on-dark);
   }
   dd {

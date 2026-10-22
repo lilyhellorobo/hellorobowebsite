@@ -31,7 +31,7 @@ const { title, services, image, imageAlt, stamp } = Astro.props;
         alt=""
         width={stamp.w}
         height={stamp.h}
-        style={`left:${stamp.x}px;top:${stamp.y}px`}
+        style={`--w: ${stamp.w}; left:calc(${stamp.x} * var(--px));top:calc(${stamp.y} * var(--px))`}
         loading="lazy"
       />
       <ul class="service-block__list t-body">
@@ -47,7 +47,7 @@ const { title, services, image, imageAlt, stamp } = Astro.props;
 <style>
   .service-block {
     padding-top: var(--space-40);
-    padding-bottom: 157px;
+    padding-bottom: calc(157 * var(--px));
   }
   /* Accent segment is 338 of 1648 */
   .service-block :global(.service-block__rule.divider--accent)::before {
@@ -70,7 +70,7 @@ const { title, services, image, imageAlt, stamp } = Astro.props;
   }
   .service-block__title {
     margin-top: var(--space-20);
-    width: 818px;
+    width: calc(818 * var(--px));
     max-width: 100%;
   }
   .service-block__stamp {

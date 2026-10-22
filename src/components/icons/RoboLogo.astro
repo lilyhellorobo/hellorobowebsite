@@ -14,6 +14,7 @@ const { width = 70, label, class: className } = Astro.props;
   class:list={['robo-logo', className]}
   width={width}
   height={(width * 40) / 70}
+  style={`--w: ${width}`}
   viewBox="0 0 70 40"
   fill="none"
   role={label ? 'img' : undefined}

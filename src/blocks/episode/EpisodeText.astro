@@ -29,7 +29,7 @@ const firstName = data.guest.split(' ')[0];
 
 <style>
   .episode-text {
-    padding-block: 120px;
+    padding-block: calc(120 * var(--px));
   }
   .episode-text__inner {
     display: grid;
@@ -39,14 +39,14 @@ const firstName = data.guest.split(' ')[0];
   .episode-text__body {
     grid-column: 2;
     display: grid;
-    gap: 100px;
-    width: 680px;
+    gap: calc(100 * var(--px));
+    width: calc(680 * var(--px));
     max-width: 100%;
   }
   .episode-text__follow {
     display: grid;
     justify-items: start;
-    gap: 10px;
+    gap: calc(10 * var(--px));
   }
 
   /* ── Mobile ── */

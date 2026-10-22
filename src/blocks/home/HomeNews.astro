@@ -16,7 +16,7 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
 ---
 <section class="home-news">
   <header class="home-news__head container">
-    <img src="/images/home/stamp-news.svg" alt="" width="230" height="132" loading="lazy" />
+    <img src="/images/home/stamp-news.svg" alt="" width="230" style="--w: 230" height="132" loading="lazy" />
     <h2 class="t-h1">Latest news</h2>
   </header>
 
@@ -41,21 +41,21 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
 
 <style>
   .home-news {
-    padding-top: 120px;
-    padding-bottom: 166px;
+    padding-top: calc(120 * var(--px));
+    padding-bottom: calc(166 * var(--px));
     overflow-x: clip;
   }
   /* Stamp at x 40, title at x 312 (stamp 230 + 42) */
   .home-news__head {
     display: flex;
     align-items: flex-start;
-    gap: 42px;
+    gap: calc(42 * var(--px));
   }
   .home-news__row {
     display: flex;
     align-items: flex-start;
     gap: var(--gutter);
-    margin-top: 104px;
+    margin-top: calc(104 * var(--px));
     padding-left: var(--page-margin);
   }
   .home-news__card {
@@ -64,10 +64,10 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
     justify-items: start;
   }
   .home-news__card--wide {
-    width: 815px;
+    width: calc(815 * var(--px));
   }
   .home-news__card--narrow {
-    width: 537px;
+    width: calc(537 * var(--px));
   }
   .home-news__media {
     width: 100%;
@@ -87,7 +87,7 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
   }
   .home-news__text {
     margin-top: var(--space-20);
-    max-width: 465px;
+    max-width: calc(465 * var(--px));
   }
   .home-news__card :global(.arrow-link) {
     margin-top: var(--space-40);

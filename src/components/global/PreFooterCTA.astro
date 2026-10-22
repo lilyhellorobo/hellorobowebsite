@@ -23,7 +23,7 @@ const title = 'Tell us what you are building';
       class="prefooter__printer"
       src="/images/shell/prefooter-printer.png"
       alt=""
-      width="994"
+      width="994" style="--w: 994"
       height="949"
       loading="lazy"
       decoding="async"
@@ -53,7 +53,7 @@ const title = 'Tell us what you are building';
       class="prefooter__stamp"
       src="/images/shell/stamp-human-core.svg"
       alt=""
-      width="403"
+      width="403" style="--w: 403"
       height="174"
       loading="lazy"
     />
@@ -91,7 +91,7 @@ const title = 'Tell us what you are building';
     padding: var(--space-40);
   }
   .prefooter__title {
-    max-width: 716px;
+    max-width: calc(716 * var(--px));
   }
   .prefooter__stamp,
   .prefooter__hint {
@@ -103,7 +103,7 @@ const title = 'Tell us what you are building';
   }
   .prefooter__stamp {
     width: calc(403 / 1728 * 100%);
-    min-width: 200px;
+    min-width: calc(200 * var(--px));
     height: auto;
   }
 

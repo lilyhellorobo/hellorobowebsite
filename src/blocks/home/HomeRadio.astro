@@ -53,7 +53,7 @@ const cells = [
             alt=""
             width={c.w}
             height={c.h}
-            style={`width: calc(${c.w} / 541 * 100%)`}
+            style={`--w: ${c.w}; width: calc(${c.w} / 541 * 100%)`}
             loading="lazy"
           />
         )}
@@ -64,27 +64,27 @@ const cells = [
 
 <style>
   .home-radio {
-    padding-top: 100px;
-    padding-bottom: 124px;
+    padding-top: calc(100 * var(--px));
+    padding-bottom: calc(124 * var(--px));
   }
   .home-radio__head {
     display: grid;
-    grid-template-columns: calc(968 / 1648 * 100%) 553px;
+    grid-template-columns: calc(968 / 1648 * 100%) calc(553 * var(--px));
     align-items: start;
   }
   .home-radio__title {
-    margin-top: 60px;
+    margin-top: calc(60 * var(--px));
   }
   .home-radio__intro {
     display: grid;
     justify-items: start;
-    gap: 60px;
+    gap: calc(60 * var(--px));
   }
   .home-radio__grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 80px;
+    gap: calc(12 * var(--px));
+    margin-top: calc(80 * var(--px));
   }
   .home-radio__cell {
     aspect-ratio: 541 / 765;

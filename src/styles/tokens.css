@@ -11,6 +11,14 @@
 */
 
 :root {
+  /* ── Scale ──────────────────────────────────────────────────────
+     The desktop design is drawn at 1728. Every desktop size is written as
+     calc(N * var(--px)), where N is the Figma px value: 1px at 1728 and wider,
+     smaller on smaller screens, so the layout scales like the Figma frame.
+     Text has a floor (see Typography) so it stays readable on tablets.
+     On mobile (≤ 767px) --px is 1px again and the 390 frames are used as is. */
+  --px: min(1px, 100vw / 1728);
+
   /* ── Color: brand (Figma variables) ─────────────────────────── */
   --color-orange: #ff6b03;        /* Orange / primary */
 
@@ -44,23 +52,23 @@
   --font-sans: "Alliance No.2", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* H1 — 120 / 95% / -6% */
-  --type-h1-size: 120px;
+  --type-h1-size: max(56px, calc(120 * var(--px)));
   --type-h1-line: 0.95;
   --type-h1-track: -0.06em;
   /* H2 — 80 / 95% / -6% */
-  --type-h2-size: 80px;
+  --type-h2-size: max(40px, calc(80 * var(--px)));
   --type-h2-line: 0.95;
   --type-h2-track: -0.06em;
   /* H3 — 50 / 116% / -5% */
-  --type-h3-size: 50px;
+  --type-h3-size: max(26px, calc(50 * var(--px)));
   --type-h3-line: 1.16;
   --type-h3-track: -0.05em;
   /* Body — 20 / 120% / -1% */
-  --type-body-size: 20px;
+  --type-body-size: max(15px, calc(20 * var(--px)));
   --type-body-line: 1.2;
   --type-body-track: -0.01em;
   /* Button — 18 / 100% / +6%, uppercase */
-  --type-button-size: 18px;
+  --type-button-size: max(13px, calc(18 * var(--px)));
   --type-button-line: 1;
   --type-button-track: 0.06em;
 
@@ -75,32 +83,32 @@
 
   /* ── Layout (measured from 1728 desktop / 390 mobile frames) ── */
   --page-max: 1728px;
-  --page-margin: 40px;            /* desktop side margin */
+  --page-margin: calc(40 * var(--px));            /* desktop side margin */
   --page-margin-mobile: 16px;
-  --gutter: 12px;                 /* gap between columns / cards */
+  --gutter: calc(12 * var(--px));                 /* gap between columns / cards */
   --section-gap-mobile: 164px;    /* "divider" frames on mobile */
 
   /* Spacing scale — values that repeat in the designs */
-  --space-6: 6px;
-  --space-12: 12px;
-  --space-16: 16px;
-  --space-20: 20px;
-  --space-24: 24px;
-  --space-32: 32px;
-  --space-40: 40px;
-  --space-48: 48px;
-  --space-60: 60px;
-  --space-80: 80px;
-  --space-100: 100px;
-  --space-120: 120px;
-  --space-160: 160px;
+  --space-6: calc(6 * var(--px));
+  --space-12: calc(12 * var(--px));
+  --space-16: calc(16 * var(--px));
+  --space-20: calc(20 * var(--px));
+  --space-24: calc(24 * var(--px));
+  --space-32: calc(32 * var(--px));
+  --space-40: calc(40 * var(--px));
+  --space-48: calc(48 * var(--px));
+  --space-60: calc(60 * var(--px));
+  --space-80: calc(80 * var(--px));
+  --space-100: calc(100 * var(--px));
+  --space-120: calc(120 * var(--px));
+  --space-160: calc(160 * var(--px));
 
   /* ── Components ─────────────────────────────────────────────── */
   --radius-ui: 2px;               /* nav pill, buttons */
-  --button-height: 60px;
-  --nav-height: 80px;
-  --nav-width: 426px;
-  --icon-size: 32px;
+  --button-height: max(44px, calc(60 * var(--px)));
+  --nav-height: max(56px, calc(80 * var(--px)));
+  --nav-width: max(300px, calc(426 * var(--px)));
+  --icon-size: max(24px, calc(32 * var(--px)));
 
   /* ── Z-index ────────────────────────────────────────────────── */
   --z-base: 0;
@@ -115,6 +123,7 @@
    .t-* class follows automatically. Breakpoint: 767px everywhere. */
 @media (max-width: 767px) {
   :root {
+    --px: 1px;
     --type-h1-size: var(--type-h1-size-mobile);
     --type-h2-size: var(--type-h2-size-mobile);
     --type-h2-line: var(--type-h2-line-mobile);

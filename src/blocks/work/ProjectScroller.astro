@@ -60,7 +60,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
   <div class="project-scroller__scanlines" aria-hidden="true"></div>
 
   <hr class="project-scroller__rule" />
-  <img class="project-scroller__mark" src="/images/home/work-globe.svg" alt="" width="72" height="79" loading="lazy" />
+  <img class="project-scroller__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
 
   <ol class="project-scroller__names">
     {wheel.map((p) => (
@@ -88,7 +88,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
         <Image class="project-card__bg" src={c.image} alt="" widths={[800, 1600]} sizes="275vw" loading="lazy" />
       )}
       <div class="project-scroller__scanlines" aria-hidden="true"></div>
-      <img class="project-card__mark" src="/images/home/work-globe.svg" alt="" width="72" height="79" loading="lazy" />
+      <img class="project-card__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
       <div class="project-card__info">
         <hr class="project-card__rule" />
         <h3 class="project-card__title t-h2">{c.name}</h3>
@@ -123,7 +123,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
   .project-scroller__scanlines {
     position: absolute;
     inset: 0;
-    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px);
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px calc(3 * var(--px)));
     pointer-events: none;
   }
   .project-scroller__rule {
@@ -146,7 +146,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
     position: absolute;
     inset: 0;
   }
-  /* H2 style, scaled per row to match the wheel (80 → 48px) */
+  /* H2 style, scaled per row to match the wheel (80 → calc(48 * var(--px))) */
   .project-scroller__name {
     position: absolute;
     font-size: calc(var(--type-h2-size) * var(--k));
@@ -163,13 +163,13 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
     left: calc(1362 / 1728 * 100%);
     top: calc(515 / 1117 * 100%);
     display: grid;
-    gap: 8px;
+    gap: calc(8 * var(--px));
   }
 
   /* ── Mobile cards: Figma 390×694 ── */
   .project-card {
     position: relative;
-    height: 694px;
+    height: calc(694 * var(--px));
     overflow: hidden;
     background: var(--color-black);
   }
@@ -180,9 +180,9 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
   .project-cards :global(.project-card__bg) {
     position: absolute;
     left: 50%;
-    top: -146px;
-    width: 1495px;
-    height: 966px;
+    top: calc(-146 * var(--px));
+    width: calc(1495 * var(--px));
+    height: calc(966 * var(--px));
     max-width: none;
     transform: translateX(-50%);
   }
@@ -190,7 +190,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
     position: absolute;
     left: var(--page-margin);
     top: var(--space-20);
-    width: 51px;
+    width: calc(51 * var(--px));
     height: auto;
   }
   /* Rule at 481, title at 505, services at 600, VIEW bottom-right */
@@ -198,7 +198,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
     position: absolute;
     left: var(--page-margin);
     right: var(--page-margin);
-    top: 481px;
+    top: calc(481 * var(--px));
   }
   .project-card__rule {
     margin: 0;
@@ -212,7 +212,7 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    margin-top: 44px;
+    margin-top: calc(44 * var(--px));
   }
   .project-card__services {
     display: grid;

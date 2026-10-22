@@ -36,15 +36,15 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
 
 <style>
   .radio-episodes {
-    padding-top: 180px;
+    padding-top: calc(180 * var(--px));
   }
   .radio-episodes__list {
     margin-top: var(--space-40);
   }
-  /* Rule above each row, 40px around it; no rule after the last row */
+  /* Rule above each row, calc(40 * var(--px)) around it; no rule after the last row */
   .radio-episodes__row {
     display: grid;
-    grid-template-columns: 680px 1fr 680px;
+    grid-template-columns: calc(680 * var(--px)) 1fr calc(680 * var(--px));
     padding-top: var(--space-40);
     padding-bottom: var(--space-40);
     border-top: var(--line-width) solid var(--line-on-dark);
@@ -58,7 +58,7 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
     align-items: flex-start;
   }
   .radio-episodes__line {
-    width: 553px;
+    width: calc(553 * var(--px));
     max-width: 100%;
     margin-top: var(--space-20);
   }
@@ -79,7 +79,7 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
   .radio-episodes__more {
     display: flex;
     justify-content: center;
-    margin-top: 120px;
+    margin-top: calc(120 * var(--px));
   }
 
   /* ── Mobile: cover on top of each row, then title, line and button ── */

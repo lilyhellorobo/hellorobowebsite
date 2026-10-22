@@ -17,7 +17,7 @@ import Button from '../../components/ui/Button.astro';
 
 <style>
   .radio-invite {
-    padding-block: 120px;
+    padding-block: calc(120 * var(--px));
   }
   .radio-invite__inner {
     display: flex;
@@ -29,12 +29,12 @@ import Button from '../../components/ui/Button.astro';
     color: var(--color-orange);
   }
   .radio-invite__title {
-    width: 956px;
+    width: calc(956 * var(--px));
     max-width: 100%;
     margin-top: var(--space-40);
   }
   .radio-invite__text {
-    width: 553px;
+    width: calc(553 * var(--px));
     max-width: 100%;
     margin-top: var(--space-48);
   }

@@ -25,17 +25,17 @@ const services = [
 <section class="contact" aria-label="Contact">
   <!-- Shared background: grey ground, printer photo (multiply), HUMAN_CORE stamp -->
   <div class="contact__bg" aria-hidden="true">
-    <img class="contact__printer" src="/images/shell/prefooter-printer.png" alt="" width="994" height="949" />
-    <img class="contact__stamp" src="/images/shell/stamp-human-core.svg" alt="" width="403" height="174" />
+    <img class="contact__printer" src="/images/shell/prefooter-printer.png" alt="" width="994" style="--w: 994" height="949" />
+    <img class="contact__stamp" src="/images/shell/stamp-human-core.svg" alt="" width="403" style="--w: 403" height="174" />
   </div>
 
   <!-- Start -->
   <div class="contact__screen contact__screen--start">
     <h1 class="contact__title t-h2">Okay, we’re listening. So, what’s on your mind?</h1>
     <div class="contact__actions">
-      <Button href="#name" variant="light" icon="none" style="min-width:266px">Start a project</Button>
-      <Button href="#message" variant="light" icon="none" style="min-width:307px">Drop a quick word</Button>
-      <Button variant="light" icon="none" style="min-width:266px" data-copy="info@hellorobo.co">Copy our email</Button>
+      <Button href="#name" variant="light" icon="none" style="min-width: calc(266 * var(--px))">Start a project</Button>
+      <Button href="#message" variant="light" icon="none" style="min-width: calc(307 * var(--px))">Drop a quick word</Button>
+      <Button variant="light" icon="none" style="min-width: calc(266 * var(--px))" data-copy="info@hellorobo.co">Copy our email</Button>
     </div>
   </div>
 
@@ -48,8 +48,8 @@ const services = [
         <input class="contact__input t-h3" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.type === 'email' ? 'email' : s.id === 'name' ? 'name' : 'organization'} />
       </label>
       <div class="contact__actions">
-        <Button href={s.back} variant="dark" icon="none" style="min-width:149px">Back</Button>
-        <Button href={s.next} variant="light" icon="none" style="min-width:147px">Next</Button>
+        <Button href={s.back} variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
+        <Button href={s.next} variant="light" icon="none" style="min-width: calc(147 * var(--px))">Next</Button>
       </div>
       <Divider tone="dark" accent class="contact__rule" />
     </form>
@@ -69,8 +69,8 @@ const services = [
       ))}
     </fieldset>
     <div class="contact__actions">
-      <Button href="#company" variant="dark" icon="none" style="min-width:149px">Back</Button>
-      <Button href="#done" variant="light" icon="none" style="min-width:151px">Send</Button>
+      <Button href="#company" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
+      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))">Send</Button>
     </div>
     <Divider tone="dark" accent class="contact__rule" />
   </form>
@@ -83,8 +83,8 @@ const services = [
       <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Don’t overthink it. Just type away..."></textarea>
     </label>
     <div class="contact__actions">
-      <Button href="#" variant="dark" icon="none" style="min-width:149px">Back</Button>
-      <Button href="#done" variant="light" icon="none" style="min-width:151px">Send</Button>
+      <Button href="#" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
+      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))">Send</Button>
     </div>
     <Divider tone="dark" accent class="contact__rule" />
   </form>
@@ -149,18 +149,18 @@ const services = [
   }
 
   .contact__title {
-    width: 716px;
+    width: calc(716 * var(--px));
     max-width: 100%;
   }
   .contact__hint {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--px));
   }
   /* Fields sit at y 412 on every step (436 for the message), whatever the title length */
   .contact__field {
     position: absolute;
     left: var(--page-margin);
     top: calc(412 / 949 * 100%);
-    width: 680px;
+    width: calc(680 * var(--px));
     max-width: calc(100% - 2 * var(--page-margin));
   }
   .contact__field--message {
@@ -168,7 +168,7 @@ const services = [
   }
   .contact__input {
     width: 100%;
-    padding: 0 0 10px;
+    padding: 0 0 calc(10 * var(--px));
     border: 0;
     border-bottom: var(--line-width) solid var(--color-white);
     border-radius: 0;
@@ -186,14 +186,14 @@ const services = [
   }
   .contact__textarea {
     resize: none;
-    padding-bottom: 20px;
+    padding-bottom: calc(20 * var(--px));
   }
   .contact__chips {
     position: absolute;
     left: var(--page-margin);
     top: calc(415 / 949 * 100%);
     display: flex;
-    gap: 9px;
+    gap: calc(9 * var(--px));
     margin: 0;
     padding: 0;
     border: 0;
@@ -222,7 +222,7 @@ const services = [
   }
   .contact__actions {
     display: flex;
-    gap: 10px;
+    gap: calc(10 * var(--px));
     margin-top: auto;
   }
   .contact__screen :global(.contact__rule) {
@@ -238,8 +238,8 @@ const services = [
   }
   .contact__done-text {
     display: grid;
-    gap: 96px;
-    width: 716px;
+    gap: calc(96 * var(--px));
+    width: calc(716 * var(--px));
     align-content: start;
   }
   .contact :global(.contact__receipt) {

@@ -13,7 +13,7 @@ const { testimonial, credits } = Astro.props.project.data;
 ---
 <section class="project-testimonial theme-dark">
   <div class="project-testimonial__grid container">
-    <img src="/images/project/badge-testimonial.svg" alt="" width="212" height="211" />
+    <img src="/images/project/badge-testimonial.svg" alt="" width="212" style="--w: 212" height="211" />
     {testimonial && (
       <figure class="project-testimonial__quote">
         <blockquote class="t-h3">{testimonial.quote}</blockquote>
@@ -34,13 +34,13 @@ const { testimonial, credits } = Astro.props.project.data;
       </>
     )}
   </div>
-  <img class="project-testimonial__stamp" src="/images/home/stamp-radio-handmade.svg" alt="" width="404" height="222" loading="lazy" />
+  <img class="project-testimonial__stamp" src="/images/home/stamp-radio-handmade.svg" alt="" width="404" style="--w: 404" height="222" loading="lazy" />
 </section>
 
 <style>
   .project-testimonial {
-    padding-top: 180px;
-    padding-bottom: 120px;
+    padding-top: calc(180 * var(--px));
+    padding-bottom: calc(120 * var(--px));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -49,31 +49,31 @@ const { testimonial, credits } = Astro.props.project.data;
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: var(--gutter);
-    row-gap: 165px;
+    row-gap: calc(165 * var(--px));
     align-items: start;
   }
   .project-testimonial__quote blockquote {
     margin: 0;
-    width: 814px;
+    width: calc(814 * var(--px));
     max-width: 100%;
   }
   .project-testimonial__quote figcaption {
-    margin-top: 100px;
+    margin-top: calc(100 * var(--px));
   }
   .project-testimonial__credit {
     display: flex;
     justify-content: space-between;
   }
   .project-testimonial__credit + .project-testimonial__credit {
-    margin-top: 32px;
-    padding-top: 32px;
+    margin-top: calc(32 * var(--px));
+    padding-top: calc(32 * var(--px));
     border-top: var(--line-width) solid var(--line-on-dark);
   }
   dd {
     margin: 0;
   }
   .project-testimonial__stamp {
-    margin-top: 218px;
+    margin-top: calc(218 * var(--px));
     height: auto;
   }
 

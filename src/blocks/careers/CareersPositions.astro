@@ -11,7 +11,7 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
 ---
 <section class="careers-positions theme-dark">
   <header class="careers-positions__head container">
-    <img src="/images/careers/stamp-positions.svg" alt="" width="222" height="66" />
+    <img src="/images/careers/stamp-positions.svg" alt="" width="222" style="--w: 222" height="66" />
     <h2 class="t-h1">Positions</h2>
     <p class="careers-positions__intro t-body">
       We’re hiring — and always interested in people who care about the human side of robotics. Don’t see the right role? Say hello anyway.
@@ -25,7 +25,7 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
           <span class="careers-positions__title">
             <span class="t-h2">{p.data.title}</span>
             {p.data.stamp && (
-              <img src={p.data.stamp.src} alt="" width={p.data.stamp.w} height={p.data.stamp.h} loading="lazy" />
+              <img src={p.data.stamp.src} alt="" width={p.data.stamp.w} style={`--w: ${p.data.stamp.w}`} height={p.data.stamp.h} loading="lazy" />
             )}
           </span>
           <span class="careers-positions__meta t-body">
@@ -41,8 +41,8 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
 
 <style>
   .careers-positions {
-    padding-top: 165px;
-    padding-bottom: 160px;
+    padding-top: calc(165 * var(--px));
+    padding-bottom: calc(160 * var(--px));
   }
   .careers-positions__head {
     display: flex;
@@ -51,22 +51,22 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
     text-align: center;
   }
   .careers-positions__head h2 {
-    margin-top: 28px;
+    margin-top: calc(28 * var(--px));
   }
   .careers-positions__intro {
-    width: 553px;
+    width: calc(553 * var(--px));
     max-width: 100%;
     margin-top: var(--space-40);
   }
   .careers-positions__list {
     display: grid;
-    gap: 100px;
-    margin-top: 130px;
+    gap: calc(100 * var(--px));
+    margin-top: calc(130 * var(--px));
   }
-  /* Full-bleed rule above each row, then 100px to the title */
+  /* Full-bleed rule above each row, then calc(100 * var(--px)) to the title */
   .careers-positions__row {
     border-top: var(--line-width) solid var(--line-on-dark);
-    padding-top: 100px;
+    padding-top: calc(100 * var(--px));
   }
   .careers-positions__link {
     display: grid;
@@ -79,7 +79,7 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
     gap: var(--space-20);
   }
   .careers-positions__title .t-h2 {
-    max-width: 900px;
+    max-width: calc(900 * var(--px));
   }
   .careers-positions__title img {
     flex: none;
@@ -87,11 +87,20 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
   }
   .careers-positions__meta {
     display: grid;
-    grid-template-columns: 138px 277px 1fr;
-    margin-top: -5px;
+    grid-template-columns: calc(138 * var(--px)) calc(277 * var(--px)) 1fr;
+    margin-top: calc(-5 * var(--px));
   }
   .careers-positions__link:hover .t-h2 {
     color: var(--color-orange);
+  }
+
+  /* Tablet: columns size to their words so short labels never wrap */
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .careers-positions__meta {
+      grid-template-columns: repeat(3, auto);
+      justify-content: start;
+      column-gap: var(--space-40);
+    }
   }
 
   /* ── Mobile: each row stacks title over the meta line ── */

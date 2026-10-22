@@ -8,7 +8,7 @@
 <section class="services-hero container">
   <h1 class="services-hero__title t-h1">
     We design every reason<br /> to say yes
-    <img class="services-hero__stamp" src="/images/services/stamp-thinkers.svg" alt="" width="252" height="82" />
+    <img class="services-hero__stamp" src="/images/services/stamp-thinkers.svg" alt="" width="252" style="--w: 252" height="82" />
   </h1>
   <div class="services-hero__intro">
     <p class="t-body">Our services</p>
@@ -21,25 +21,25 @@
 <style>
   .services-hero {
     padding-top: var(--space-40);
-    padding-bottom: 39px;
+    padding-bottom: calc(39 * var(--px));
   }
   .services-hero__title {
     position: relative;
-    width: 1233px;
+    width: calc(1233 * var(--px));
     max-width: 100%;
   }
   /* Stamp sits after "to say yes" on the second line (539,175 in the frame) */
   .services-hero__stamp {
     display: inline-block;
     vertical-align: baseline;
-    width: 252px;
+    width: calc(252 * var(--px));
     height: auto;
-    margin-left: 12px;
+    margin-left: calc(12 * var(--px));
   }
   .services-hero__intro {
     display: grid;
-    grid-template-columns: calc(830 / 1648 * 100%) 680px;
-    margin-top: 389px;
+    grid-template-columns: calc(830 / 1648 * 100%) calc(680 * var(--px));
+    margin-top: calc(389 * var(--px));
   }
 
   /* ── Mobile (no Figma frame yet — follows the Home mobile rules) ── */

@@ -15,8 +15,8 @@
   </div>
   <div class="services-building__logos container">
     <div class="services-building__row">
-      <img src="/images/services/logos-building.svg" alt="Palantir, Bedrock, Surf Air, Weekly Robotics" width="1644" height="355" loading="lazy" />
-      <img class="services-building__bedrock" src="/images/services/logo-bedrock-white.png" alt="" width="165" height="22" loading="lazy" />
+      <img src="/images/services/logos-building.svg" alt="Palantir, Bedrock, Surf Air, Weekly Robotics" width="1644" style="--w: 1644" height="355" loading="lazy" />
+      <img class="services-building__bedrock" src="/images/services/logo-bedrock-white.png" alt="" width="165" style="--w: 165" height="22" loading="lazy" />
     </div>
   </div>
 </section>
@@ -28,18 +28,18 @@
   }
   .services-building__head {
     display: grid;
-    grid-template-columns: calc(968 / 1648 * 100%) 676px;
+    grid-template-columns: calc(968 / 1648 * 100%) calc(676 * var(--px));
     align-items: start;
   }
   .services-building__title {
-    width: 766px;
+    width: calc(766 * var(--px));
     max-width: 100%;
   }
   .services-building__text {
-    margin-top: 16px;
+    margin-top: calc(16 * var(--px));
   }
   .services-building__logos {
-    margin-top: 292px;
+    margin-top: calc(292 * var(--px));
   }
   .services-building__row {
     position: relative;

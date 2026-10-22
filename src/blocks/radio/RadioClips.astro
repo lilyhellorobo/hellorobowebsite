@@ -22,7 +22,7 @@ const clips = [
     <div class="radio-clips__text">
       <p class="t-body">Conversations in the field</p>
       <h2 class="radio-clips__title t-h1">Humanoids</h2>
-      <img class="radio-clips__stamp" src="/images/radio/stamp-clips.svg" alt="" width="585" height="148" loading="lazy" />
+      <img class="radio-clips__stamp" src="/images/radio/stamp-clips.svg" alt="" width="585" style="--w: 585" height="148" loading="lazy" />
       <p class="radio-clips__desc t-body">Robo Radio brings together the people shaping robotics for thoughtful conversations about design, technology and the human lives around them.</p>
     </div>
     {clips.map((c) => (
@@ -39,7 +39,7 @@ const clips = [
 <style>
   .radio-clips {
     padding-top: var(--space-40);
-    padding-bottom: 140px;
+    padding-bottom: calc(140 * var(--px));
     background: var(--color-white);
     color: var(--color-black);
   }
@@ -48,7 +48,7 @@ const clips = [
   }
   .radio-clips__grid {
     display: grid;
-    grid-template-columns: 1fr 403px 403px;
+    grid-template-columns: 1fr calc(403 * var(--px)) calc(403 * var(--px));
     gap: var(--gutter);
     margin-top: var(--space-40);
   }
@@ -58,20 +58,20 @@ const clips = [
     align-items: flex-start;
   }
   .radio-clips__title {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--px));
   }
   .radio-clips__stamp {
-    margin-top: 10px;
+    margin-top: calc(10 * var(--px));
     height: auto;
   }
   .radio-clips__desc {
-    width: 553px;
+    width: calc(553 * var(--px));
     max-width: 100%;
     margin-top: auto;
   }
   .radio-clips__clip {
     display: grid;
-    gap: 15px;
+    gap: calc(15 * var(--px));
   }
   .radio-clips__media {
     aspect-ratio: 403 / 718;

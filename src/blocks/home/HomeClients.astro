@@ -26,7 +26,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 ---
 <section class="home-clients">
   <div class="home-clients__text container">
-    <img class="home-clients__stamp-text" src="/images/home/stamp-clients.svg" alt="" width="306" height="76" loading="lazy" />
+    <img class="home-clients__stamp-text" src="/images/home/stamp-clients.svg" alt="" width="306" style="--w: 306" height="76" loading="lazy" />
     <p class="home-clients__label t-body">Clients</p>
     <h2 class="home-clients__title t-h3">
       And we are doing it together with visionary founders who are ready for the world to adopt their robots. And they chose to do it with Hello Robo.
@@ -40,9 +40,9 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
         style={`left:${pct(t.x, 1728)};top:${pct(t.y, 1481)}`}
       >
         {t.raster ? (
-          <img class="home-clients__logo-raster" src={t.src} alt={t.name} width="165" height="22" loading="lazy" />
+          <img class="home-clients__logo-raster" src={t.src} alt={t.name} width="165" style="--w: 165" height="22" loading="lazy" />
         ) : (
-          <img src={t.src} alt={t.name} width="264" height="355" loading="lazy" />
+          <img src={t.src} alt={t.name} width="264" style="--w: 264" height="355" loading="lazy" />
         )}
       </li>
     ))}
@@ -52,7 +52,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
         aria-hidden="true"
         style={`left:${pct(s.x, 1728)};top:${pct(s.y, 1481)};width:${pct(s.w, 1728)}`}
       >
-        <img src={s.src} alt="" width={s.w} height={s.h} loading="lazy" />
+        <img src={s.src} alt="" width={s.w} style={`--w: ${s.w}`} height={s.h} loading="lazy" />
       </li>
     ))}
   </ul>
@@ -67,19 +67,19 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
   .home-clients__text {
     position: relative;
     z-index: var(--z-raised);
-    padding-top: 191px;
+    padding-top: calc(191 * var(--px));
   }
-  /* The SVG includes 13/8px of stroke overflow around the 280×60 stamp */
+  /* The SVG includes 13/calc(8 * var(--px)) of stroke overflow around the 280×60 stamp */
   .home-clients__stamp-text {
-    margin: -8px -13px;
+    margin: calc(-8 * var(--px)) calc(-13 * var(--px));
   }
   .home-clients__label {
-    margin-top: 32px;
+    margin-top: calc(32 * var(--px));
   }
   .home-clients__title {
-    width: 835px;
+    width: calc(835 * var(--px));
     max-width: 50%;
-    margin-top: 32px;
+    margin-top: calc(32 * var(--px));
   }
   .home-clients__wall {
     position: absolute;

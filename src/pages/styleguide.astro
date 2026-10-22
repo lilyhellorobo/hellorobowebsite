@@ -138,7 +138,7 @@ const type = [
   .sg__head {
     display: grid;
     gap: var(--space-24);
-    max-width: 1100px;
+    max-width: calc(1100 * var(--px));
   }
   .sg__muted {
     color: var(--color-grey-600);
@@ -149,7 +149,7 @@ const type = [
   }
   .sg__type {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: calc(280 * var(--px)) 1fr;
     gap: var(--space-40);
     align-items: baseline;
     padding-bottom: var(--space-32);
@@ -161,7 +161,7 @@ const type = [
   }
   code {
     font-family: ui-monospace, Menlo, monospace;
-    font-size: 14px;
+    font-size: calc(14 * var(--px));
   }
   .sg__colors {
     display: grid;
@@ -169,7 +169,7 @@ const type = [
   }
   .sg__swatches {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(calc(220 * var(--px)), 1fr));
     gap: var(--space-24) var(--gutter);
   }
   .sg__swatch {
@@ -177,12 +177,12 @@ const type = [
     gap: var(--space-6);
   }
   .sg__chip {
-    height: 96px;
+    height: calc(96 * var(--px));
     border: var(--line-width) solid var(--line-on-light);
     border-radius: var(--radius-ui);
   }
   .sg__note {
-    font-size: 14px;
+    font-size: calc(14 * var(--px));
   }
   .sg__row {
     display: flex;

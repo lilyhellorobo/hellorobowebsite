@@ -57,12 +57,12 @@ import { mainNav, studio } from '../../data/site';
   }
   /* Figma "footer" frame (1441 high): wordmark at 89, legal row at 1276, 115 below */
   .footer__bottom {
-    padding-top: 89px;
-    padding-bottom: 115px;
+    padding-top: calc(89 * var(--px));
+    padding-bottom: calc(115 * var(--px));
   }
   .footer__legal {
-    margin-top: 167px;
-    height: 50px;
+    margin-top: calc(167 * var(--px));
+    height: calc(50 * var(--px));
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
@@ -70,9 +70,9 @@ import { mainNav, studio } from '../../data/site';
   .footer__legal a:last-child {
     justify-self: end;
   }
-  /* Footer mark: 95×50 drawn shape = the nav logo at 121px */
+  /* Footer mark: 95×50 drawn shape = the nav logo at calc(121 * var(--px)) */
   .footer__legal :global(.footer__logo) {
-    width: 121px;
+    width: calc(121 * var(--px));
     height: auto;
   }
 
