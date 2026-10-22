@@ -1,12 +1,46 @@
 {
   "title": "Freelance Motion Designer",
   "location": "Remote",
-  "hours": "US-friendly hours",
+  "hours": "US-friendly time zones",
   "type": "Freelance",
   "order": 7,
   "stamp": {
     "src": "/images/careers/stamp-role-motion.svg",
     "w": 139,
     "h": 80
-  }
+  },
+  "intro": [
+    "Our interfaces aren’t static—they’re living, breathing systems. Every transition, hover, and microinteraction matters. This role exists to bring that life into our products—to make motion feel purposeful, responsive, and human."
+  ],
+  "workOn": [
+    "Crafting microinteractions and motion systems that make our interfaces feel alive and responsive",
+    "Collaborating with designers and engineers to define how products move, react, and communicate",
+    "Prototyping motion concepts that enhance clarity, feedback, and emotion",
+    "Pushing the edge of how AI and robotics interfaces feel—not just how they look"
+  ],
+  "bring": [
+    "A strong sense for motion as communication—not decoration",
+    "Experience creating microinteractions, transitions, and motion systems for digital products",
+    "Ability to prototype ideas quickly in tools like After Effects, Principle, or Figma",
+    "An eye for rhythm, timing, and flow—knowing when to add energy and when to hold still",
+    "Collaboration skills to work closely with designers, engineers, and clients",
+    "Curiosity about robotics, AI, and how motion can make technology feel more human"
+  ],
+  "niceToHave": [
+    "Experience animating logos, icons, or visual identities",
+    "Familiarity with motion for brand storytelling and product launches",
+    "Comfort working with 3D or physics-based motion tools",
+    "Curiosity about how motion can make interfaces breathe, signal, and feel alive"
+  ],
+  "howWeWork": [
+    "Weekly “Design Together” sessions with clients—zero waiting weeks for feedback.",
+    "Twice-weekly Slack updates keep pulses steady.",
+    "Small senior team, flat hierarchy, big ownership.",
+    "We meet once a year in different parts of the world to connect, plan, and reset."
+  ],
+  "applySteps": [
+    "Portfolio link",
+    "CV or LinkedIn",
+    "One project you’re proud of & why (tweet length)"
+  ]
 }
