@@ -3,7 +3,7 @@
   Source: Figma "Hello Robo Website 2026" → Handoff ✅ → website
 
   FROM FIGMA (variables / text styles):
-    Orange / primary, Orange / 02
+    Orange / primary (the only orange — use it for every orange in the designs)
     H1, H2, H3, Body, Button  (+ Mobile/H1, Mobile/H2, Mobile/H3, Mobile/Body1, Mobile/Body2)
 
   ADDED (measured from the designs, not yet Figma variables):
@@ -13,7 +13,6 @@
 :root {
   /* ── Color: brand (Figma variables) ─────────────────────────── */
   --color-orange: #ff6b03;        /* Orange / primary */
-  --color-orange-02: #e86000;     /* Orange / 02 (hover / pressed) */
 
   /* ── Color: neutrals (measured) ─────────────────────────────── */
   --color-black: #000000;         /* page backgrounds, buttons */
