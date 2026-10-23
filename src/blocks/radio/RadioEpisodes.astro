@@ -3,18 +3,22 @@
  * Robo Radio — All of the episodes
  * Figma: "all episodes" (10105:985), 1730×2694, black
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-985
- * Rows from the episodes collection (listed: true). Load more is wired in the motion step.
+ * Rows from the episodes collection (listed: true), newest first. The first INITIAL rows
+ * show; "Load more" reveals STEP more per click and disappears when all are shown.
+ * Without JavaScript every row shows and the button stays hidden.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Button from '../../components/ui/Button.astro';
 
 const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a, b) => a.data.order - b.data.order);
+const INITIAL = 6;
+const STEP = 2;
 ---
 <section class="radio-episodes theme-dark">
   <div class="container">
     <p class="t-body">All of the episodes</p>
-    <ul class="radio-episodes__list">
+    <ul class="radio-episodes__list" id="radio-episode-list" data-episodes data-initial={INITIAL} data-step={STEP}>
       {episodes.map((e) => (
         <li class="radio-episodes__row">
           <div class="radio-episodes__text">
@@ -28,11 +32,38 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
         </li>
       ))}
     </ul>
-    <div class="radio-episodes__more">
-      <Button variant="light" icon="hex">Load more</Button>
-    </div>
+    {episodes.length > INITIAL && (
+      <div class="radio-episodes__more" hidden data-load-more>
+        <Button variant="light" icon="hex" aria-controls="radio-episode-list">Load more</Button>
+      </div>
+    )}
   </div>
 </section>
+
+<script>
+  // Load more: hide rows past the first INITIAL, reveal STEP per click
+  for (const list of document.querySelectorAll<HTMLElement>('[data-episodes]')) {
+    const more = list.parentElement?.querySelector<HTMLElement>('[data-load-more]');
+    const button = more?.querySelector('button');
+    const rows = [...list.children] as HTMLElement[];
+    const step = Number(list.dataset.step) || 2;
+    let shown = Number(list.dataset.initial) || rows.length;
+    if (!more || !button || rows.length <= shown) continue;
+    const render = () => {
+      rows.forEach((row, i) => (row.hidden = i >= shown));
+      more.hidden = shown >= rows.length;
+    };
+    button.addEventListener('click', () => {
+      const first = shown;
+      shown = Math.min(rows.length, shown + step);
+      render();
+      // move focus to the first new episode so keyboard users land on it
+      rows[first]?.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+      rows[first]?.classList.add('is-revealed');
+    });
+    render();
+  }
+</script>
 
 <style>
   .radio-episodes {
@@ -107,6 +138,28 @@ const episodes = (await getCollection('episodes', (e) => e.data.listed)).sort((a
     }
     .radio-episodes__more :global(.button) {
       flex: 1;
+    }
+  }
+  /* Rows / button hidden by Load more (their display rules would otherwise win over [hidden]) */
+  .radio-episodes__row[hidden],
+  .radio-episodes__more[hidden] {
+    display: none;
+  }
+  /* Newly loaded rows fade up (placeholder for the motion step) */
+  .radio-episodes__row.is-revealed,
+  .radio-episodes__row.is-revealed ~ .radio-episodes__row {
+    animation: radio-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes radio-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(calc(24 * var(--px)));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .radio-episodes__row.is-revealed,
+    .radio-episodes__row.is-revealed ~ .radio-episodes__row {
+      animation: none;
     }
   }
 </style>
