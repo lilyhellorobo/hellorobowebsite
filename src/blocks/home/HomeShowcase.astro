@@ -8,9 +8,12 @@
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10203-131
  * Mobile: slides "block 1 / block 2 / block" (10101:14507, 10101:14838, 10101:15206), 390×694.
  *
- * Scroll: the slide pins to the screen for three screen-heights of scrolling.
- * The background crossfades, the title and services list swap, and the bright
- * segment of the line grows with the progress through all three slides.
+ * Scroll (desktop): the block starts inside the page layout (40 side margins, as the
+ * Figma photo block 1648×1117) and pins when it reaches the top. The first half
+ * screen of scrolling widens it to full screen; then three screens of scrolling move
+ * through the slides: the background crossfades, the title and services list swap,
+ * and the bright segment of the line grows with the progress through all slides.
+ * Mobile: already full width (Figma), so it skips the widening.
  * Transitions are placeholders for the motion step.
  */
 import { Image } from 'astro:assets';
@@ -104,7 +107,12 @@ const slides = [
       // The stage's own height (100vh / 100svh), not window.innerHeight: on phones the
       // browser toolbar changes innerHeight while scrolling, which would make slides jump
       const travel = rect.height - stage.offsetHeight;
-      const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+      // The first part of the scroll widens the block to full screen (desktop only)
+      const expand = stage.offsetHeight * (Number(getComputedStyle(scroller).getPropertyValue('--expand')) || 0);
+      const clamp = (v: number) => Math.min(1, Math.max(0, v));
+      const enter = expand > 0 ? clamp(-rect.top / expand) : 1;
+      const progress = travel - expand > 0 ? clamp((-rect.top - expand) / (travel - expand)) : 0;
+      stage.style.setProperty('--enter', String(enter));
       const active = Math.min(count - 1, Math.floor(progress * count));
       stage.style.setProperty('--progress', String(progress));
       if (stage.dataset.active !== String(active)) {
@@ -131,10 +139,11 @@ const slides = [
     margin-inline: 0;
   }
 
-  /* Three screens of scroll; the stage stays pinned while they pass */
+  /* Half a screen to widen + one screen per slide; the stage stays pinned meanwhile */
   .home-showcase__scroller {
+    --expand: 0.5;
     position: relative;
-    height: calc(var(--slides) * 100vh);
+    height: calc((var(--slides) + var(--expand)) * 100vh);
     margin-top: calc(80 * var(--px));
   }
   .home-showcase__stage {
@@ -145,6 +154,9 @@ const slides = [
     color: var(--color-white);
     background: var(--color-black);
     --progress: 0;
+    --enter: 0;
+    /* Starts with the page's side margins (the Figma 1648-wide block), opens to full width */
+    clip-path: inset(0 calc(var(--page-margin) * (1 - var(--enter))));
   }
 
   /* ── Backgrounds: crossfade to the active slide ── */
@@ -173,10 +185,11 @@ const slides = [
   }
 
   /* Rule at 683, content row at 714 in the 1728×1117 frame (scaled to the screen height) */
+  /* Inside the margins at first (80 from the screen edge), 40 when full screen */
   .home-showcase__overlay {
     position: absolute;
-    left: var(--page-margin);
-    right: var(--page-margin);
+    left: calc(var(--page-margin) * (2 - var(--enter)));
+    right: calc(var(--page-margin) * (2 - var(--enter)));
     top: calc(683 / 1117 * 100%);
   }
   /* Progress: the bright segment grows with the scroll through all slides */
@@ -247,14 +260,18 @@ const slides = [
       width: auto;
     }
     .home-showcase__scroller {
+      --expand: 0;
       height: calc(var(--slides) * 100svh);
       margin-top: 40px;
     }
     .home-showcase__stage {
       height: 100svh;
+      clip-path: none;
     }
     /* 20 above the fixed nav pill (20 + 64), so the services list is never covered */
     .home-showcase__overlay {
+      left: var(--page-margin);
+      right: var(--page-margin);
       top: 0;
       bottom: calc(20px + var(--nav-height) + 20px);
       display: flex;
