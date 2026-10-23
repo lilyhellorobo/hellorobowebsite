@@ -7,5 +7,7 @@
   "youtube": "6zBkPegcqhU",
   "description": "Robo Radio 12 is live. This month Hello Robo hosted Brian Ringley, Distinguished Product Manager and HRI Designer at Boston Dynamics.",
   "listed": true,
+  "featured": true,
+  "homepage": true,
   "order": 3
 }

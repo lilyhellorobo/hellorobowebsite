@@ -101,6 +101,10 @@ const episodes = defineCollection({
     poster: image().optional(),
     /** Show in the "All of the episodes" list */
     listed: z.boolean().default(true),
+    /** Poster in the "One talk. One future" collage (up to 6, in `order`) */
+    featured: z.boolean().default(false),
+    /** Poster in the Robo Radio section on Home (up to 4, in `order`) */
+    homepage: z.boolean().default(false),
     order: z.number().default(0),
   }),
 });

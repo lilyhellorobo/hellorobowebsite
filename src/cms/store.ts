@@ -434,6 +434,7 @@ export async function saveEntry(
     const errors: string[] = [];
     const data = validateFields(c.fields, resolved, '', errors);
     if (errors.length) throw new CmsError('Please fix the highlighted fields', 422, errors);
+    await checkLimits(c, id, data);
     await writeJson(file, data);
     const after = collectRefs(data);
     await removeUnreferenced([...before].filter((r) => !after.has(r)));
@@ -441,6 +442,22 @@ export async function saveEntry(
   } catch (err) {
     await Promise.all(saved.map((ref) => unlink(assetFile(ref)!).catch(() => {})));
     throw err;
+  }
+}
+
+/** Top-level boolean fields with a `limit` can only be on for that many entries */
+async function checkLimits(c: CmsCollection, id: string, data: Data) {
+  const limited = c.fields.filter(
+    (f): f is Extract<Field, { kind: 'boolean' }> => f.kind === 'boolean' && !!f.limit && data[f.key] === true,
+  );
+  if (!limited.length) return;
+  const others = (await listEntries(c)).filter((e) => e.id !== id);
+  for (const f of limited) {
+    const on = others.filter((e) => e.data[f.key] === true);
+    if (on.length >= f.limit!) {
+      const msg = `${f.label}: only ${f.limit} ${c.singular}s can be on at once. Switch it off on one of: ${on.map((e) => e.data[c.titleField] ?? e.id).join(', ')}`;
+      throw new CmsError(msg, 422, [msg]);
+    }
   }
 }
 

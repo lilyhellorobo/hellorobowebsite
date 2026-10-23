@@ -7,5 +7,7 @@
   "youtube": "9OIdShlPGCM",
   "description": "This month Hello Robo hosted Jason Kline, Head of Design at Humanoid. We talked about where the design challenges actually are, what's overhyped, and what's quietly getting closer to real deployment.",
   "listed": true,
+  "featured": true,
+  "homepage": true,
   "order": 5
 }

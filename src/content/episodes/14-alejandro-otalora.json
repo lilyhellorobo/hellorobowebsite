@@ -8,5 +8,6 @@
   "description": "Robo Radio 14 is live. This month Hello Robo hosted Alejandro Otálora, Head of Global Design & Product Innovation at Robot.com, to talk about building robots against the odds — and what it takes to design for a world where robots become part of everyday life.",
   "portfolioUrl": "https://alotdesign.com/",
   "listed": true,
+  "featured": true,
   "order": 1
 }

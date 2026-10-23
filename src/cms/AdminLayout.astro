@@ -1,6 +1,6 @@
 ---
 /**
- * CMS shell: left-hand nav (Team, Updates, Projects), signed-in user, page content.
+ * CMS shell: left-hand nav (content sections, then Contact form responses), signed-in user, page content.
  * Separate from the site's BaseLayout so CMS styles never reach the site.
  */
 import '../styles/fonts.css';
@@ -41,6 +41,11 @@ const user = Astro.locals.user;
                   </a>
                 </li>
               ))}
+              <li class="cms-nav__split">
+                <a href="/admin/responses" aria-current={active === 'responses' ? 'page' : undefined}>
+                  Contact form responses
+                </a>
+              </li>
             </ul>
           </nav>
           <div class="cms-side__foot">

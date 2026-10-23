@@ -3,9 +3,9 @@
  * Contact — "Start a project" / "Drop a quick word" flow
  * Figma: "Contact" column (10093:10195 … 10093:10721), each screen 1728×949
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-10195
- * Static: every state is its own screen, linked with #anchors (CSS :target).
- * TODO (logic step): validation + error states ("Name can’t contain numbers",
- * "Email is missing an @"), copy email → "copied", submit, receipt with real data.
+ * Every state is its own screen, linked with #anchors (CSS :target). Send posts the
+ * answers to /api/contact (saved for the CMS "Contact form responses"), then shows #done.
+ * TODO (logic step): copy email → "copied", receipt with real data.
  */
 import Button from '../../components/ui/Button.astro';
 import Divider from '../../components/ui/Divider.astro';
@@ -46,6 +46,7 @@ const services = [
       <label class="contact__field">
         <span class="visually-hidden">{s.field}</span>
         <input class="contact__input t-h3" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.type === 'email' ? 'email' : s.id === 'name' ? 'name' : 'organization'} />
+        <span class="contact__error t-body" role="alert" data-error></span>
       </label>
       <div class="contact__actions">
         <Button href={s.back} variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
@@ -70,8 +71,10 @@ const services = [
     </fieldset>
     <div class="contact__actions">
       <Button href="#company" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
-      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))">Send</Button>
+      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))" data-send="project">Send</Button>
     </div>
+    <span class="contact__error contact__error--inline t-body" role="alert" data-error></span>
+    <input class="contact__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <Divider tone="dark" accent class="contact__rule" />
   </form>
 
@@ -81,11 +84,13 @@ const services = [
     <label class="contact__field contact__field--message">
       <span class="visually-hidden">Your message</span>
       <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Don’t overthink it. Just type away..."></textarea>
+      <span class="contact__error t-body" role="alert" data-error></span>
     </label>
     <div class="contact__actions">
       <Button href="#" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
-      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))">Send</Button>
+      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))" data-send="message">Send</Button>
     </div>
+    <input class="contact__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <Divider tone="dark" accent class="contact__rule" />
   </form>
 
@@ -98,6 +103,58 @@ const services = [
     <Receipt class="contact__receipt" />
   </div>
 </section>
+
+<script>
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const value = (id: string) => document.querySelector<HTMLInputElement>(`#contact-${id}`)?.value.trim() ?? '';
+
+  /** Shows `text` under the field of screen `id` and opens that screen */
+  function fail(id: string, text: string) {
+    document.querySelectorAll<HTMLElement>('.contact [data-error]').forEach((el) => (el.textContent = ''));
+    const screen = document.getElementById(id)!;
+    screen.querySelector<HTMLElement>('[data-error]')!.textContent = text;
+    if (location.hash !== `#${id}`) location.hash = id;
+    screen.querySelector<HTMLElement>('input:not([type=checkbox]):not(.contact__trap), textarea')?.focus();
+  }
+
+  document.querySelectorAll<HTMLAnchorElement>('.contact [data-send]').forEach((button) => {
+    button.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (button.ariaBusy === 'true') return;
+      const type = button.dataset.send as 'project' | 'message';
+      const form = button.closest('form')!;
+      let body: Record<string, unknown>;
+      if (type === 'project') {
+        if (!value('name')) return fail('name', 'Please tell us your name');
+        if (!EMAIL_RE.test(value('email'))) return fail('email', 'That email doesn’t look right');
+        const services = [...document.querySelectorAll<HTMLInputElement>('#mission input[name=services]:checked')].map((i) => i.value);
+        body = { type, name: value('name'), email: value('email'), company: value('company'), services };
+      } else {
+        if (!value('message')) return fail('message', 'Write a few words first');
+        body = { type, message: value('message') };
+      }
+      body.page = location.pathname;
+      body.website = form.querySelector<HTMLInputElement>('.contact__trap')?.value;
+
+      button.ariaBusy = 'true';
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
+        document.querySelectorAll<HTMLFormElement>('.contact form').forEach((f) => f.reset());
+        document.querySelectorAll<HTMLElement>('.contact [data-error]').forEach((el) => (el.textContent = ''));
+        location.hash = 'done';
+      } catch (err) {
+        fail(form.id, `Couldn’t send: ${(err as Error).message}. Please try again or email info@hellorobo.co`);
+      } finally {
+        button.ariaBusy = 'false';
+      }
+    });
+  });
+</script>
 
 <style>
   .contact {
@@ -165,6 +222,20 @@ const services = [
   }
   .contact__field--message {
     top: calc(436 / 949 * 100%);
+  }
+  .contact__error {
+    display: block;
+    margin-top: var(--space-12);
+  }
+  .contact__error:empty {
+    display: none;
+  }
+  .contact__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
   }
   .contact__input {
     width: 100%;

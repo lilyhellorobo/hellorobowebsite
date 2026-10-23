@@ -1,0 +1,90 @@
+---
+/** CMS: what people sent through the site's contact form, newest first (read-only) */
+import AdminLayout from '../../../cms/AdminLayout.astro';
+import { listResponses } from '../../../cms/responses';
+
+export const prerender = false;
+
+const responses = await listResponses();
+const deleted = Astro.url.searchParams.get('deleted');
+const date = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'America/New_York',
+});
+---
+<AdminLayout title="Contact form responses" active="responses">
+  <header class="cms-head">
+    <div>
+      <h1>Contact form responses</h1>
+      <p class="cms-muted">
+        {responses.length} {responses.length === 1 ? 'response' : 'responses'} · from “Get in touch” and the form at the bottom of each page
+      </p>
+    </div>
+  </header>
+
+  {deleted && <p class="cms-notice" role="status">Deleted the response from {deleted}.</p>}
+
+  {responses.length ? (
+    <ul class="cms-responses">
+      {responses.map((r) => {
+        const from = r.type === 'project' ? r.name! : 'Quick word';
+        return (
+          <li class="cms-card cms-response">
+            <header class="cms-response__head">
+              <div>
+                <p class="cms-row__title">{from}</p>
+                <p class="cms-muted cms-small">
+                  <time datetime={r.receivedAt}>{date.format(new Date(r.receivedAt))} ET</time>
+                  {r.page && ` · sent from ${r.page}`}
+                </p>
+              </div>
+              <span class="cms-badge">{r.type === 'project' ? 'Start a project' : 'Drop a quick word'}</span>
+            </header>
+            <dl class="cms-response__fields">
+              {r.email && (<><dt>Email</dt><dd><a class="cms-link" href={`mailto:${r.email}`}>{r.email}</a></dd></>)}
+              {r.company && (<><dt>Company</dt><dd>{r.company}</dd></>)}
+              {r.type === 'project' && (<><dt>Services</dt><dd>{r.services?.length ? r.services.join(', ') : '—'}</dd></>)}
+              {r.message && (<><dt>Message</dt><dd class="cms-response__message">{r.message}</dd></>)}
+            </dl>
+            <div>
+              <button class="cms-btn cms-btn--danger cms-btn--small" type="button" data-delete={r.id} data-title={from}>
+                Delete
+              </button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <div class="cms-empty">
+      <p class="cms-muted">No responses yet. They show up here as soon as someone sends the contact form.</p>
+    </div>
+  )}
+
+  <dialog class="cms-dialog" id="confirm-delete">
+    <form method="dialog">
+      <h2>Delete this response?</h2>
+      <p class="cms-muted">The response from <span data-name></span> will be deleted. This can’t be undone.</p>
+      <p class="cms-notice cms-notice--error" data-error hidden></p>
+      <div class="cms-dialog__actions">
+        <button class="cms-btn cms-btn--ghost" value="cancel">Cancel</button>
+        <button class="cms-btn cms-btn--danger cms-btn--solid" value="delete" data-confirm>Delete</button>
+      </div>
+    </form>
+  </dialog>
+</AdminLayout>
+
+<script>
+  import { confirmDelete } from '../../../cms/client/delete';
+
+  const dialog = document.querySelector<HTMLDialogElement>('#confirm-delete')!;
+  document.querySelectorAll<HTMLButtonElement>('[data-delete]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const title = btn.dataset.title!;
+      if (await confirmDelete(dialog, 'responses', btn.dataset.delete!, title)) {
+        location.href = `${location.pathname}?deleted=${encodeURIComponent(title)}`;
+      }
+    });
+  });
+</script>
