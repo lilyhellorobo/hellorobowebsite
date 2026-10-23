@@ -29,7 +29,7 @@
  * (a .glb set in the CMS) for the future WebGL gallery.
  */
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 import brightIdeas from '../../assets/team/objects/bright_ideas_01.png';
 import catMode from '../../assets/team/objects/cat_mode_active.png';
@@ -57,9 +57,11 @@ const OBJECTS: Record<string, ImageMetadata> = {
   cat_mode_active: catMode,
 };
 const personByObject = new Map(people.map((p) => [p.data.object, p]));
-// The robot stands for the whole studio: it opens the Hello Robo card, not a person's
+// The robot stands for the whole studio: it opens the Hello Robo card (CMS: Team → Studio
+// card, src/content/studio/hello-robo.json), not a person's
 const STUDIO_OBJECT = 'hello_robo';
 const STUDIO_ID = 'hello-robo';
+const studio = (await getEntry('studio', STUDIO_ID))!.data;
 
 // ── The Figma frame "team" (1728×1117), object by object: image box x / y (top-left,
 // Figma px) and its label exactly as placed there — text, and the label frame's left /
@@ -219,7 +221,7 @@ const config = JSON.stringify({
   ))}
 
   <!-- Studio card (Figma 10104:398): opened by the robot; no photo, the culture text -->
-  <article class="team-card team-card--studio" id={STUDIO_ID} aria-label="Hello Robo" aria-hidden="true">
+  <article class="team-card team-card--studio" id={STUDIO_ID} aria-label={studio.name} aria-hidden="true">
     <a class="team-card__close" href="#" aria-label="Close" data-team-close>
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
         <path d="M17.6719 14.3303L25.6023 6.3999" stroke="currentColor" stroke-width="1.28" />
@@ -227,21 +229,20 @@ const config = JSON.stringify({
         <path d="M6.39844 6.3999L25.5984 25.5999" stroke="currentColor" stroke-width="1.28" />
       </svg>
     </a>
-    <img class="team-card__stamp" src="/images/services/stamp-thinkers.svg" alt="" width="252" height="82" style="--w: 252" />
+    {studio.stamp && <img class="team-card__stamp" src={studio.stamp} alt="" width="252" height="82" style="--w: 252" />}
     <header class="team-card__names">
-      <p class="team-card__ja t-h3" lang="ja">ハローロボ</p>
-      <h2 class="t-h2">Hello Robo</h2>
+      <p class="team-card__ja t-h3" lang="ja">{studio.nameJa}</p>
+      <h2 class="t-h2">{studio.name}</h2>
     </header>
     <div class="team-card__quote t-body">
-      <p>Our culture</p>
-      <p>Robots are complex. Working together shouldn’t be. We’re a curious, collaborative team that shares ideas early, asks honest questions and leaves ego at the door.</p>
-      <p>We care about the details, support one another and make space for different perspectives. Everyone has a voice, good ideas can come from anywhere, and the best work is something we build together.</p>
+      <p>{studio.heading}</p>
+      {studio.text.map((p) => <p>{p}</p>)}
     </div>
   </article>
 
   <!-- Keyboard / screen reader access to every card -->
   <ul class="visually-hidden">
-    <li><a href={`#${STUDIO_ID}`} data-team-open={STUDIO_ID}>Hello Robo — our culture</a></li>
+    <li><a href={`#${STUDIO_ID}`} data-team-open={STUDIO_ID}>{studio.name} — {studio.heading}</a></li>
     {people.map((p) => <li><a href={`#${p.id}`} data-team-open={p.id}>{p.data.name}, {p.data.role}</a></li>)}
   </ul>
 </section>

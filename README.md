@@ -312,7 +312,7 @@ The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321
   `stamp-*` / `badge-*` / globe / micrographic SVG in `public/images`, plus uploads,
   which go to `public/images/micrographics/` and are available to every project.
   SVG uploads with scripts or event handlers are refused.
-- Projects, Updates and Robo Radio can be **dragged into order** on their list page
+- Projects, Updates, Careers and Robo Radio can be **dragged into order** on their list page
   (drag the ⠿ handle, or focus it and use ↑ / ↓). Dropping saves right away by
   rewriting each entry's `order` (1, 2, 3…); `sortable: true` in `collections.ts`
   turns it on for a section.
@@ -321,6 +321,9 @@ The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321
   `{ "video": "/videos/..." }`; images stay in `src/assets`. `components/ui/Media.astro`
   renders either: optimized image, GIF as-is (keeps animating), or a muted looping inline
   video (paused for reduced motion).
+- The **studio card** on /team (Hello Robo, opened by the robot) is its own collection,
+  `src/content/studio/hello-robo.json`. In the CMS it sits pinned at the top of Team
+  (`parent: 'team'`); it can be edited but not added or deleted (`fixed: true`).
 - Team members can have a **3D object** (`model`) for the WebGL team gallery: a GLB
   (binary glTF, textures embedded) uploaded in the CMS to `public/models/team/` and
   stored as its URL. OBJ/FBX/etc. are refused with export instructions. On `/team`

@@ -51,7 +51,7 @@ export interface CmsCollection {
   /** URL segment under /admin */
   slug: string;
   /** Folder name in src/content/ and src/assets/ */
-  collection: 'team' | 'news' | 'projects' | 'episodes' | 'positions';
+  collection: 'team' | 'studio' | 'news' | 'projects' | 'episodes' | 'positions';
   label: string;
   singular: string;
   /** Field used as the list title and to suggest the file name of a new entry */
@@ -64,6 +64,15 @@ export interface CmsCollection {
   sortable?: boolean;
   /** Upload images into src/assets/<collection>/<id>/ instead of src/assets/<collection>/ */
   assetsPerEntry?: boolean;
+  /**
+   * Shown at the top of this section's list (and highlighted in its nav) instead of
+   * having a nav item of its own, e.g. the studio card inside Team
+   */
+  parent?: string;
+  /** Fixed entries: they can be edited, not added or deleted */
+  fixed?: boolean;
+  /** Badge on its row in the parent's list */
+  badge?: string;
   fields: Field[];
 }
 
@@ -118,6 +127,25 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         hint: 'For the interactive WebGL team gallery. GLB format (binary glTF, textures embedded), ideally under 5 MB. In Blender: File → Export → glTF 2.0, format “glTF Binary (.glb)”.',
       },
       order,
+    ],
+  },
+  {
+    slug: 'studio',
+    collection: 'studio',
+    label: 'Studio card',
+    singular: 'studio card',
+    titleField: 'name',
+    subtitleField: 'heading',
+    siteUrl: (id) => `/team#${id}`,
+    parent: 'team',
+    fixed: true,
+    badge: 'Studio card · opened by the robot',
+    fields: [
+      { kind: 'text', key: 'nameJa', label: 'Name in Japanese', required: true, lang: 'ja' },
+      { kind: 'text', key: 'name', label: 'Name', required: true },
+      { kind: 'graphic', key: 'stamp', label: 'Stamp', hint: 'Top right of the card.' },
+      { kind: 'text', key: 'heading', label: 'Heading', required: true, hint: 'e.g. “Our culture”' },
+      { kind: 'strings', key: 'text', label: 'Text', item: 'paragraph', multiline: true },
     ],
   },
   {
@@ -278,6 +306,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     titleField: 'title',
     subtitleField: 'type',
     siteUrl: (id) => `/careers/${id}`,
+    sortable: true,
     fields: [
       { kind: 'text', key: 'title', label: 'Job title', required: true },
       { kind: 'text', key: 'location', label: 'Location', required: true, hint: 'e.g. “Remote” or “New York”' },

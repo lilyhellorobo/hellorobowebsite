@@ -34,7 +34,7 @@ const user = Astro.locals.user;
           </a>
           <nav class="cms-nav" aria-label="CMS">
             <ul>
-              {CMS_COLLECTIONS.map((c) => (
+              {CMS_COLLECTIONS.filter((c) => !c.parent).map((c) => (
                 <li>
                   <a href={`/admin/${c.slug}`} aria-current={active === c.slug ? 'page' : undefined}>
                     {c.label}

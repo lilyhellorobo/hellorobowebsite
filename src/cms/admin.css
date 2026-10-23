@@ -358,6 +358,9 @@
   font-size: 12px;
   text-align: center;
 }
+.cms-list--pinned {
+  margin-bottom: 12px;
+}
 .cms-empty {
   padding: 48px 24px;
   border: 1px dashed var(--c-line-strong);

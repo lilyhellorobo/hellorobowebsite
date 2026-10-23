@@ -5,6 +5,6 @@ import { getCmsCollection } from '../../../cms/collections';
 export const prerender = false;
 
 const c = getCmsCollection(Astro.params.section);
-if (!c) return new Response('Not found', { status: 404 });
+if (!c || c.fixed) return new Response('Not found', { status: 404 });
 ---
 <Editor c={c} />
