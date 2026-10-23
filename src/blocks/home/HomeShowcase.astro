@@ -1,67 +1,175 @@
 ---
 /**
- * Home — Showcase ("What it took those founders…")
- * Figma: "Frame 2147232805" (10093:249), 1728×1555; photo block 10093:250 (1648×1117)
- * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-249
- * Mobile: the full-bleed slide "block 1" (10101:14507, 390×694) under the intro text.
+ * Home — Showcase ("What it took those founders…" + "Make the … say yes")
+ * Figma: intro + slides, each 1728×1117 full screen:
+ *   1 "Make the world say yes"     — 10093:250 (photo block)
+ *   2 "Make the operators say yes" — 10203:131
+ *   3 "Make the market say yes"    — 10203:481
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10203-131
+ * Mobile: slides "block 1 / block 2 / block" (10101:14507, 10101:14838, 10101:15206), 390×694.
+ *
+ * Scroll (desktop): the block starts inside the page layout (40 side margins, as the
+ * Figma photo block 1648×1117) and pins when it reaches the top. The first half
+ * screen of scrolling widens it to full screen; then three screens of scrolling move
+ * through the slides: the background crossfades, the title and services list swap,
+ * and the bright segment of the line grows with the progress through all slides.
+ * Mobile: already full width (Figma), so it skips the widening.
+ * Transitions are placeholders for the motion step.
  */
 import { Image } from 'astro:assets';
 import Divider from '../../components/ui/Divider.astro';
-import photo from '../../assets/home/showcase-photo.png';
+import world from '../../assets/home/showcase-photo.png';
+import operators from '../../assets/home/showcase-operators.jpg';
+import market from '../../assets/home/showcase-market.jpg';
 
-const services = [
-  'Robot Brand Identity',
-  'Brand Strategy & Positioning',
-  'Robot Naming & Nomenclature',
-  'Motion Identity',
-  'Tone of Voice',
+// Title is "Make the <word> say yes", broken as in Figma: before "say yes" on desktop, after "Make the" on mobile
+const slides = [
+  {
+    word: 'world',
+    image: world,
+    alt: 'A person holding a tablet showing a robotics product interface',
+    // Slide 1's photo has no shade baked in; slides 2–3 were exported with Figma's 30% shade
+    shade: true,
+    services: ['Robot Brand Identity', 'Brand Strategy & Positioning', 'Robot Naming & Nomenclature', 'Motion Identity', 'Tone of Voice'],
+  },
+  {
+    word: 'operators',
+    image: operators,
+    alt: 'Aerial view of a solar field with a module installation chart',
+    shade: false,
+    services: ['HRI Design', 'Robot Management UI', 'Fleet Management UI', 'Operator Dashboard', 'Observability Interface'],
+  },
+  {
+    word: 'market',
+    image: market,
+    alt: 'Close-up of a solar panel corner on black',
+    shade: false,
+    services: ['Robot Cinematic Videos', 'Product Launch Films', 'Brand Films', 'Product Demos', 'Founder Stories', 'Pilot Case Studies'],
+  },
 ];
 ---
-<section class="home-showcase container">
-  <h2 class="home-showcase__intro t-h3">What it took those founders to be ready for that moment.</h2>
+<section class="home-showcase">
+  <h2 class="home-showcase__intro t-h3 container">What it took those founders to be ready for that moment.</h2>
 
-  <div class="home-showcase__media">
-    <Image
-      class="home-showcase__photo"
-      src={photo}
-      alt="A person holding a tablet showing a robotics product interface"
-      widths={[1100, 1648, 2400, 3296]}
-      sizes="(min-width: 1728px) 1648px, calc(100vw - 80px)"
-      loading="lazy"
-    />
-    <div class="home-showcase__shade" aria-hidden="true"></div>
-
-    <div class="home-showcase__overlay">
-      <Divider tone="dark" accent class="home-showcase__rule" />
-      <div class="home-showcase__row">
-        <div class="home-showcase__marks" aria-hidden="true">
-          <img src="/images/home/showcase-globe.svg" alt="" width="68" style="--w: 68" height="72" />
-          <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" style="--w: 62" height="14" />
+  <div class="home-showcase__scroller" style={`--slides: ${slides.length}`} data-showcase>
+    <div class="home-showcase__stage" data-active="0">
+      {slides.map((s, i) => (
+        <div class="home-showcase__bg" data-slide={i}>
+          <Image
+            class="home-showcase__photo"
+            src={s.image}
+            alt={s.alt}
+            widths={[1200, 1728, 2600, 3456]}
+            sizes="100vw"
+            loading="lazy"
+          />
+          {s.shade && <div class="home-showcase__shade" aria-hidden="true"></div>}
         </div>
-        <p class="home-showcase__title t-h2">Make the world say yes</p>
-        <ul class="home-showcase__services t-body t-body2-mobile">
-          {services.map((s) => <li>{s}</li>)}
-        </ul>
+      ))}
+
+      <div class="home-showcase__overlay">
+        <Divider tone="dark" accent class="home-showcase__rule" />
+        <div class="home-showcase__row">
+          <div class="home-showcase__marks" aria-hidden="true">
+            <img src="/images/home/showcase-globe.svg" alt="" width="68" style="--w: 68" height="72" />
+            <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" style="--w: 62" height="14" />
+          </div>
+          <div class="home-showcase__titles">
+            {slides.map((s, i) => (
+              <p class="home-showcase__title t-h2" data-slide={i} aria-hidden={i > 0 ? 'true' : undefined}>Make the<br class="only-mobile" /> {s.word}<br class="only-desktop" /> say yes</p>
+            ))}
+          </div>
+          <div class="home-showcase__lists">
+            {slides.map((s, i) => (
+              <ul class="home-showcase__services t-body t-body2-mobile" data-slide={i} aria-hidden={i > 0 ? 'true' : undefined}>
+                {s.services.map((item) => <li>{item}</li>)}
+              </ul>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
+<script>
+  // Pinned slides: progress 0→1 across the scroller drives the line and the active slide.
+  for (const scroller of document.querySelectorAll<HTMLElement>('[data-showcase]')) {
+    const stage = scroller.querySelector<HTMLElement>('.home-showcase__stage');
+    const count = Number(getComputedStyle(scroller).getPropertyValue('--slides')) || 3;
+    const parts = scroller.querySelectorAll<HTMLElement>('.home-showcase__title, .home-showcase__services');
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      if (!stage) return;
+      const rect = scroller.getBoundingClientRect();
+      // The stage's own height (100vh / 100svh), not window.innerHeight: on phones the
+      // browser toolbar changes innerHeight while scrolling, which would make slides jump
+      const travel = rect.height - stage.offsetHeight;
+      // The first part of the scroll widens the block to full screen (desktop only)
+      const expand = stage.offsetHeight * (Number(getComputedStyle(scroller).getPropertyValue('--expand')) || 0);
+      const clamp = (v: number) => Math.min(1, Math.max(0, v));
+      const enter = expand > 0 ? clamp(-rect.top / expand) : 1;
+      const progress = travel - expand > 0 ? clamp((-rect.top - expand) / (travel - expand)) : 0;
+      stage.style.setProperty('--enter', String(enter));
+      const active = Math.min(count - 1, Math.floor(progress * count));
+      stage.style.setProperty('--progress', String(progress));
+      if (stage.dataset.active !== String(active)) {
+        stage.dataset.active = String(active);
+        parts.forEach((el) => el.setAttribute('aria-hidden', String(el.dataset.slide !== String(active))));
+      }
+    };
+    const request = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request);
+    update();
+  }
+</script>
+
 <style>
   .home-showcase {
     padding-top: calc(160 * var(--px));
-    padding-bottom: calc(82 * var(--px));
   }
   .home-showcase__intro {
-    width: calc(818 * var(--px));
+    width: calc(818 * var(--px) + 2 * var(--page-margin));
     max-width: 100%;
+    margin-inline: 0;
   }
-  .home-showcase__media {
+
+  /* Half a screen to widen + one screen per slide; the stage stays pinned meanwhile */
+  .home-showcase__scroller {
+    --expand: 0.5;
     position: relative;
+    height: calc((var(--slides) + var(--expand)) * 100vh);
     margin-top: calc(80 * var(--px));
-    aspect-ratio: 1648 / 1117;
+  }
+  .home-showcase__stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
     overflow: hidden;
     color: var(--color-white);
+    background: var(--color-black);
+    --progress: 0;
+    --enter: 0;
+    /* Starts with the page's side margins (the Figma 1648-wide block), opens to full width */
+    clip-path: inset(0 calc(var(--page-margin) * (1 - var(--enter))));
+  }
+
+  /* ── Backgrounds: crossfade to the active slide ── */
+  .home-showcase__bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .home-showcase__stage[data-active='0'] .home-showcase__bg[data-slide='0'],
+  .home-showcase__stage[data-active='1'] .home-showcase__bg[data-slide='1'],
+  .home-showcase__stage[data-active='2'] .home-showcase__bg[data-slide='2'] {
+    opacity: 1;
   }
   .home-showcase :global(.home-showcase__photo) {
     position: absolute;
@@ -75,19 +183,24 @@ const services = [
     inset: 0;
     background: rgb(0 0 0 / 0.3);
   }
-  /* Rule at 681, content row at 714 inside the 1117-tall block */
+
+  /* Rule at 683, content row at 714 in the 1728×1117 frame (scaled to the screen height) */
+  /* Inside the margins at first (80 from the screen edge), 40 when full screen */
   .home-showcase__overlay {
     position: absolute;
-    left: var(--space-40);
-    right: var(--space-40);
-    top: calc(681 / 1117 * 100%);
+    left: calc(var(--page-margin) * (2 - var(--enter)));
+    right: calc(var(--page-margin) * (2 - var(--enter)));
+    top: calc(683 / 1117 * 100%);
+  }
+  /* Progress: the bright segment grows with the scroll through all slides */
+  .home-showcase :global(.home-showcase__rule.divider--accent)::before {
+    width: calc(var(--progress) * 100%);
   }
   .home-showcase__row {
     display: grid;
-    /* columns from the 1568-wide row: marks 108 · title 947 · services 403 · rest */
-    grid-template-columns: calc(108 / 1568 * 100%) calc(947 / 1568 * 100%) calc(403 / 1568 * 100%) 1fr;
-    gap: 0;
-    margin-top: calc(33 * var(--px));
+    /* columns from the 1648-wide row: globe 128 · title 979 · services 403 · rest */
+    grid-template-columns: calc(128 / 1648 * 100%) calc(979 / 1648 * 100%) calc(403 / 1648 * 100%) 1fr;
+    margin-top: calc(31 * var(--px));
   }
   .home-showcase__marks {
     position: relative;
@@ -97,32 +210,70 @@ const services = [
     left: calc(5 * var(--px));
     top: calc(62 * var(--px));
   }
+
+  /* ── Titles and service lists: all slides share one cell, only the active one shows ── */
+  .home-showcase__titles,
+  .home-showcase__lists {
+    display: grid;
+  }
+  .home-showcase__title,
+  .home-showcase__services {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transform: translateY(calc(16 * var(--px)));
+    transition:
+      opacity 0.4s ease,
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .home-showcase__stage[data-active='0'] [data-slide='0']:is(.home-showcase__title, .home-showcase__services),
+  .home-showcase__stage[data-active='1'] [data-slide='1']:is(.home-showcase__title, .home-showcase__services),
+  .home-showcase__stage[data-active='2'] [data-slide='2']:is(.home-showcase__title, .home-showcase__services) {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.15s;
+  }
   .home-showcase__title {
-    width: calc(542 * var(--px));
-    margin-top: calc(7 * var(--px));
+    width: calc(680 * var(--px));
+    margin-top: calc(5 * var(--px));
   }
   .home-showcase__services {
     display: grid;
+    align-content: start;
     gap: var(--space-24);
-    margin-top: calc(11 * var(--px));
+    margin-top: calc(9 * var(--px));
   }
 
-  /* ── Mobile: intro (Figma 10098:3679) + slide "block 1" (10101:14507, 390×694) ── */
+  @media (prefers-reduced-motion: reduce) {
+    .home-showcase__title,
+    .home-showcase__services {
+      transform: none;
+    }
+  }
+
+  /* ── Mobile: intro (Figma 10098:3679) + slides "block 1 / 2 / block" (390×694).
+     Content sits at the bottom: rule, title 24 below, services 44 below ── */
   @media (max-width: 767px) {
     .home-showcase {
       padding-top: 164px;
-      padding-bottom: 0;
     }
-    .home-showcase__media {
-      margin: 40px calc(-1 * var(--page-margin)) 0;
-      aspect-ratio: 390 / 694;
+    .home-showcase__intro {
+      width: auto;
     }
-    /* Content sits at the bottom: rule at 370, title at 394, services at 540 */
+    .home-showcase__scroller {
+      --expand: 0;
+      height: calc(var(--slides) * 100svh);
+      margin-top: 40px;
+    }
+    .home-showcase__stage {
+      height: 100svh;
+      clip-path: none;
+    }
+    /* 20 above the fixed nav pill (20 + 64), so the services list is never covered */
     .home-showcase__overlay {
       left: var(--page-margin);
       right: var(--page-margin);
       top: 0;
-      bottom: 20px;
+      bottom: calc(20px + var(--nav-height) + 20px);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -131,6 +282,7 @@ const services = [
       display: block;
       margin-top: 0;
     }
+    /* Globe mark at the top left of the slide (16, 20) */
     .home-showcase__marks {
       position: absolute;
       top: 20px;
@@ -146,13 +298,19 @@ const services = [
       width: 51px;
       height: auto;
     }
-    .home-showcase__title {
-      width: 300px; /* Figma breaks after "the" */
+    .home-showcase__titles {
       margin-top: var(--space-24);
+    }
+    .home-showcase__title {
+      width: auto;
+      margin-top: 0;
+    }
+    .home-showcase__lists {
+      margin-top: 44px;
     }
     .home-showcase__services {
       gap: var(--space-16);
-      margin-top: 44px;
+      margin-top: 0;
     }
   }
 </style>
