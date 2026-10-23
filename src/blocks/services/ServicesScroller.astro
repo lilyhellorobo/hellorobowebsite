@@ -128,9 +128,7 @@ const { items } = Astro.props;
     grid-template-columns: 1fr 1fr;
     grid-template-areas: 'text media';
     column-gap: var(--gutter);
-    margin-top: var(--space-40);
-    /* Room for the nav pill below (Figma block: 157 under the image) */
-    height: calc(100% - var(--space-40) - var(--line-width) - calc(157 * var(--px)));
+    margin-top: calc(36 * var(--px)); /* image at 77 in Figma (rule at 40) */
   }
   .services-scroller__slide {
     display: contents;
@@ -204,14 +202,18 @@ const { items } = Astro.props;
   }
 
   /* ── Images: the next one slides in from the bottom over the previous ── */
+  /* Figma 818×872 at (870, 77), corner 4: always the full right column (to the page
+     margin). On short windows it keeps that width and crops top/bottom, leaving room
+     for the nav pill (Figma: 157 under the image). The row takes the image's height,
+     so the services list sits on the image's bottom edge. */
   .services-scroller__media {
     grid-area: media;
     position: relative;
     align-self: start;
-    height: 100%;
-    max-height: calc(872 * var(--px));
+    width: 100%;
     aspect-ratio: 818 / 872;
-    max-width: 100%;
+    max-height: calc(100vh - var(--space-40) - var(--line-width) - calc(36 * var(--px)) - calc(157 * var(--px)));
+    border-radius: calc(4 * var(--px));
     overflow: hidden;
     background: var(--color-black);
     clip-path: inset(100% 0 0 0);
