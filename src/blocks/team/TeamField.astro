@@ -246,8 +246,12 @@ const config = JSON.stringify({
     const groups = new Map<string, number[]>();
     pos.forEach((_, i) => groups.set(copyKey(i), [...(groups.get(copyKey(i)) || []), i]));
     let focusAt: { x: number; y: number } | null = null;
+    // While selected, the object is headed for selTarget: on screen it's at selTarget minus
+    // the pan still to go — exact even if a slow frame jumps the whole glide at once
+    let selTarget: { x: number; y: number; panX: number; panY: number } | null = null;
     const followFocus = () => {
       if (focus < 0) return void (focusAt = null);
+      if (selTarget && selected === focus) focusAt = { x: selTarget.x - (selTarget.panX - panX), y: selTarget.y - (selTarget.panY - panY) };
       if (focusAt) {
         let best = focus;
         let bestD = Infinity;
@@ -383,6 +387,7 @@ const config = JSON.stringify({
       const s = screenOf(i);
       const t = target();
       panAnim = { x0: panX, y0: panY, x1: panX + (t.x - s.x), y1: panY + (t.y - s.y), t0: performance.now(), dur: reduce ? 0 : 1100 };
+      selTarget = { x: t.x, y: t.y, panX: panAnim.x1, panY: panAnim.y1 };
       kick();
       // The robot opens the studio card; any other object, for now, a random person
       // (never the same twice in a row), unless one is given
@@ -393,6 +398,7 @@ const config = JSON.stringify({
     const deselect = () => {
       if (selected < 0) return;
       selected = -1;
+      selTarget = null;
       objs.forEach((el) => el.classList.remove('is-selected'));
       closeAll();
       setFocus(-1);
@@ -668,6 +674,14 @@ const config = JSON.stringify({
   }
   .team-obj.is-selected :global(img) {
     transform: scale(1.15);
+  }
+  /* The label stays visible on the selected object and moves down with the zoom
+     (half of the extra 15% height) */
+  .team-obj__label {
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+  .team-obj.is-selected .team-obj__label {
+    transform: translate(-50%, calc(var(--h) * 0.075 * var(--px) * var(--s)));
   }
 
   /* ── Card: 819×1037 white panel, 40 from the top and right; fades in ───────── */
