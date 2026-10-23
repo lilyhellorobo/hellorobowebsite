@@ -82,6 +82,22 @@ const { back } = Astro.props;
     transform: translateX(-50%);
     z-index: var(--z-nav);
     display: flex;
+    transition:
+      opacity var(--duration-smooth) var(--ease-out),
+      translate var(--duration-slow) var(--ease-out),
+      visibility 0s;
+  }
+  /* A page can tuck the menu away (e.g. Team while a person's card is open):
+     html[data-nav='hidden'] — it fades and slides down, and comes back the same way */
+  :global(html[data-nav='hidden']) .nav-pill {
+    opacity: 0;
+    translate: 0 calc(24 * var(--px));
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity var(--duration-smooth) var(--ease-out),
+      translate var(--duration-slow) var(--ease-out),
+      visibility 0s linear var(--duration-slow);
   }
   .nav-pill__back,
   .nav-pill__close,
