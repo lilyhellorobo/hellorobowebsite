@@ -117,17 +117,16 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     z-index: var(--z-overlay);
     width: calc(819 * var(--px));
     max-width: calc(100vw - 2 * var(--page-margin));
-    min-height: min(calc(1037 * var(--px)), calc(100vh - calc(80 * var(--px))));
-    max-height: calc(100vh - calc(80 * var(--px)));
-    overflow-y: auto;
+    height: min(calc(1037 * var(--px)), calc(100vh - calc(80 * var(--px))));
+    overflow-y: auto; /* only if a quote is extremely long for a very short window */
     padding: var(--space-40);
     background: var(--color-white);
     color: var(--color-black);
     grid-template-columns: calc(314 * var(--px)) 1fr;
-    /* Row 1: names | photo — always as tall as they need (never squeezed).
-       Row 2: the quote, pushed to the bottom when the card has room; a long quote
-       makes the card scroll instead of overlapping the photo. */
-    grid-template-rows: auto 1fr;
+    /* Row 2 (the quote) takes its full height; row 1 (names | photo) gets the rest.
+       The photo shrinks to fit that space (up to Figma's 369×499), so the card fits
+       the screen without scrolling and nothing overlaps. */
+    grid-template-rows: minmax(0, 1fr) auto;
     column-gap: calc(56 * var(--px));
   }
   .team-card:target {
@@ -153,21 +152,29 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
   .team-card__photo {
     grid-column: 2;
     grid-row: 1;
-    width: calc(369 * var(--px));
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
   }
+  /* Fills the free height, keeps 369:499, never larger than Figma */
   .team-card__photo :global(img) {
-    width: calc(369 * var(--px));
-    height: auto;
+    flex: 0 1 auto;
+    min-height: calc(160 * var(--px));
+    height: 100%;
+    max-height: calc(499 * var(--px));
+    width: auto;
+    max-width: calc(369 * var(--px));
     aspect-ratio: 369 / 499;
     object-fit: cover;
   }
   .team-card__photo figcaption {
+    flex: none;
     margin-top: var(--space-20);
   }
   .team-card__quote {
     grid-column: 1 / -1;
     grid-row: 2;
-    align-self: end;
     width: calc(739 * var(--px));
     max-width: 100%;
     margin-top: var(--space-40);
@@ -194,8 +201,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       bottom: 96px;
       width: auto;
       max-width: none;
-      min-height: 0;
-      max-height: none;
+      height: auto;
       padding: var(--space-20);
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: none;
@@ -207,8 +213,13 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       grid-column: 1;
       grid-row: auto;
     }
+    /* A plain scrolling column: nothing is squeezed to fit the sheet */
+    .team-card:target {
+      display: block;
+    }
     .team-card__close {
       position: static;
+      display: block;
     }
     .team-card__names {
       margin-top: var(--space-24);
@@ -217,8 +228,17 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       width: 100%;
       margin-top: var(--space-24);
     }
+    /* The mobile sheet scrolls, so the photo keeps its full size */
+    .team-card__photo {
+      display: block;
+    }
     .team-card__photo :global(img) {
+      flex: none;
       width: 100%;
+      height: auto;
+      min-height: 0;
+      max-width: none;
+      max-height: none;
     }
     .team-card__quote {
       margin-top: var(--space-24);
