@@ -101,7 +101,9 @@ const slides = [
       frame = 0;
       if (!stage) return;
       const rect = scroller.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
+      // The stage's own height (100vh / 100svh), not window.innerHeight: on phones the
+      // browser toolbar changes innerHeight while scrolling, which would make slides jump
+      const travel = rect.height - stage.offsetHeight;
       const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
       const active = Math.min(count - 1, Math.floor(progress * count));
       stage.style.setProperty('--progress', String(progress));
