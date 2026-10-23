@@ -351,7 +351,7 @@ hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open it
 - Placeholder copy in Figma: Team (Paulina, Greg quotes; Alex's names swapped); episode rows share one description.
 - Heavy SVGs to simplify with the designer: approved stamp (~965 KB), department stamp (~738 KB), logo rows (~990 KB), menu micrographic (~518 KB). Bedrock logo only exists as PNG.
 - Motion step: menu reveal, value tabs, contact form logic and copy-email; polish of the Home scroll interactions (easing, timing).
-- Project wheel: some project reveal images may need a better crop for the wheel background; the 30% overlay is desktop only so far.
+- Project wheel: some project reveal images may need a better crop for the wheel background.
 - CMS publishing: choose hosting for hellorobo.co and how CMS saves reach the live site.
 
 ---
