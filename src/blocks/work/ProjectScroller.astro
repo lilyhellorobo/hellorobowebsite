@@ -1,16 +1,21 @@
 ---
 /**
- * Work — Project scroller (also used on Home as "Featured work")
+ * Work — Project wheel (Home "Featured work" and the Work page)
  * Figma: Home "Portfolio page d" (10093:1049) / Work "Portfolio page" (10100:11973), 1728×1117
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1049
  *
- * Static state of the wheel: the active project in the H2 style, the others
- * smaller and fainter above/below it. Sizes, opacities and offsets are from
- * Figma. Scrolling the wheel + the lens/CRT shaders come in the motion/WebGL steps.
- * Mobile (Figma Home 10101:9021): the wheel becomes a stack of full-bleed
- * 390×694 project cards — image, globe mark, rule, title, services, VIEW.
- * Projects come from the projects collection (edited in the CMS): the first one by
- * `order` is the active project; the wheel repeats the list around it.
+ * Desktop: the project names sit on a looping cylinder. The block pins to the screen
+ * and scrolling turns the wheel through every project once; the name at the front is
+ * the active project: its background and services show, and hovering its name shows
+ * VIEW. Sizes, opacities and offsets of the rows are Figma's wheel (by distance from
+ * the front), so the static state matches the design. A CSS CRT layer (scanlines,
+ * aperture mask, vignette, noise, flicker, rolling band — values from the Figma shader)
+ * sits on top until the WebGL step.
+ * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
+ * half screen of scrolling widens it to full screen, then the wheel turns.
+ * Work page: full screen from the start.
+ * Mobile (Figma Home 10101:9021): a stack of full-bleed 390×694 project cards.
+ * Projects come from the projects collection (CMS), in `order`; the first is in front.
  */
 import { getCollection } from 'astro:content';
 import Media from '../../components/ui/Media.astro';
@@ -18,76 +23,94 @@ import Button from '../../components/ui/Button.astro';
 
 interface Props {
   as?: 'section' | 'div';
+  /** Inside the page margins (Home) instead of full screen (Work) */
+  framed?: boolean;
   /** How many project cards the mobile layout shows (Home shows 2) */
   mobileLimit?: number;
 }
-const { as: Tag = 'section', mobileLimit } = Astro.props;
+const { as: Tag = 'section', framed = false, mobileLimit } = Astro.props;
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 const active = projects[0];
 
-// Wheel rows: x, y, size (px in Figma), opacity — in the 1728×1117 frame. Row 6 is the active one.
-const rows = [
-  { x: 335, y: -39, size: 56, opacity: 0.15 },
-  { x: 376, y: 65, size: 52, opacity: 0.1 },
-  { x: 354, y: 125, size: 58, opacity: 0.15 },
-  { x: 344, y: 204, size: 62, opacity: 0.25 },
-  { x: 336, y: 298, size: 68, opacity: 0.35 },
-  { x: 319, y: 404, size: 75, opacity: 0.5 },
-  { x: 319, y: 511, size: 80, opacity: 1 },
-  { x: 322, y: 628, size: 75, opacity: 0.5 },
-  { x: 330, y: 738, size: 68, opacity: 0.35 },
-  { x: 346, y: 838, size: 62, opacity: 0.25 },
-  { x: 356, y: 935, size: 58, opacity: 0.15 },
-  { x: 378, y: 1019, size: 52, opacity: 0.1 },
-  { x: 372, y: 1089, size: 48, opacity: 0.1 },
-];
-const ACTIVE_ROW = 6;
-const at = (i: number) => projects[(((i - ACTIVE_ROW) % projects.length) + projects.length) % projects.length];
-// Each project is a link once, on the row nearest the active one; the other rows repeat it
-const linkRow = new Map<string, number>();
-[...rows.keys()]
-  .sort((a, b) => Math.abs(a - ACTIVE_ROW) - Math.abs(b - ACTIVE_ROW) || a - b)
-  .forEach((i) => projects.length && !linkRow.has(at(i).id) && linkRow.set(at(i).id, i));
-const wheel = projects.length
-  ? rows.map((r, i) => ({ ...r, project: at(i), active: i === ACTIVE_ROW, repeat: linkRow.get(at(i).id) !== i }))
+// Figma wheel rows by distance from the front (0 = front): vertical offset from the
+// front row's centre, scale of the H2 size, opacity, left edge — 1728×1117 frame units.
+const WHEEL = {
+  y: [0, 112, 220, 317, 405, 477, 562, 640],
+  scale: [1, 0.9375, 0.85, 0.775, 0.725, 0.65, 0.6, 0.55],
+  opacity: [1, 0.5, 0.35, 0.25, 0.15, 0.1, 0.1, 0],
+  x: [319, 320, 333, 345, 355, 377, 380, 385],
+  centre: 549,
+};
+const SLOTS = 15; // rows rendered; the middle one is the front
+const MID = (SLOTS - 1) / 2;
+const mod = (n: number, m: number) => ((n % m) + m) % m;
+// Static placement at offset 0 (the script moves them on scroll with the same maths)
+const place = (d: number) => {
+  const a = Math.min(Math.abs(d), WHEEL.y.length - 1);
+  const sign = d < 0 ? -1 : 1;
+  return {
+    left: `${(WHEEL.x[a] / 1728) * 100}%`,
+    top: `${((WHEEL.centre + sign * WHEEL.y[a]) / 1117) * 100}%`,
+    scale: WHEEL.scale[a],
+    opacity: WHEEL.opacity[a],
+  };
+};
+const rows = projects.length
+  ? Array.from({ length: SLOTS }, (_, s) => {
+      const k = s - MID;
+      return { k, project: projects[mod(k, projects.length)], ...place(k) };
+    })
   : [];
+const wheelData = JSON.stringify({ ...WHEEL, items: projects.map((p) => ({ name: p.data.name, href: `/work/${p.id}` })) });
 // Mobile cards: every project once, in order
 const cards = projects.slice(0, mobileLimit ?? projects.length);
-const pctX = (v: number) => `${(v / 1728) * 100}%`;
-const pctY = (v: number) => `${(v / 1117) * 100}%`;
 ---
 {active && (
-<Tag class="project-scroller theme-dark only-desktop" aria-label="Selected work">
-  <Media
-    class="project-scroller__bg"
-    media={active.data.reveal}
-    widths={[1400, 2406]}
-    sizes="140vw"
-    loading="lazy"
-  />
-  <div class="project-scroller__scanlines" aria-hidden="true"></div>
+<Tag class:list={['project-wheel', 'theme-dark', 'only-desktop', { 'project-wheel--framed': framed }]} aria-label="Selected work" style={`--count: ${projects.length}`} data-wheel={wheelData}>
+  <div class="project-wheel__stage" data-active="0">
+    <div class="project-wheel__frame">
+      <div class="project-wheel__canvas">
+        {projects.map((p, i) => (
+          <div class:list={['project-wheel__bg', { 'is-current': i === 0 }]} data-index={i}>
+            <Media class="project-wheel__bg-media" media={p.data.reveal} widths={[1400, 2406]} sizes="140vw" loading="lazy" />
+          </div>
+        ))}
 
-  <hr class="project-scroller__rule" />
-  <img class="project-scroller__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
+        <hr class="project-wheel__rule" />
+        <img class="project-wheel__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
 
-  <ol class="project-scroller__names">
-    {wheel.map((p) => (
-      <li
-        class:list={['project-scroller__name', 't-h2', { 'is-active': p.active }]}
-        style={`left:${pctX(p.x)};top:${pctY(p.y)};--k:${p.size / 80};opacity:${p.opacity}`}
-        aria-current={p.active ? 'true' : undefined}
-        aria-hidden={p.repeat ? 'true' : undefined}
-      >
-        <a href={`/work/${p.project.id}`} tabindex={p.repeat ? -1 : undefined}>{p.project.data.name}</a>
-      </li>
-    ))}
-  </ol>
+        <ol class="project-wheel__names" aria-hidden="true">
+          {rows.map((r) => (
+            <li
+              class:list={['project-wheel__name', 't-h2', { 'is-front': r.k === 0 }]}
+              data-k={r.k}
+              style={`left:${r.left};top:${r.top};opacity:${r.opacity};transform:translateY(-50%) scale(${r.scale})`}
+            >
+              <a href={`/work/${r.project.id}`} tabindex={r.k === 0 ? undefined : -1}>{r.project.data.name}</a>
+            </li>
+          ))}
+        </ol>
 
-  <Button href={`/work/${active.id}`} variant="light" size="small" class="project-scroller__view">View</Button>
+        <Button href={`/work/${active.id}`} variant="light" size="small" class="project-wheel__view" tabindex="-1">View</Button>
 
-  <ul class="project-scroller__services t-body">
-    {active.data.services.map((s) => <li>{s}</li>)}
+        {projects.map((p, i) => (
+          <ul class:list={['project-wheel__services', 't-body', { 'is-current': i === 0 }]} data-index={i}>
+            {p.data.services.map((s) => <li>{s}</li>)}
+          </ul>
+        ))}
+
+        <div class="project-wheel__crt" aria-hidden="true">
+          <span class="project-wheel__crt-mask"></span>
+          <span class="project-wheel__crt-noise"></span>
+          <span class="project-wheel__crt-roll"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- The wheel is decorative motion; this is the same list for keyboard and screen readers -->
+  <ul class="visually-hidden">
+    {projects.map((p) => <li><a href={`/work/${p.id}`}>{p.data.name}</a></li>)}
   </ul>
 </Tag>
 )}
@@ -112,71 +135,312 @@ const pctY = (v: number) => `${(v / 1117) * 100}%`;
   ))}
 </Tag>
 
+<script>
+  // Turns page scroll into the wheel's rotation: one full turn through every project
+  // while the block is pinned. offset 0 = first project in front, offset N = back to it.
+  type Wheel = { y: number[]; scale: number[]; opacity: number[]; x: number[]; centre: number; items: { name: string; href: string }[] };
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wheel]')) {
+    const data: Wheel = JSON.parse(root.dataset.wheel || '{}');
+    const N = data.items.length;
+    const stage = root.querySelector<HTMLElement>('.project-wheel__stage');
+    const canvas = root.querySelector<HTMLElement>('.project-wheel__canvas');
+    const rows = [...root.querySelectorAll<HTMLElement>('.project-wheel__name')];
+    const view = root.querySelector<HTMLAnchorElement>('.project-wheel__view');
+    const bgs = [...root.querySelectorAll<HTMLElement>('.project-wheel__bg')];
+    const lists = [...root.querySelectorAll<HTMLElement>('.project-wheel__services')];
+    if (!stage || !canvas || !N) continue;
+    const MID = (rows.length - 1) / 2;
+    const last = data.y.length - 1;
+    const mod = (n: number, m: number) => ((n % m) + m) % m;
+    const lerp = (arr: number[], a: number) => {
+      const i = Math.min(Math.floor(a), last);
+      const t = Math.min(a - i, 1);
+      return arr[i] + (arr[Math.min(i + 1, last)] - arr[i]) * t;
+    };
+    let current = 0;
+    let frame = 0;
+
+    const place = (offset: number) => {
+      const base = Math.round(offset);
+      rows.forEach((row, s) => {
+        const k = base + s - MID;
+        const d = k - offset;
+        const a = Math.min(Math.abs(d), last);
+        const sign = d < 0 ? -1 : 1;
+        if (row.dataset.k !== String(k)) {
+          const item = data.items[mod(k, N)];
+          const link = row.firstElementChild as HTMLAnchorElement;
+          row.dataset.k = String(k);
+          link.textContent = item.name;
+          link.href = item.href;
+        }
+        row.style.left = `${(lerp(data.x, a) / 1728) * 100}%`;
+        row.style.top = `${((data.centre + sign * lerp(data.y, a)) / 1117) * 100}%`;
+        row.style.opacity = String(lerp(data.opacity, a));
+        row.style.transform = `translateY(-50%) scale(${lerp(data.scale, a)})`;
+        const front = s === MID;
+        row.classList.toggle('is-front', front);
+        (row.firstElementChild as HTMLElement).tabIndex = front ? 0 : -1;
+      });
+      const next = mod(base, N);
+      if (next !== current) {
+        current = next;
+        stage.dataset.active = String(next);
+        bgs.forEach((el) => el.classList.toggle('is-current', Number(el.dataset.index) === next));
+        lists.forEach((el) => el.classList.toggle('is-current', Number(el.dataset.index) === next));
+        if (view) view.href = data.items[next].href;
+        stage.classList.remove('is-hovering');
+      }
+    };
+
+    const update = () => {
+      frame = 0;
+      const rect = root.getBoundingClientRect();
+      const travel = rect.height - stage.offsetHeight;
+      // Framed (Home): the first part of the scroll widens the block to full screen
+      const expand = stage.offsetHeight * (Number(getComputedStyle(root).getPropertyValue('--expand')) || 0);
+      const clamp = (v: number) => Math.min(1, Math.max(0, v));
+      stage.style.setProperty('--enter', String(expand > 0 ? clamp(-rect.top / expand) : 1));
+      const progress = travel - expand > 0 ? clamp((-rect.top - expand) / (travel - expand)) : 0;
+      place(progress * N);
+    };
+    const request = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request);
+    update();
+
+    // VIEW: only while the front name (or the button itself) is hovered or focused;
+    // it sits just after the name (128 in Figma)
+    let hideTimer = 0;
+    const show = () => {
+      const front = root.querySelector<HTMLElement>('.project-wheel__name.is-front a');
+      if (!front || !view) return;
+      window.clearTimeout(hideTimer);
+      const unit = canvas.clientWidth / 1728;
+      const left = front.getBoundingClientRect().right - canvas.getBoundingClientRect().left + 128 * unit;
+      view.style.left = `${left}px`;
+      stage.classList.add('is-hovering');
+    };
+    const hide = () => {
+      hideTimer = window.setTimeout(() => stage.classList.remove('is-hovering'), 150);
+    };
+    root.querySelector('.project-wheel__names')?.addEventListener('pointerover', (e) => {
+      if ((e.target as HTMLElement).closest('.is-front')) show();
+    });
+    root.querySelector('.project-wheel__names')?.addEventListener('pointerout', (e) => {
+      if ((e.target as HTMLElement).closest('.is-front')) hide();
+    });
+    view?.addEventListener('pointerenter', show);
+    view?.addEventListener('pointerleave', hide);
+    root.addEventListener('focusin', (e) => {
+      if ((e.target as HTMLElement).closest('.is-front')) show();
+    });
+    root.addEventListener('focusout', hide);
+  }
+</script>
+
 <style>
-  .project-scroller {
+  /* One screen to show the block + 40% of a screen per project while the wheel turns */
+  .project-wheel {
     position: relative;
-    aspect-ratio: 1728 / 1117;
+    --expand: 0;
+    height: calc(100vh + (var(--expand) + var(--count) * 0.4) * 100vh);
+  }
+  .project-wheel__stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* Home: inside the page margins (Figma 1648×1117 window onto the 1728 frame) */
+  .project-wheel__frame {
+    position: absolute;
+    inset: 0;
     overflow: hidden;
     background: var(--color-black);
   }
-  /* Background still: 2406×1555 at (-339, -235) */
-  .project-scroller :global(.project-scroller__bg) {
+  /* Framed: margins at first, opening to full width as --enter goes 0 → 1 */
+  .project-wheel--framed {
+    --expand: 0.5;
+  }
+  .project-wheel--framed .project-wheel__frame {
+    left: calc(var(--page-margin) * (1 - var(--enter, 0)));
+    right: calc(var(--page-margin) * (1 - var(--enter, 0)));
+  }
+  /* Everything inside is placed in the 1728×1117 Figma frame (% of this box) */
+  .project-wheel__canvas {
+    position: absolute;
+    inset: 0;
+  }
+  /* The canvas stays put on screen while the frame opens around it */
+  .project-wheel--framed .project-wheel__canvas {
+    left: calc(-1 * var(--page-margin) * (1 - var(--enter, 0)));
+    right: calc(-1 * var(--page-margin) * (1 - var(--enter, 0)));
+  }
+
+  /* Backgrounds: the Figma crop (2406×1555 at -339, -235), crossfading per project */
+  .project-wheel__bg {
     position: absolute;
     left: calc(-339 / 1728 * 100%);
     top: calc(-235 / 1117 * 100%);
     width: calc(2406 / 1728 * 100%);
-    height: auto;
+    height: calc(1555 / 1117 * 100%);
+    opacity: 0;
+    transition: opacity 0.7s ease;
+  }
+  .project-wheel__bg.is-current {
+    opacity: 1;
+  }
+  .project-wheel :global(.project-wheel__bg-media) {
+    width: 100%;
+    height: 100%;
     max-width: none;
+    object-fit: cover;
   }
-  /* Stand-in for the CRT shader until the WebGL step */
-  .project-scroller__scanlines {
+
+  .project-wheel__rule {
     position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px calc(3 * var(--px)));
-    pointer-events: none;
-  }
-  .project-scroller__rule {
-    position: absolute;
-    left: var(--page-margin);
-    right: var(--page-margin);
+    left: calc(40 / 1728 * 100%);
+    right: calc(40 / 1728 * 100%);
     top: calc(622 / 1117 * 100%);
     margin: 0;
     border: 0;
     border-top: var(--line-width) solid var(--line-on-dark);
   }
-  .project-scroller__mark {
+  .project-wheel__mark {
     position: absolute;
     left: calc(104 / 1728 * 100%);
     top: calc(519 / 1117 * 100%);
     width: calc(72 / 1728 * 100%);
     height: auto;
   }
-  .project-scroller__names {
+
+  /* ── The wheel: H2 rows scaled and faded by distance from the front ── */
+  .project-wheel__names {
     position: absolute;
     inset: 0;
   }
-  /* H2 style, scaled per row to match the wheel (80 → calc(48 * var(--px))) */
-  .project-scroller__name {
+  .project-wheel__name {
     position: absolute;
-    font-size: calc(var(--type-h2-size) * var(--k));
+    transform-origin: left center;
     white-space: nowrap;
     color: var(--color-white);
+    will-change: transform, opacity, top;
   }
-  .project-scroller__name a {
+  .project-wheel__name a {
     color: inherit;
-    text-decoration: none;
   }
-  .project-scroller :global(.project-scroller__view) {
+  .project-wheel__name:not(.is-front) {
+    pointer-events: none;
+  }
+
+  /* VIEW: hidden until the front name is hovered or focused */
+  .project-wheel :global(.project-wheel__view) {
     position: absolute;
     left: calc(1051 / 1728 * 100%);
     top: calc(573 / 1117 * 100%);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(calc(8 * var(--px)));
+    transition:
+      opacity 0.2s ease,
+      transform 0.3s ease;
   }
-  .project-scroller__services {
+  .project-wheel__stage.is-hovering :global(.project-wheel__view) {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  /* Services of the front project */
+  .project-wheel__services {
     position: absolute;
     left: calc(1362 / 1728 * 100%);
     top: calc(515 / 1117 * 100%);
     display: grid;
     gap: calc(8 * var(--px));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .project-wheel__services.is-current {
+    opacity: 1;
+  }
+
+  /* ── CRT screen (Figma shader: scanlines 38 / size 3, mask 9 / pitch 12, vignette 13,
+     noise 5 / size 1.5, flicker, roll speed 0.93). CSS stand-in until the WebGL step. ── */
+  .project-wheel__crt,
+  .project-wheel__crt > span {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .project-wheel__crt {
+    z-index: 2;
+    /* scanlines + vignette */
+    background:
+      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.38) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 60%, rgb(0 0 0 / 0.4) 100%);
+    animation: crt-flicker 0.12s steps(2) infinite;
+  }
+  /* aperture grille: thin R / G / B columns, 12px pitch */
+  .project-wheel__crt-mask {
+    background: repeating-linear-gradient(
+      to right,
+      rgb(255 0 0 / 0.09) 0 4px,
+      rgb(0 255 0 / 0.09) 4px 8px,
+      rgb(0 0 255 / 0.09) 8px 12px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.4;
+  }
+  .project-wheel__crt-noise {
+    inset: -50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+    opacity: 0.05;
+    animation: crt-noise 0.5s steps(5) infinite;
+  }
+  /* slow bright band rolling down the screen */
+  .project-wheel__crt-roll {
+    background: linear-gradient(to bottom, transparent 0%, rgb(255 255 255 / 0.04) 45%, rgb(255 255 255 / 0.06) 50%, transparent 60%);
+    background-size: 100% 300%;
+    animation: crt-roll 8s linear infinite;
+  }
+  @keyframes crt-flicker {
+    50% {
+      opacity: 0.94;
+    }
+  }
+  @keyframes crt-noise {
+    to {
+      transform: translate(10%, -10%);
+    }
+  }
+  @keyframes crt-roll {
+    from {
+      background-position: 0 100%;
+    }
+    to {
+      background-position: 0 -200%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-wheel__crt,
+    .project-wheel__crt-noise,
+    .project-wheel__crt-roll {
+      animation: none;
+    }
+  }
+
+  /* CRT lines on the mobile cards */
+  .project-scroller__scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px);
+    pointer-events: none;
   }
 
   /* ── Mobile cards: Figma 390×694 ── */
