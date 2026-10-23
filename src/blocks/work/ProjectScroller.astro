@@ -76,6 +76,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
             <Media class="project-wheel__bg-media" media={p.data.reveal} widths={[1400, 2406]} sizes="140vw" loading="lazy" />
           </div>
         ))}
+        <div class="project-wheel__shade" aria-hidden="true"></div>
 
         <hr class="project-wheel__rule" />
         <img class="project-wheel__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
@@ -293,6 +294,12 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   }
   .project-wheel__bg.is-current {
     opacity: 1;
+  }
+  /* 30% black over every background, under the names */
+  .project-wheel__shade {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.3);
   }
   .project-wheel :global(.project-wheel__bg-media) {
     width: 100%;
