@@ -9,11 +9,13 @@
  *   trackpad, arrow keys), with a little glide after a drag. The tile IS the Figma frame:
  *   its 13 objects and their labels at exactly their Figma positions, with a little room
  *   around it (TILE_W × TILE_H) so the objects cut by the frame edge don't collide with
- *   the next copy. 3 × 3 copies of the tile are drawn and the world wraps as you drag.
+ *   the next copy. It repeats as a 2 × 2 block (the Figma frame + three tiles with the
+ *   same places but the objects mixed, see VARIANTS) so the same object never sits next
+ *   to itself. 3 × 3 copies of the block are drawn and the world wraps as you drag.
  *   The page opens on the Figma frame (on phones: centred on the robot).
- * - Hover an object: every other object blurs slightly and fades, more the further it is
- *   from it, with a lens distortion that grows toward the screen edges.
- * - Figma's progressive blur strips on the left and right screen edges (6px).
+ * - Blur grows smoothly toward the screen corners (none in the middle). Hover an object:
+ *   it's sharp, nearby objects barely blur, and the blur and fade grow with distance from
+ *   it and toward the corners, with a lens distortion toward the screen edges.
  * - Click: the canvas glides so the object lands in the middle of the left half (beside
  *   the card), the rest stays out of focus, and the card fades in on the right. The robot
  *   (hello_robo) opens the studio card — Hello Robo, no photo (Figma 10104:398); every
@@ -84,27 +86,70 @@ const TILE_H = 1330;
 const FRAME = { w: 1728, h: 1117 };
 const ROBOT = LAYOUT.find((l) => l.key === STUDIO_OBJECT)!;
 
-const items = LAYOUT.map((l) => {
-  const img = OBJECTS[l.key];
-  const w = Math.round(img.width / 2);
-  const h = Math.round(img.height / 2);
-  return {
-    ...l,
-    w,
-    h,
-    // centre of the image box (where the canvas brings an object when it's selected)
-    cx: Math.round(l.x + w / 2),
-    cy: Math.round(l.y + h / 2),
-    // label: centre and text top, relative to the image box
-    labelX: l.lx + l.lw / 2 - l.x,
-    labelY: l.ly + 7 - l.y,
-  };
+// The frame alone has two boxes, cats, stars and lotuses, so repeating it puts the same
+// objects side by side where copies meet. The canvas therefore repeats a 2 × 2 block of
+// tiles: the first is the Figma frame exactly; the other three use the same places with
+// the objects mixed so each object appears 5–6 times per block, chosen so the same
+// object is never closer than 1100 Figma px (centre to centre) to itself — also across
+// the block's edges. (Found once with a small search; the slots are in LAYOUT order.)
+const VARIANTS: string[][] = [
+  LAYOUT.map((l) => l.key),
+  ['tiny_obsession_12', 'cat_mode_active', 'tiny_obsession_12', 'nuts_about_details_03', 'bright_ideas_01', 'good_chaos_13', 'seriously_playful', 'bright_ideas_01', 'bite_first_05', 'seriously_playful', 'inner_calm_02', 'hello_robo', 'hello_robo'],
+  ['good_chaos_13', 'nuts_about_details_03', 'bite_first_05', 'seriously_playful', 'tiny_obsession_12', 'hello_robo', 'seriously_playful', 'inner_calm_02', 'good_chaos_13', 'cat_mode_active', 'bite_first_05', 'nuts_about_details_03', 'inner_calm_02'],
+  ['cat_mode_active', 'tiny_obsession_12', 'nuts_about_details_03', 'bright_ideas_01', 'cat_mode_active', 'seriously_playful', 'bright_ideas_01', 'nuts_about_details_03', 'bite_first_05', 'good_chaos_13', 'inner_calm_02', 'hello_robo', 'hello_robo'],
+];
+// Labels of the mixed tiles: each object's own name (as Figma names it on its main copy)
+const LABELS: Record<string, string> = {
+  hello_robo: 'hello_robo.OBJ',
+  inner_calm_02: 'INNER_CALM_02.OBJ',
+  bright_ideas_01: 'BRIGHT_IDEAS_01.OBJ',
+  bite_first_05: 'WILD_IDEA_FINAL.OBJ',
+  tiny_obsession_12: 'TINY_OBSESSION_12.OBJ',
+  seriously_playful: 'SERIOUSLY_PLAYFUL.OBJ',
+  good_chaos_13: 'GOOD_CHAOS_13.OBJ',
+  nuts_about_details_03: 'NUTS_ABOUT_DETAILS_03.OBJ',
+  cat_mode_active: 'CAT_MODE_ACTIVE.OBJ',
+};
+// The repeating block: 2 × 2 tiles
+const PERIOD_W = 2 * TILE_W;
+const PERIOD_H = 2 * TILE_H;
+
+const size = (key: string) => ({ w: Math.round(OBJECTS[key].width / 2), h: Math.round(OBJECTS[key].height / 2) });
+const items = VARIANTS.flatMap((keys, v) => {
+  const ox = (v % 2) * TILE_W;
+  const oy = Math.floor(v / 2) * TILE_H;
+  return LAYOUT.map((l, i) => {
+    // the slot: Figma's image centre, and its label relative to that image
+    const fig = size(l.key);
+    const scx = l.x + fig.w / 2;
+    const scy = l.y + fig.h / 2;
+    const labelDx = l.lx + l.lw / 2 - scx; // label centre vs image centre
+    const labelGap = l.ly + 7 - (l.y + fig.h); // label text top vs image bottom
+    const key = keys[i];
+    const { w, h } = size(key);
+    const x = scx - w / 2;
+    const y = scy - h / 2;
+    return {
+      key,
+      label: v === 0 ? l.label : LABELS[key],
+      x: ox + x,
+      y: oy + y,
+      w,
+      h,
+      // centre of the image box (where the canvas brings an object when it's selected)
+      cx: Math.round(ox + scx),
+      cy: Math.round(oy + scy),
+      // label: centre and text top, relative to the image box
+      labelX: w / 2 + labelDx,
+      labelY: h + labelGap,
+    };
+  });
 });
-// 3 × 3 copies of the tile; the middle one (0, 0) is the focusable one
+// 3 × 3 copies of the block; the middle one (0, 0) is the focusable one
 const tiles = [-1, 0, 1].flatMap((ty) => [-1, 0, 1].map((tx) => ({ tx, ty })));
 const config = JSON.stringify({
-  tileW: TILE_W,
-  tileH: TILE_H,
+  tileW: PERIOD_W,
+  tileH: PERIOD_H,
   people: people.map((p) => p.id),
   studio: STUDIO_ID,
   // where the page opens: the middle of the Figma frame (phones: the robot)
@@ -112,7 +157,7 @@ const config = JSON.stringify({
   startMobile: { x: ROBOT.x + 349 / 2, y: ROBOT.y + 255 / 2 },
 });
 ---
-<section class="team" aria-label="The team" data-team={config} style={`--tile-w: ${TILE_W}; --tile-h: ${TILE_H}`}>
+<section class="team" aria-label="The team" data-team={config} style={`--tile-w: ${PERIOD_W}; --tile-h: ${PERIOD_H}`}>
   <div class="team__viewport">
     <div class="team__world">
       {tiles.map(({ tx, ty }) =>
@@ -127,9 +172,9 @@ const config = JSON.stringify({
               data-person={owner?.id}
               data-card={it.key === STUDIO_OBJECT ? STUDIO_ID : undefined}
               data-model={owner?.data.model}
-              data-x={(tx + 1) * TILE_W + it.cx}
-              data-y={(ty + 1) * TILE_H + it.cy}
-              style={`--x: ${(tx + 1) * TILE_W + it.x}; --y: ${(ty + 1) * TILE_H + it.y}; --w: ${it.w}; --h: ${it.h}; --lx: ${it.labelX}; --ly: ${it.labelY}`}
+              data-x={(tx + 1) * PERIOD_W + it.cx}
+              data-y={(ty + 1) * PERIOD_H + it.cy}
+              style={`--x: ${(tx + 1) * PERIOD_W + it.x}; --y: ${(ty + 1) * PERIOD_H + it.y}; --w: ${it.w}; --h: ${it.h}; --lx: ${it.labelX}; --ly: ${it.labelY}`}
               tabindex={centre ? undefined : -1}
               aria-hidden={centre ? undefined : 'true'}
               aria-label={`Meet the team — ${it.label}`}
@@ -144,8 +189,6 @@ const config = JSON.stringify({
       )}
     </div>
   </div>
-  <div class="team__edge team__edge--left" aria-hidden="true"></div>
-  <div class="team__edge team__edge--right" aria-hidden="true"></div>
   <div class="team__noise" aria-hidden="true"></div>
 
   {people.map((p) => (
@@ -277,6 +320,11 @@ const config = JSON.stringify({
     // When the world wraps, every copy shifts by a tile and its neighbour takes its place.
     // That frame must not animate (the values are the same as the copy it replaces), or
     // the blur / lens / zoom transitions would visibly jump.
+    const EDGE_BLUR = 6; // px in a corner (Figma's edge blur)
+    const smooth = (v: number, a: number, b: number) => {
+      const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    };
     let lastOffset: { x: number; y: number } | null = null;
     let wrapFrame = 0;
     const render = () => {
@@ -299,21 +347,28 @@ const config = JSON.stringify({
         const sx = o.x + pos[i].x * unit;
         const sy = o.y + pos[i].y * unit;
         const el = objs[i];
-        if (lens > 0.001 && i !== focus) {
-          // barrel-style lens: push outward and grow a little, more toward the edges
-          const nx = (sx - cx) / cx;
-          const ny = (sy - cy) / cy;
-          const r2 = nx * nx + ny * ny;
-          const k = 0.07 * lens * r2;
-          pos[i].lens.style.transform = `translate(${(sx - cx) * k}px, ${(sy - cy) * k}px) scale(${1 + 0.08 * lens * r2})`;
-          const d = f ? Math.min(1, Math.hypot(sx - f.x, sy - f.y) / (diag * 0.6)) : 0.5;
-          el.style.setProperty('--blur', String(lens * (1 + 4 * d)));
-          el.style.setProperty('--fade', String(1 - lens * (0.45 + 0.3 * d)));
-        } else {
+        const nx = (sx - cx) / cx;
+        const ny = (sy - cy) / cy;
+        const r2 = nx * nx + ny * ny;
+        // toward the corners: 0 in the middle of the screen, 1 in a corner, smooth in between
+        const edge = smooth(Math.min(1, Math.sqrt(r2 / 2)), 0.4, 1);
+        if (i === focus) {
           pos[i].lens.style.transform = '';
           el.style.setProperty('--blur', '0');
           el.style.setProperty('--fade', '1');
+          continue;
         }
+        // distance from the object in focus: 0 next to it, 1 across the screen
+        const d = f ? Math.min(1, Math.hypot(sx - f.x, sy - f.y) / (diag * 0.75)) : 0;
+        const calm = EDGE_BLUR * edge;
+        const focused = 0.4 + 5 * d * d + EDGE_BLUR * 1.3 * edge;
+        el.style.setProperty('--blur', (calm + (focused - calm) * lens).toFixed(2));
+        el.style.setProperty('--fade', (1 - lens * (0.3 + 0.35 * d)).toFixed(3));
+        if (lens > 0.001) {
+          // barrel-style lens: push outward and grow a little, more toward the edges
+          const k = 0.07 * lens * r2;
+          pos[i].lens.style.transform = `translate(${(sx - cx) * k}px, ${(sy - cy) * k}px) scale(${1 + 0.08 * lens * r2})`;
+        } else pos[i].lens.style.transform = '';
       }
     };
 
@@ -588,28 +643,6 @@ const config = JSON.stringify({
     will-change: transform;
   }
   /* Figma noise layer: black 6% grain over everything */
-  /* Figma: progressive background blur (6px) on both screen edges, 0 → 6 toward the edge */
-  .team__edge {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 1;
-    width: calc(246 * var(--px));
-    pointer-events: none;
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
-  }
-  .team__edge--left {
-    left: 0;
-    -webkit-mask-image: linear-gradient(to left, transparent, #000);
-    mask-image: linear-gradient(to left, transparent, #000);
-  }
-  .team__edge--right {
-    right: 0;
-    width: calc(236 * var(--px));
-    -webkit-mask-image: linear-gradient(to right, transparent, #000);
-    mask-image: linear-gradient(to right, transparent, #000);
-  }
   .team__noise {
     position: absolute;
     inset: 0;
@@ -634,9 +667,10 @@ const config = JSON.stringify({
     /* the white render background disappears into the canvas grey (on the button, because
        its filter / opacity make it a group of its own) */
     mix-blend-mode: multiply;
+    /* short: the blur follows the object as you drag; hover easing is done in JS */
     transition:
-      opacity var(--duration-smooth) var(--ease-out),
-      filter var(--duration-smooth) var(--ease-out);
+      opacity var(--duration-fast) var(--ease-out),
+      filter var(--duration-fast) var(--ease-out);
   }
   .team.is-wrapping .team-obj,
   .team.is-wrapping .team-obj *,
@@ -859,9 +893,6 @@ const config = JSON.stringify({
     .team-card--studio .team-card__quote {
       margin-top: 64px;
       gap: var(--space-24);
-    }
-    .team__edge {
-      width: 48px;
     }
   }
 </style>
