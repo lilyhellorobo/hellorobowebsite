@@ -80,23 +80,26 @@ const LAYOUT: { key: string; x: number; y: number; label: string; lx: number; ly
   { key: 'inner_calm_02', x: 1492, y: 910, label: 'INNER_CALM_02.OBJ', lx: 1553.5, ly: 1119, lw: 190 },
 ];
 // One tile = the frame plus room for what sticks out of it (objects reach x −112…1895,
-// y −133…1150 with labels), so neighbouring copies keep a gap like the rest of the layout
-const TILE_W = 2040;
-const TILE_H = 1330;
+// y −133…1150 with labels) and a gap like the spacing inside the frame, so where copies
+// meet the objects aren't closer than they are in Figma
+const TILE_W = 2160;
+const TILE_H = 1450;
 const FRAME = { w: 1728, h: 1117 };
 const ROBOT = LAYOUT.find((l) => l.key === STUDIO_OBJECT)!;
 
 // The frame alone has two boxes, cats, stars and lotuses, so repeating it puts the same
 // objects side by side where copies meet. The canvas therefore repeats a 2 × 2 block of
 // tiles: the first is the Figma frame exactly; the other three use the same places with
-// the objects mixed so each object appears 5–6 times per block, chosen so the same
-// object is never closer than 1100 Figma px (centre to centre) to itself — also across
-// the block's edges. (Found once with a small search; the slots are in LAYOUT order.)
+// the objects mixed so each object appears 5–6 times per block. Each place only gets an
+// object about its Figma size (≤ 90 px wider, ≤ 45 px taller than the one drawn there), so
+// the spacing stays Figma's, and the same object is never closer than 1225 Figma px
+// (centre to centre) to itself — also across the block's edges. (Found once with a small
+// search; the slots are in LAYOUT order.)
 const VARIANTS: string[][] = [
   LAYOUT.map((l) => l.key),
-  ['tiny_obsession_12', 'cat_mode_active', 'tiny_obsession_12', 'nuts_about_details_03', 'bright_ideas_01', 'good_chaos_13', 'seriously_playful', 'bright_ideas_01', 'bite_first_05', 'seriously_playful', 'inner_calm_02', 'hello_robo', 'hello_robo'],
-  ['good_chaos_13', 'nuts_about_details_03', 'bite_first_05', 'seriously_playful', 'tiny_obsession_12', 'hello_robo', 'seriously_playful', 'inner_calm_02', 'good_chaos_13', 'cat_mode_active', 'bite_first_05', 'nuts_about_details_03', 'inner_calm_02'],
-  ['cat_mode_active', 'tiny_obsession_12', 'nuts_about_details_03', 'bright_ideas_01', 'cat_mode_active', 'seriously_playful', 'bright_ideas_01', 'nuts_about_details_03', 'bite_first_05', 'good_chaos_13', 'inner_calm_02', 'hello_robo', 'hello_robo'],
+  ['hello_robo', 'good_chaos_13', 'seriously_playful', 'bright_ideas_01', 'tiny_obsession_12', 'nuts_about_details_03', 'hello_robo', 'tiny_obsession_12', 'inner_calm_02', 'seriously_playful', 'cat_mode_active', 'bite_first_05', 'bright_ideas_01'],
+  ['good_chaos_13', 'nuts_about_details_03', 'cat_mode_active', 'inner_calm_02', 'tiny_obsession_12', 'hello_robo', 'good_chaos_13', 'cat_mode_active', 'seriously_playful', 'bite_first_05', 'bright_ideas_01', 'nuts_about_details_03', 'inner_calm_02'],
+  ['bright_ideas_01', 'good_chaos_13', 'seriously_playful', 'tiny_obsession_12', 'nuts_about_details_03', 'inner_calm_02', 'hello_robo', 'nuts_about_details_03', 'bite_first_05', 'seriously_playful', 'cat_mode_active', 'bite_first_05', 'bright_ideas_01'],
 ];
 // Labels of the mixed tiles: each object's own name (as Figma names it on its main copy)
 const LABELS: Record<string, string> = {
