@@ -1,15 +1,24 @@
 ---
 /** CMS list: every entry of a section, with edit / delete */
 import AdminLayout from '../../../cms/AdminLayout.astro';
-import { getCmsCollection } from '../../../cms/collections';
+import { CMS_COLLECTIONS, getCmsCollection } from '../../../cms/collections';
 import { listEntries } from '../../../cms/store';
 
 export const prerender = false;
 
 const c = getCmsCollection(Astro.params.section);
 if (!c) return new Response('Not found', { status: 404 });
+if (c.parent) return Astro.redirect(`/admin/${c.parent}`);
 
 const entries = await listEntries(c);
+// Sections shown inside this one, pinned above its list (the studio card in Team)
+const pinned = (
+  await Promise.all(
+    CMS_COLLECTIONS.filter((s) => s.parent === c.slug).map(async (s) =>
+      (await listEntries(s)).map((e) => ({ s, ...e })),
+    ),
+  )
+).flat();
 const text = (v: unknown) => (Array.isArray(v) ? v.join(', ') : typeof v === 'string' ? v : '');
 const saved = Astro.url.searchParams.get('saved');
 const deleted = Astro.url.searchParams.get('deleted');
@@ -29,6 +38,23 @@ const deleted = Astro.url.searchParams.get('deleted');
   </header>
 
   {saved && <p class="cms-notice" role="status">Saved “{saved}”.</p>}
+
+  {pinned.length > 0 && (
+    <ul class="cms-list cms-list--no-thumbs cms-list--pinned">
+      {pinned.map(({ s, id, data }) => (
+        <li class="cms-row">
+          <a class="cms-row__main" href={`/admin/${s.slug}/${id}`}>
+            <p class="cms-row__title">{text(data[s.titleField]) || id}</p>
+            <p class="cms-row__sub cms-muted cms-small">{s.subtitleField && text(data[s.subtitleField])}</p>
+          </a>
+          <div class="cms-row__actions">
+            {s.badge && <span class="cms-badge">{s.badge}</span>}
+            <a class="cms-btn cms-btn--ghost cms-btn--small" href={`/admin/${s.slug}/${id}`}>Edit</a>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
   {deleted && <p class="cms-notice" role="status">Deleted “{deleted}”.</p>}
 
   {entries.length ? (

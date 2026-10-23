@@ -19,7 +19,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
 export const DELETE: APIRoute = async ({ params }) => {
   const c = getCmsCollection(params.section);
-  if (!c || !params.id) return json({ error: 'Not found' }, 404);
+  if (!c || c.fixed || !params.id) return json({ error: 'Not found' }, 404);
   try {
     await deleteEntry(c, params.id);
     return json({ ok: true });

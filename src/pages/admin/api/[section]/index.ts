@@ -8,7 +8,7 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ params, request }) => {
   const c = getCmsCollection(params.section);
-  if (!c) return json({ error: 'Not found' }, 404);
+  if (!c || c.fixed) return json({ error: 'Not found' }, 404);
   try {
     const { data, files, id } = await readSubmission(request);
     if (!isValidId(id) || id === 'new') {

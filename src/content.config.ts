@@ -62,6 +62,19 @@ const team = defineCollection({
     }),
 });
 
+/** The studio card on /team (opened by the robot); one entry, hello-robo.json */
+const studio = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/studio' }),
+  schema: z.object({
+    name: z.string(),
+    nameJa: z.string(),
+    /** Stamp top right: a public path from the CMS asset library */
+    stamp: z.string().optional(),
+    heading: z.string(),
+    text: z.array(z.string()).default([]),
+  }),
+});
+
 const positions = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/positions' }),
   schema: z.object({
@@ -121,4 +134,4 @@ const news = defineCollection({
   }),
 });
 
-export const collections = { projects, team, positions, episodes, news };
+export const collections = { projects, team, studio, positions, episodes, news };

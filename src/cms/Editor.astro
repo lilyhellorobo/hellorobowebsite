@@ -4,7 +4,7 @@
  * collection's field list (src/cms/collections.ts) by src/cms/client/editor.ts.
  */
 import AdminLayout from './AdminLayout.astro';
-import type { CmsCollection } from './collections';
+import { getCmsCollection, type CmsCollection } from './collections';
 import type { Entry } from './store';
 
 interface Props {
@@ -13,6 +13,8 @@ interface Props {
 }
 const { c, entry } = Astro.props;
 const isNew = !entry;
+// A section shown inside another one (the studio card in Team) goes back to that one
+const back = (c.parent && getCmsCollection(c.parent)) || c;
 const title = entry ? String(entry.data[c.titleField] ?? entry.id) : `New ${c.singular}`;
 const saved = Astro.url.searchParams.get('saved') != null;
 const config = JSON.stringify({
@@ -23,10 +25,10 @@ const config = JSON.stringify({
   data: entry?.data ?? null,
 });
 ---
-<AdminLayout title={title} active={c.slug}>
+<AdminLayout title={title} active={c.parent ?? c.slug}>
   <header class="cms-head">
     <div>
-      <a class="cms-crumb" href={`/admin/${c.slug}`}>← {c.label}</a>
+      <a class="cms-crumb" href={`/admin/${back.slug}`}>← {back.label}</a>
       <h1 data-title>{title}</h1>
     </div>
   </header>
@@ -70,7 +72,7 @@ const config = JSON.stringify({
           View on site ↗
         </a>
       )}
-      {!isNew && (
+      {!isNew && !c.fixed && (
         <button
           class="cms-btn cms-btn--danger cms-btn--block"
           type="button"
