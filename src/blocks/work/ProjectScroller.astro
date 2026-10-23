@@ -120,6 +120,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   {cards.map((c) => (
     <article class="project-card">
       <Media class="project-card__bg" media={c.data.reveal} widths={[800, 1600]} sizes="275vw" loading="lazy" />
+      <div class="project-wheel__shade" aria-hidden="true"></div>
       <div class="project-scroller__scanlines" aria-hidden="true"></div>
       <img class="project-card__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
       <div class="project-card__info">
@@ -295,7 +296,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   .project-wheel__bg.is-current {
     opacity: 1;
   }
-  /* 30% black over every background, under the names */
+  /* 30% black over every background, under the names (also on the mobile cards) */
   .project-wheel__shade {
     position: absolute;
     inset: 0;
