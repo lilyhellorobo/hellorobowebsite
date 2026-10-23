@@ -18,7 +18,7 @@ The new website for the Hello Robo studio, built with [Astro](https://astro.buil
 | 3a. Laptop + tablet scaling (768–1727) | ✅ done (the 1728 design scales down; text has readable floors) |
 | 3b. Mobile (≤ 767) | ✅ Home from the Figma 390 frame; other pages follow the same rules (see “Needs design”) |
 | Site menu (overlay) | ✅ works on every page; placeholder open/close animation |
-| 4. Motion | ⏳ next — menu reveal, project wheel, carousels, value tabs, contact steps |
+| 4. Motion | 🟡 in progress — Home scroll interactions done (see “Scroll interactions”); next: menu reveal, value tabs, contact steps |
 | 5. WebGL scenes, video, CMS | ⏳ slots and content collections are ready |
 
 ## Getting started
@@ -203,11 +203,11 @@ Every block file starts with a comment naming its Figma node and link.
 | | `home/HomeIntro` — stamp + mission text | 10093:145 | Figma |
 | | `home/HomeShowreel` — video (`public/videos/showreel.mp4`) | 10093:183 | Figma |
 | | `home/HomePhilosophy` — "300 robotics companies" + bars (WebGL poster) | 10093:185 | Figma |
-| | `home/HomeShowcase` — "What it took…" + photo with services | 10093:249 | Figma ("block 1") |
+| | `home/HomeShowcase` — "What it took…" + 3 pinned slides (world / operators / market) | 10093:250, 10203:131, 10203:481 | Figma (block 1 / 2 / block) |
 | | `home/HomeClients` — text + logo wall + stamps | 10093:577 | Figma (logo rows) |
-| | `work/ProjectScroller` — project wheel (shared with /work) | 10093:1049 | Figma (cards) |
+| | `work/ProjectScroller` — project wheel, framed (shared with /work) | 10093:1049 | Figma (cards) |
 | | `home/HomeRadio` — Robo Radio teaser + posters | 10093:1424 | Figma |
-| | `home/HomeNews` — news row (`news` collection) | 10093:1889 | Figma |
+| | `home/HomeNews` — news row, scrolls sideways (`news` collection) | 10093:1889 | Figma |
 | Work | `work/ProjectScroller` | 10100:11973 | cards, all projects |
 | Project | `project/ProjectHero` — title, badge, intro + reveal image | 10100:12388, 10100:12374 | rules |
 | | `project/ProjectSummary` (+ `ProjectTextRow`) — text + facts | 10100:12615 | rules |
@@ -239,6 +239,22 @@ Every block file starts with a comment naming its Figma node and link.
 **Mobile:** *Figma* = built from the 390 frame · *rules* = follows the Home mobile
 rules (one column, 16 margins, Home spacing) · *needs design* = placeholder until
 there's a mobile frame.
+
+## Scroll interactions (Home)
+
+Each one is a small script that turns the scroll position into a few numbers; all the
+visuals are CSS on top of those, so the animation can be restyled without touching the
+script. Transitions are placeholders for the motion step.
+
+| Block | What happens | Values the CSS uses |
+|---|---|---|
+| **Showcase** "Make the … say yes" (`home/HomeShowcase`) | Starts inside the page margins. When it reaches the top it pins; the first half screen of scrolling widens it to full screen, then three screens move through the slides: the photo crossfades, the title and services list swap, the bright segment of the line grows. Mobile: already full width, slides only. | `--enter` (0→1, widening), `--progress` (0→1, line), `data-active` (slide 0–2) |
+| **Project wheel** (`work/ProjectScroller`) | Home: starts inside the margins, pins, widens to full screen, then one full turn of a looping cylinder of project names (Figma's sizes / fades / offsets by distance from the front). The front project sets the background (crossfade, 30% black overlay) and the services list. VIEW shows only while the front name is hovered or focused, 128px after it. CSS CRT layer from the Figma shader values (scanlines, aperture mask, vignette, noise, flicker, rolling band). Work page: full screen from the start. Mobile: project cards. | `--enter`, `.is-front`, `.is-current`, `.is-hovering` |
+| **News** (`home/HomeNews`) | The card row scrolls sideways: trackpad / shift + wheel, arrow keys when focused, click-and-drag with a mouse. Cards snap to the page margin; a drag never opens a card. | `.is-dragging` |
+
+Phones: progress is measured against the pinned block's own height (not the window),
+so slides don't jump when the browser toolbar shows or hides. Reduced motion turns off
+the CRT animation and the text slide-ins.
 
 ## Content (CMS-ready)
 
@@ -334,7 +350,8 @@ hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open it
 - Real social links (`src/data/site.ts`).
 - Placeholder copy in Figma: Team (Paulina, Greg quotes; Alex's names swapped); episode rows share one description.
 - Heavy SVGs to simplify with the designer: approved stamp (~965 KB), department stamp (~738 KB), logo rows (~990 KB), menu micrographic (~518 KB). Bedrock logo only exists as PNG.
-- Motion step: menu reveal, project wheel scroll, news carousel, value tabs, contact form logic and copy-email.
+- Motion step: menu reveal, value tabs, contact form logic and copy-email; polish of the Home scroll interactions (easing, timing).
+- Project wheel: some project reveal images may need a better crop for the wheel background; the 30% overlay is desktop only so far.
 - CMS publishing: choose hosting for hellorobo.co and how CMS saves reach the live site.
 
 ---
