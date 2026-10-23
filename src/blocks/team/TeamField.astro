@@ -6,12 +6,14 @@
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10104-170
  *
  * - The objects repeat on an endless canvas you can drag in any direction (mouse, touch,
- *   trackpad, arrow keys), with a little glide after a drag. One tile of TILE_W × TILE_H
- *   holds every object twice, placed on a jittered grid so the same object is never next
- *   to itself — also across the tile edges, so the repeat stays hidden. 3 × 3 copies of
- *   the tile are drawn and the world wraps around as you drag.
- * - Hover an object: every other object blurs and fades more the further it is from it,
- *   with a lens distortion that grows toward the screen edges.
+ *   trackpad, arrow keys), with a little glide after a drag. The tile IS the Figma frame:
+ *   its 13 objects and their labels at exactly their Figma positions, with a little room
+ *   around it (TILE_W × TILE_H) so the objects cut by the frame edge don't collide with
+ *   the next copy. 3 × 3 copies of the tile are drawn and the world wraps as you drag.
+ *   The page opens on the Figma frame (on phones: centred on the robot).
+ * - Hover an object: every other object blurs slightly and fades, more the further it is
+ *   from it, with a lens distortion that grows toward the screen edges.
+ * - Figma's progressive blur strips on the left and right screen edges (6px).
  * - Click: the canvas glides so the object lands in the middle of the left half (beside
  *   the card), the rest stays out of focus, and the card fades in on the right. The robot
  *   (hello_robo) opens the studio card — Hello Robo, no photo (Figma 10104:398); every
@@ -38,96 +40,83 @@ import innerCalm from '../../assets/team/objects/inner_calm_02.png';
 
 const people = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
 
-// The 9 objects (keys = the "3D object" field in the CMS). Images are 2× renders.
-const OBJECTS: Record<string, { label: string; image: ImageMetadata }> = {
-  hello_robo: { label: 'hello_robo.OBJ', image: helloRobo },
-  inner_calm_02: { label: 'INNER_CALM_02.OBJ', image: innerCalm },
-  bright_ideas_01: { label: 'BRIGHT_IDEAS_01.OBJ', image: brightIdeas },
-  bite_first_05: { label: 'BITE_FIRST_05.OBJ', image: biteFirst },
-  tiny_obsession_12: { label: 'TINY_OBSESSION_12.OBJ', image: tinyObsession },
-  seriously_playful: { label: 'SERIOUSLY_PLAYFUL.OBJ', image: seriouslyPlayful },
-  good_chaos_13: { label: 'GOOD_CHAOS_13.OBJ', image: goodChaos },
-  nuts_about_details_03: { label: 'NUTS_ABOUT_DETAILS_03.OBJ', image: nuts },
-  cat_mode_active: { label: 'CAT_MODE_ACTIVE.OBJ', image: catMode },
+// The 9 objects (keys = the "3D object" field in the CMS). Images are 2× renders, the
+// same size as Figma's image boxes.
+const OBJECTS: Record<string, ImageMetadata> = {
+  hello_robo: helloRobo,
+  inner_calm_02: innerCalm,
+  bright_ideas_01: brightIdeas,
+  bite_first_05: biteFirst,
+  tiny_obsession_12: tinyObsession,
+  seriously_playful: seriouslyPlayful,
+  good_chaos_13: goodChaos,
+  nuts_about_details_03: nuts,
+  cat_mode_active: catMode,
 };
-const KEYS = Object.keys(OBJECTS);
+const personByObject = new Map(people.map((p) => [p.data.object, p]));
 // The robot stands for the whole studio: it opens the Hello Robo card, not a person's
 const STUDIO_OBJECT = 'hello_robo';
 const STUDIO_ID = 'hello-robo';
-const personByObject = new Map(people.map((p) => [p.data.object, p]));
 
-// ── One tile of the endless canvas (Figma px). A COLS × ROWS jittered grid, one object
-// per cell, every object used twice; no object next to itself (8 neighbours, wrapping).
-const TILE_W = 2400;
-const TILE_H = 1500;
-const COLS = 6;
-const ROWS = 3;
-const CELL_W = TILE_W / COLS;
-const CELL_H = TILE_H / ROWS;
-const USES = (COLS * ROWS) / KEYS.length; // 2
+// ── The Figma frame "team" (1728×1117), object by object: image box x / y (top-left,
+// Figma px) and its label exactly as placed there — text, and the label frame's left /
+// top / width (the text is centred in it, 7 px from its top). The last three are cut by
+// the frame's bottom edge in Figma and have no label there; theirs follow the same rule.
+const LAYOUT: { key: string; x: number; y: number; label: string; lx: number; ly: number; lw: number }[] = [
+  { key: 'good_chaos_13', x: -112, y: -78, label: 'BRIGHT_IDEAS_01.OBJ', lx: -72, ly: 155, lw: 200 },
+  { key: 'tiny_obsession_12', x: 654, y: -115, label: 'TINY_OBSESSION_12.OBJ', lx: 636, ly: 86, lw: 220 },
+  { key: 'cat_mode_active', x: 1452.6, y: -133, label: 'CAT_MODE_ACTIVE.OBJ', lx: 1440, ly: 118, lw: 206 },
+  { key: 'inner_calm_02', x: 274, y: 192, label: 'INNER_CALM_02.OBJ', lx: 296, ly: 391, lw: 190 },
+  { key: 'nuts_about_details_03', x: 1120, y: 156, label: 'NUTS_ABOUT_DETAILS_03.OBJ', lx: 1083, ly: 356, lw: 258 },
+  { key: 'hello_robo', x: 739, y: 336, label: 'hello_robo.OBJ', lx: 764.5, ly: 618, lw: 167 },
+  { key: 'good_chaos_13', x: 1539, y: 336, label: 'GOOD_CHAOS_13.OBJ', lx: 1586, ly: 580, lw: 196 },
+  { key: 'cat_mode_active', x: -90.4, y: 422, label: 'BITE_FIRST_05.OBJ', lx: -87, ly: 673, lw: 174 },
+  { key: 'seriously_playful', x: 1244, y: 589, label: 'SERIOUSLY_PLAYFUL.OBJ', lx: 1219, ly: 809, lw: 226 },
+  { key: 'bite_first_05', x: 277, y: 649, label: 'WILD_IDEA_FINAL.OBJ', lx: 342.5, ly: 857, lw: 198 },
+  { key: 'bright_ideas_01', x: 875, y: 871, label: 'BRIGHT_IDEAS_01.OBJ', lx: 921.5, ly: 1120, lw: 200 },
+  { key: 'tiny_obsession_12', x: -50, y: 913, label: 'TINY_OBSESSION_12.OBJ', lx: -12, ly: 1130, lw: 220 },
+  { key: 'inner_calm_02', x: 1492, y: 910, label: 'INNER_CALM_02.OBJ', lx: 1553.5, ly: 1119, lw: 190 },
+];
+// One tile = the frame plus room for what sticks out of it (objects reach x −112…1895,
+// y −133…1150 with labels), so neighbouring copies keep a gap like the rest of the layout
+const TILE_W = 2040;
+const TILE_H = 1330;
+const FRAME = { w: 1728, h: 1117 };
+const ROBOT = LAYOUT.find((l) => l.key === STUDIO_OBJECT)!;
 
-// Small seeded random (same layout on every load and on the server)
-let seed = 20261023;
-const rand = () => {
-  seed = (seed + 0x6d2b79f5) | 0;
-  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
-const shuffle = <T,>(a: T[]) => {
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
-const wrapI = (v: number, m: number) => ((v % m) + m) % m;
-const grid: (string | null)[] = Array(COLS * ROWS).fill(null);
-const used: Record<string, number> = Object.fromEntries(KEYS.map((k) => [k, 0]));
-const neighbours = (i: number) => {
-  const c = i % COLS;
-  const r = Math.floor(i / COLS);
-  const out: number[] = [];
-  for (let dr = -1; dr <= 1; dr++)
-    for (let dc = -1; dc <= 1; dc++) if (dr || dc) out.push(wrapI(r + dr, ROWS) * COLS + wrapI(c + dc, COLS));
-  return out;
-};
-const fill = (i: number): boolean => {
-  if (i === grid.length) return true;
-  for (const k of shuffle([...KEYS])) {
-    if (used[k] >= USES || neighbours(i).some((n) => grid[n] === k)) continue;
-    grid[i] = k;
-    used[k]++;
-    if (fill(i + 1)) return true;
-    grid[i] = null;
-    used[k]--;
-  }
-  return false;
-};
-fill(0);
-const items = grid.map((key, i) => {
-  const c = i % COLS;
-  const r = Math.floor(i / COLS);
-  const img = OBJECTS[key!].image;
+const items = LAYOUT.map((l) => {
+  const img = OBJECTS[l.key];
+  const w = Math.round(img.width / 2);
+  const h = Math.round(img.height / 2);
   return {
-    key: key!,
-    // cell centre, every other row shifted half a cell, plus a little jitter
-    x: Math.round((c + 0.5 + (r % 2) * 0.5) * CELL_W + (rand() - 0.5) * CELL_W * 0.35),
-    y: Math.round((r + 0.5) * CELL_H + (rand() - 0.5) * CELL_H * 0.3),
-    w: Math.round(img.width / 2),
-    h: Math.round(img.height / 2),
+    ...l,
+    w,
+    h,
+    // centre of the image box (where the canvas brings an object when it's selected)
+    cx: Math.round(l.x + w / 2),
+    cy: Math.round(l.y + h / 2),
+    // label: centre and text top, relative to the image box
+    labelX: l.lx + l.lw / 2 - l.x,
+    labelY: l.ly + 7 - l.y,
   };
 });
 // 3 × 3 copies of the tile; the middle one (0, 0) is the focusable one
 const tiles = [-1, 0, 1].flatMap((ty) => [-1, 0, 1].map((tx) => ({ tx, ty })));
-const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map((p) => p.id), studio: STUDIO_ID });
+const config = JSON.stringify({
+  tileW: TILE_W,
+  tileH: TILE_H,
+  people: people.map((p) => p.id),
+  studio: STUDIO_ID,
+  // where the page opens: the middle of the Figma frame (phones: the robot)
+  start: { x: FRAME.w / 2, y: FRAME.h / 2 },
+  startMobile: { x: ROBOT.x + 349 / 2, y: ROBOT.y + 255 / 2 },
+});
 ---
 <section class="team" aria-label="The team" data-team={config}>
   <div class="team__viewport">
     <div class="team__world">
       {tiles.map(({ tx, ty }) =>
         items.map((it) => {
-          const o = OBJECTS[it.key];
           const owner = personByObject.get(it.key);
           const centre = tx === 0 && ty === 0;
           return (
@@ -138,16 +127,16 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
               data-person={owner?.id}
               data-card={it.key === STUDIO_OBJECT ? STUDIO_ID : undefined}
               data-model={owner?.data.model}
-              data-x={(tx + 1) * TILE_W + it.x}
-              data-y={(ty + 1) * TILE_H + it.y}
-              style={`--x: ${(tx + 1) * TILE_W + it.x}; --y: ${(ty + 1) * TILE_H + it.y}; --w: ${it.w}; --h: ${it.h}`}
+              data-x={(tx + 1) * TILE_W + it.cx}
+              data-y={(ty + 1) * TILE_H + it.cy}
+              style={`--x: ${(tx + 1) * TILE_W + it.x}; --y: ${(ty + 1) * TILE_H + it.y}; --w: ${it.w}; --h: ${it.h}; --lx: ${it.labelX}; --ly: ${it.labelY}`}
               tabindex={centre ? undefined : -1}
               aria-hidden={centre ? undefined : 'true'}
-              aria-label={`Meet the team — ${o.label}`}
+              aria-label={`Meet the team — ${it.label}`}
             >
               <span class="team-obj__lens">
-                <Image src={o.image} alt="" widths={[it.w, it.w * 2]} sizes={`${it.w}px`} loading="eager" draggable="false" />
-                <span class="team-obj__label t-button">{o.label}</span>
+                <Image src={OBJECTS[it.key]} alt="" widths={[it.w, it.w * 2]} sizes={`${it.w}px`} loading="eager" draggable="false" />
+                <span class="team-obj__label t-button">{it.label}</span>
               </span>
             </button>
           );
@@ -155,6 +144,8 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
       )}
     </div>
   </div>
+  <div class="team__edge team__edge--left" aria-hidden="true"></div>
+  <div class="team__edge team__edge--right" aria-hidden="true"></div>
   <div class="team__noise" aria-hidden="true"></div>
 
   {people.map((p) => (
@@ -209,7 +200,8 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
 </section>
 
 <script>
-  type Config = { tileW: number; tileH: number; people: string[]; studio: string };
+  type Point = { x: number; y: number };
+  type Config = { tileW: number; tileH: number; people: string[]; studio: string; start: Point; startMobile: Point };
 
   const root = document.querySelector<HTMLElement>('[data-team]');
   if (root) {
@@ -305,7 +297,7 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
           const k = 0.07 * lens * r2;
           pos[i].lens.style.transform = `translate(${(sx - cx) * k}px, ${(sy - cy) * k}px) scale(${1 + 0.08 * lens * r2})`;
           const d = f ? Math.min(1, Math.hypot(sx - f.x, sy - f.y) / (diag * 0.6)) : 0.5;
-          el.style.setProperty('--blur', String(lens * (3 + 13 * d)));
+          el.style.setProperty('--blur', String(lens * (1 + 4 * d)));
           el.style.setProperty('--fade', String(1 - lens * (0.45 + 0.3 * d)));
         } else {
           pos[i].lens.style.transform = '';
@@ -534,8 +526,10 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
 
     // Start: the middle tile centred on screen; /team#<person> opens that card
     measure();
-    panX = innerWidth / 2 - (cfg.tileW * unit) / 2;
-    panY = innerHeight / 2 - (cfg.tileH * unit) / 2;
+    // a point p of the middle tile is on screen at wrap(pan) + p × unit
+    const start = innerWidth <= 767 ? cfg.startMobile : cfg.start;
+    panX = innerWidth / 2 - start.x * unit;
+    panY = innerHeight / 2 - start.y * unit;
     render();
     root.classList.add('is-ready');
     const fromHash = decodeURIComponent(location.hash.slice(1));
@@ -582,6 +576,28 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     will-change: transform;
   }
   /* Figma noise layer: black 6% grain over everything */
+  /* Figma: progressive background blur (6px) on both screen edges, 0 → 6 toward the edge */
+  .team__edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    width: calc(246 * var(--px));
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .team__edge--left {
+    left: 0;
+    -webkit-mask-image: linear-gradient(to left, transparent, #000);
+    mask-image: linear-gradient(to left, transparent, #000);
+  }
+  .team__edge--right {
+    right: 0;
+    width: calc(236 * var(--px));
+    -webkit-mask-image: linear-gradient(to right, transparent, #000);
+    mask-image: linear-gradient(to right, transparent, #000);
+  }
   .team__noise {
     position: absolute;
     inset: 0;
@@ -595,9 +611,10 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
   /* ── Objects ─────────────────────────────────────────────────── */
   .team-obj {
     position: absolute;
-    left: calc((var(--x) - var(--w) / 2) * var(--px) * var(--s));
-    top: calc((var(--y) - var(--h) / 2) * var(--px) * var(--s));
+    left: calc(var(--x) * var(--px) * var(--s));
+    top: calc(var(--y) * var(--px) * var(--s));
     width: calc(var(--w) * var(--px) * var(--s));
+    height: calc(var(--h) * var(--px) * var(--s));
     padding: 0;
     cursor: pointer;
     opacity: var(--fade, 1);
@@ -613,20 +630,28 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     cursor: grabbing;
   }
   .team-obj__lens {
-    display: grid;
-    justify-items: center;
+    position: relative;
+    display: block;
+    height: 100%;
     transform-origin: center;
     transition: transform var(--duration-smooth) var(--ease-out);
   }
   .team-obj :global(img) {
+    display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
     pointer-events: none;
     transition: transform var(--duration-slow) var(--ease-out);
   }
+  /* Label exactly where Figma has it: centred on its frame, 14 px, uppercase, 6% tracking
+     (Button style at the canvas's label size) */
   .team-obj__label {
-    margin-top: calc(-12 * var(--px));
-    padding: calc(6 * var(--px)) calc(12 * var(--px));
+    position: absolute;
+    left: calc(var(--lx) * var(--px) * var(--s));
+    top: calc(var(--ly) * var(--px) * var(--s));
+    transform: translateX(-50%);
+    font-size: max(9px, calc(14 * var(--px) * var(--s)));
+    line-height: 1.2;
     color: var(--color-black);
     white-space: nowrap;
   }
@@ -810,8 +835,8 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
       margin-top: 64px;
       gap: var(--space-24);
     }
-    .team-obj__label {
-      font-size: 12px;
+    .team__edge {
+      width: 48px;
     }
   }
 </style>
