@@ -202,17 +202,16 @@ const { items } = Astro.props;
   }
 
   /* ── Images: the next one slides in from the bottom over the previous ── */
-  /* Figma 818×872 at (870, 77), corner 4: always the full right column (to the page
-     margin). On short windows it keeps that width and crops top/bottom, leaving room
-     for the nav pill (Figma: 157 under the image). The row takes the image's height,
-     so the services list sits on the image's bottom edge. */
+  /* The full right column (to the page margin, Figma x 870 → 1688), from 77 down to the
+     page margin at the bottom of the screen — the same 40 as at the sides. It may pass
+     under the nav pill; the image crops (cover) to fill it. The row takes the image's
+     height, so the services list sits on the image's bottom edge. */
   .services-scroller__media {
     grid-area: media;
     position: relative;
     align-self: start;
     width: 100%;
-    aspect-ratio: 818 / 872;
-    max-height: calc(100vh - var(--space-40) - var(--line-width) - calc(36 * var(--px)) - calc(157 * var(--px)));
+    height: calc(100vh - var(--space-40) - var(--line-width) - calc(36 * var(--px)) - var(--page-margin));
     border-radius: calc(4 * var(--px));
     overflow: hidden;
     background: var(--color-black);
@@ -294,6 +293,7 @@ const { items } = Astro.props;
     }
     .services-scroller__media {
       width: calc(100% + 2 * var(--page-margin));
+      aspect-ratio: 818 / 872;
       height: auto;
       max-height: none;
       max-width: none;
