@@ -350,7 +350,6 @@ hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open it
 
 ## Open items
 
-- Showreel video file (`public/videos/showreel.mp4`) — waiting for the file.
 - Mobile designs needed: Team field, Robo Radio TV, Contact, Careers hero, Services device image, poster collage, Project hero.
 - Real social links (`src/data/site.ts`).
 - Placeholder copy in Figma: Team (Paulina, Greg quotes; Alex's names swapped); episode rows share one description.
