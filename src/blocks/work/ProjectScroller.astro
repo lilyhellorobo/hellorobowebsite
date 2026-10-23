@@ -9,8 +9,10 @@
  * are foreshortened, keystoned and pulled toward the vanishing point like letters on a
  * turning drum. The block pins to the screen and scrolling turns the drum through every
  * project once; the name at the front is the active project: its background and
- * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px),
- * fade by distance from the front = Figma's wheel opacities. A CSS CRT layer (scanlines,
+ * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px);
+ * the front name is at full opacity and the others fade fast (FADE), for contrast.
+ * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
+ * into one continuous turn; one project ≈ 70% of a screen of scrolling. A CSS CRT layer (scanlines,
  * aperture mask, vignette, noise, flicker, rolling band — values from the Figma shader)
  * sits on top until the WebGL step.
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
@@ -48,8 +50,9 @@ const LOOPS = projects.length ? Math.max(1, Math.round(40 / projects.length)) : 
 const FACES = projects.length * LOOPS;
 const STEP = FACES ? 360 / FACES : 0;
 const RADIUS = FACES ? Math.round(ROW / Math.sin((STEP * Math.PI) / 180)) : 0;
-// Opacity by distance from the front, in rows (Figma's wheel)
-const FADE = [1, 0.5, 0.35, 0.25, 0.15, 0.1, 0.1, 0];
+// Opacity by distance from the front, in rows: the front project stands out clearly,
+// the rest fall away fast (more contrast than Figma's 1 / 0.5 / 0.35 …, as requested)
+const FADE = [1, 0.25, 0.14, 0.08, 0.05, 0.03, 0.02, 0];
 const fadeAt = (d: number) => FADE[Math.min(Math.round(Math.abs(d)), FADE.length - 1)];
 const faces = Array.from({ length: FACES }, (_, i) => {
   const d = Math.min(i, FACES - i); // rows from the front at rest
@@ -168,6 +171,14 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     let current = 0;
     let frame = 0;
 
+    // Smooth follow: the drum eases toward `target`, time-based so it feels the same at
+    // any frame rate. SMOOTH = seconds to cover ~63% of the remaining turn.
+    const SMOOTH = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.001 : 0.28;
+    let offset = 0;
+    let target = 0;
+    let running = 0;
+    let lastT = 0;
+
     const place = (offset: number) => {
       drum.style.setProperty('--rot', `${offset * data.step}deg`);
       const base = Math.round(offset);
@@ -196,26 +207,33 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     // Wheel / trackpad / touch / keys turn the drum directly; the offset never stops,
     // so it loops forever both ways. It eases toward the target and, once input stops,
     // settles the nearest project at the front.
+    const tick = (t: number) => {
+      const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 1 / 60;
+      lastT = t;
+      offset += (target - offset) * (1 - Math.exp(-dt / SMOOTH));
+      if (Math.abs(target - offset) < 0.0005) offset = target;
+      place(offset);
+      if (offset === target) {
+        running = 0;
+        lastT = 0;
+      } else running = requestAnimationFrame(tick);
+    };
+    const follow = () => {
+      if (!running) running = requestAnimationFrame(tick);
+    };
+
     if (root.hasAttribute('data-infinite')) {
-      let offset = 0;
-      let target = 0;
       let idle = 0;
-      let running = 0;
-      const perProject = () => window.innerHeight * 0.4; // same feel as the pinned wheel
-      const tick = () => {
-        offset += (target - offset) * 0.12;
-        if (Math.abs(target - offset) < 0.0005) offset = target;
-        place(offset);
-        running = offset === target ? 0 : requestAnimationFrame(tick);
-      };
+      const perProject = () => window.innerHeight * 0.7; // same pace as the pinned wheel
       const nudge = (projects: number) => {
         target += projects;
         window.clearTimeout(idle);
+        // once input stops, settle the nearest project at the front
         idle = window.setTimeout(() => {
           target = Math.round(target);
-          if (!running) running = requestAnimationFrame(tick);
-        }, 140);
-        if (!running) running = requestAnimationFrame(tick);
+          follow();
+        }, 220);
+        follow();
       };
       root.addEventListener(
         'wheel',
@@ -247,7 +265,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
         if (step === undefined) return;
         e.preventDefault();
         target = Math.round(target) + step;
-        if (!running) running = requestAnimationFrame(tick);
+        follow();
       });
       stage.style.setProperty('--enter', '1');
       place(0);
@@ -262,7 +280,8 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
         const clamp = (v: number) => Math.min(1, Math.max(0, v));
         stage.style.setProperty('--enter', String(expand > 0 ? clamp(-rect.top / expand) : 1));
         const progress = travel - expand > 0 ? clamp((-rect.top - expand) / (travel - expand)) : 0;
-        place(progress * N);
+        target = progress * N;
+        follow();
       };
       const request = () => {
         if (!frame) frame = requestAnimationFrame(update);
@@ -270,6 +289,9 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
       window.addEventListener('scroll', request, { passive: true });
       window.addEventListener('resize', request);
       update();
+      // start where the page already is (e.g. after a reload mid-page), without easing in
+      offset = target;
+      place(offset);
     }
 
     // VIEW: only while the front name (or the button itself) is hovered or focused;
@@ -340,7 +362,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 </script>
 
 <style>
-  /* One screen to show the block + 40% of a screen per project while the wheel turns */
+  /* One screen to show the block + 70% of a screen per project while the wheel turns */
   /* Work page: one screen, the wheel turns in place (no page scroll) */
   .project-wheel--infinite {
     height: 100vh !important;
@@ -350,7 +372,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   .project-wheel {
     position: relative;
     --expand: 0;
-    height: calc(100vh + (var(--expand) + var(--count) * 0.4) * 100vh);
+    height: calc(100vh + (var(--expand) + var(--count) * 0.7) * 100vh);
   }
   .project-wheel__stage {
     position: sticky;
