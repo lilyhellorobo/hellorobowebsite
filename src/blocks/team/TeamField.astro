@@ -20,7 +20,8 @@
  *   the card), the rest stays out of focus, and the card fades in on the right. The robot
  *   (hello_robo) opens the studio card — Hello Robo, no photo (Figma 10104:398); every
  *   other object, for now, a random team member (not the same twice in a row).
- * - While an object is selected the menu pill fades / slides away (html[data-nav=hidden]).
+ * - While an object is selected the menu pill and Get in touch fade / slide away
+ *   (html[data-nav=hidden]).
  * - Close (×, a click outside the card, or Esc): the card fades out and the canvas
  *   returns to normal. /team#<person> opens that person's card on load.
  * Objects are 2× renders on white, drawn with mix-blend-mode: multiply so the white
@@ -570,7 +571,7 @@ const config = JSON.stringify({
     );
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && selected >= 0) deselect();
-      if (selected >= 0 || (e.target as HTMLElement).closest('input, textarea')) return;
+      if (selected >= 0 || (e.target as Element).closest?.('input, textarea')) return;
       const step = 120;
       const moves: Record<string, [number, number]> = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
       const m = moves[e.key];
