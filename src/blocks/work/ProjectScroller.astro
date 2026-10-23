@@ -4,11 +4,13 @@
  * Figma: Home "Portfolio page d" (10093:1049) / Work "Portfolio page" (10100:11973), 1728×1117
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1049
  *
- * Desktop: the project names sit on a looping cylinder. The block pins to the screen
- * and scrolling turns the wheel through every project once; the name at the front is
- * the active project: its background and services show, and hovering its name shows
- * VIEW. Sizes, opacities and offsets of the rows are Figma's wheel (by distance from
- * the front), so the static state matches the design. A CSS CRT layer (scanlines,
+ * Desktop: the project names are printed on a real 3D drum (CSS perspective +
+ * rotateX/translateZ): each name is a face of a cylinder, so names away from the front
+ * are foreshortened, keystoned and pulled toward the vanishing point like letters on a
+ * turning drum. The block pins to the screen and scrolling turns the drum through every
+ * project once; the name at the front is the active project: its background and
+ * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px),
+ * fade by distance from the front = Figma's wheel opacities. A CSS CRT layer (scanlines,
  * aperture mask, vignette, noise, flicker, rolling band — values from the Figma shader)
  * sits on top until the WebGL step.
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
@@ -35,36 +37,23 @@ const { as: Tag = 'section', framed = false, mobileLimit } = Astro.props;
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 const active = projects[0];
 
-// Figma wheel rows by distance from the front (0 = front): vertical offset from the
-// front row's centre, scale of the H2 size, opacity, left edge — 1728×1117 frame units.
-const WHEEL = {
-  y: [0, 112, 220, 317, 405, 477, 562, 640],
-  scale: [1, 0.9375, 0.85, 0.775, 0.725, 0.65, 0.6, 0.55],
-  opacity: [1, 0.5, 0.35, 0.25, 0.15, 0.1, 0.1, 0],
-  x: [319, 320, 333, 345, 355, 377, 380, 385],
-  centre: 549,
-};
-const SLOTS = 15; // rows rendered; the middle one is the front
-const MID = (SLOTS - 1) / 2;
-const mod = (n: number, m: number) => ((n % m) + m) % m;
-// Static placement at offset 0 (the script moves them on scroll with the same maths)
-const place = (d: number) => {
-  const a = Math.min(Math.abs(d), WHEEL.y.length - 1);
-  const sign = d < 0 ? -1 : 1;
-  return {
-    left: `${(WHEEL.x[a] / 1728) * 100}%`,
-    top: `${((WHEEL.centre + sign * WHEEL.y[a]) / 1117) * 100}%`,
-    scale: WHEEL.scale[a],
-    opacity: WHEEL.opacity[a],
-  };
-};
-const rows = projects.length
-  ? Array.from({ length: SLOTS }, (_, s) => {
-      const k = s - MID;
-      return { k, project: projects[mod(k, projects.length)], ...place(k) };
-    })
-  : [];
-const wheelData = JSON.stringify({ ...WHEEL, items: projects.map((p) => ({ name: p.data.name, href: `/work/${p.id}` })) });
+// 3D drum: the names go all the way round a cylinder. The number of faces is a whole
+// number of project loops (≈ 40), so the drum closes seamlessly; STEP is the angle
+// between names and the radius keeps Figma's ≈ 110px spacing between the front rows,
+// so the drum runs past the top and bottom of the frame as in Figma.
+const ROW = 110; // 1117-frame units between the front rows
+const LOOPS = projects.length ? Math.max(1, Math.round(40 / projects.length)) : 0;
+const FACES = projects.length * LOOPS;
+const STEP = FACES ? 360 / FACES : 0;
+const RADIUS = FACES ? Math.round(ROW / Math.sin((STEP * Math.PI) / 180)) : 0;
+// Opacity by distance from the front, in rows (Figma's wheel)
+const FADE = [1, 0.5, 0.35, 0.25, 0.15, 0.1, 0.1, 0];
+const fadeAt = (d: number) => FADE[Math.min(Math.round(Math.abs(d)), FADE.length - 1)];
+const faces = Array.from({ length: FACES }, (_, i) => {
+  const d = Math.min(i, FACES - i); // rows from the front at rest
+  return { i, project: projects[i % projects.length], opacity: fadeAt(d) };
+});
+const wheelData = JSON.stringify({ step: STEP, fade: FADE, faces: FACES, items: projects.map((p) => ({ name: p.data.name, href: `/work/${p.id}` })) });
 // Mobile slides: every project once, in order
 const cards = projects.slice(0, mobileLimit ?? projects.length);
 ---
@@ -83,17 +72,18 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
         <hr class="project-wheel__rule" />
         <img class="project-wheel__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
 
-        <ol class="project-wheel__names" aria-hidden="true">
-          {rows.map((r) => (
-            <li
-              class:list={['project-wheel__name', 't-h2', { 'is-front': r.k === 0 }]}
-              data-k={r.k}
-              style={`left:${r.left};top:${r.top};opacity:${r.opacity};transform:translateY(-50%) scale(${r.scale})`}
-            >
-              <a href={`/work/${r.project.id}`} tabindex={r.k === 0 ? undefined : -1}>{r.project.data.name}</a>
-            </li>
-          ))}
-        </ol>
+        <div class="project-wheel__names" aria-hidden="true" style={`--radius: ${RADIUS}`}>
+          <ol class="project-wheel__drum">
+            {faces.map((f) => (
+              <li
+                class:list={['project-wheel__name', 't-h2', { 'is-front': f.i === 0 }]}
+                style={`--a: ${-f.i * STEP}deg; opacity: ${f.opacity}`}
+              >
+                <a href={`/work/${f.project.id}`} tabindex={f.i === 0 ? undefined : -1}>{f.project.data.name}</a>
+              </li>
+            ))}
+          </ol>
+        </div>
 
         <Button href={`/work/${active.id}`} variant="light" size="small" class="project-wheel__view" tabindex="-1">View</Button>
 
@@ -149,50 +139,43 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 </Tag>
 
 <script>
-  // Turns page scroll into the wheel's rotation: one full turn through every project
-  // while the block is pinned. offset 0 = first project in front, offset N = back to it.
-  type Wheel = { y: number[]; scale: number[]; opacity: number[]; x: number[]; centre: number; items: { name: string; href: string }[] };
+  // Turns page scroll into the drum's rotation: one pass through every project while
+  // the block is pinned. offset 0 = first project in front, offset N = back to it.
+  type Wheel = { step: number; fade: number[]; faces: number; items: { name: string; href: string }[] };
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-wheel]')) {
     const data: Wheel = JSON.parse(root.dataset.wheel || '{}');
     const N = data.items.length;
     const stage = root.querySelector<HTMLElement>('.project-wheel__stage');
     const canvas = root.querySelector<HTMLElement>('.project-wheel__canvas');
+    const drum = root.querySelector<HTMLElement>('.project-wheel__drum');
     const rows = [...root.querySelectorAll<HTMLElement>('.project-wheel__name')];
     const view = root.querySelector<HTMLAnchorElement>('.project-wheel__view');
     const bgs = [...root.querySelectorAll<HTMLElement>('.project-wheel__bg')];
     const lists = [...root.querySelectorAll<HTMLElement>('.project-wheel__services')];
-    if (!stage || !canvas || !N) continue;
-    const MID = (rows.length - 1) / 2;
-    const last = data.y.length - 1;
+    if (!stage || !canvas || !drum || !N) continue;
+    const F = data.faces;
+    const last = data.fade.length - 1;
     const mod = (n: number, m: number) => ((n % m) + m) % m;
-    const lerp = (arr: number[], a: number) => {
-      const i = Math.min(Math.floor(a), last);
-      const t = Math.min(a - i, 1);
-      return arr[i] + (arr[Math.min(i + 1, last)] - arr[i]) * t;
+    // Opacity for a face `a` rows from the front, eased between Figma's steps
+    const fade = (a: number) => {
+      if (a >= last) return 0;
+      const i = Math.floor(a);
+      return data.fade[i] + (data.fade[i + 1] - data.fade[i]) * (a - i);
     };
     let current = 0;
     let frame = 0;
 
     const place = (offset: number) => {
+      drum.style.setProperty('--rot', `${offset * data.step}deg`);
       const base = Math.round(offset);
-      rows.forEach((row, s) => {
-        const k = base + s - MID;
-        const d = k - offset;
-        const a = Math.min(Math.abs(d), last);
-        const sign = d < 0 ? -1 : 1;
-        if (row.dataset.k !== String(k)) {
-          const item = data.items[mod(k, N)];
-          const link = row.firstElementChild as HTMLAnchorElement;
-          row.dataset.k = String(k);
-          link.textContent = item.name;
-          link.href = item.href;
-        }
-        row.style.left = `${(lerp(data.x, a) / 1728) * 100}%`;
-        row.style.top = `${((data.centre + sign * lerp(data.y, a)) / 1117) * 100}%`;
-        row.style.opacity = String(lerp(data.opacity, a));
-        row.style.transform = `translateY(-50%) scale(${lerp(data.scale, a)})`;
-        const front = s === MID;
+      const frontFace = mod(base, F);
+      rows.forEach((row, i) => {
+        // rows between this face and the front, the short way round the drum
+        let d = mod(i - offset, F);
+        if (d > F / 2) d -= F;
+        row.style.opacity = String(fade(Math.abs(d)));
+        const front = i === frontFace;
         row.classList.toggle('is-front', front);
         (row.firstElementChild as HTMLElement).tabIndex = front ? 0 : -1;
       });
@@ -374,17 +357,39 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     height: auto;
   }
 
-  /* ── The wheel: H2 rows scaled and faded by distance from the front ── */
+  /* ── The 3D drum ──────────────────────────────────────────────
+     The names box is the camera: perspective from the middle of the frame, so faces
+     away from the front shrink and drift toward the centre (Figma's indent). The drum
+     axis sits at the front row's left edge / centre line (319, 549); it is pushed back
+     by R so the front face is at its real size. Lengths are in screen-height units
+     because the stage is 100vh tall (1117 in Figma). */
   .project-wheel__names {
     position: absolute;
     inset: 0;
+    --unit: calc(100vh / 1117);
+    perspective: calc(1300 * var(--unit));
+    perspective-origin: calc(864 / 1728 * 100%) calc(549 / 1117 * 100%);
   }
+  .project-wheel__drum {
+    position: absolute;
+    left: calc(319 / 1728 * 100%);
+    top: calc(549 / 1117 * 100%);
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(-1 * var(--radius) * var(--unit))) rotateX(var(--rot, 0deg));
+    will-change: transform;
+  }
+  /* Each name is one face: centred on the axis, pushed out to the surface, turned to its angle */
   .project-wheel__name {
     position: absolute;
-    transform-origin: left center;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    transform: rotateX(var(--a)) translateZ(calc(var(--radius) * var(--unit))) translateY(-50%);
+    backface-visibility: hidden;
     white-space: nowrap;
     color: var(--color-white);
-    will-change: transform, opacity, top;
   }
   .project-wheel__name a {
     color: inherit;
