@@ -112,7 +112,7 @@ const config = JSON.stringify({
   startMobile: { x: ROBOT.x + 349 / 2, y: ROBOT.y + 255 / 2 },
 });
 ---
-<section class="team" aria-label="The team" data-team={config}>
+<section class="team" aria-label="The team" data-team={config} style={`--tile-w: ${TILE_W}; --tile-h: ${TILE_H}`}>
   <div class="team__viewport">
     <div class="team__world">
       {tiles.map(({ tx, ty }) =>
@@ -274,9 +274,20 @@ const config = JSON.stringify({
       focusAt = screenOf(focus);
     };
 
+    // When the world wraps, every copy shifts by a tile and its neighbour takes its place.
+    // That frame must not animate (the values are the same as the copy it replaces), or
+    // the blur / lens / zoom transitions would visibly jump.
+    let lastOffset: { x: number; y: number } | null = null;
+    let wrapFrame = 0;
     const render = () => {
-      followFocus();
       const o = offset();
+      if (lastOffset && (Math.abs(o.x - lastOffset.x) > (cfg.tileW * unit) / 2 || Math.abs(o.y - lastOffset.y) > (cfg.tileH * unit) / 2)) {
+        root.classList.add('is-wrapping');
+        cancelAnimationFrame(wrapFrame);
+        wrapFrame = requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('is-wrapping')));
+      }
+      lastOffset = o;
+      followFocus();
       world.style.transform = `translate3d(${o.x}px, ${o.y}px, 0)`;
       const vw = innerWidth;
       const vh = innerHeight;
@@ -287,12 +298,7 @@ const config = JSON.stringify({
       for (let i = 0; i < objs.length; i++) {
         const sx = o.x + pos[i].x * unit;
         const sy = o.y + pos[i].y * unit;
-        const off = sx < -600 || sx > vw + 600 || sy < -600 || sy > vh + 600;
         const el = objs[i];
-        if (off) {
-          el.style.setProperty('--blur', '0');
-          continue;
-        }
         if (lens > 0.001 && i !== focus) {
           // barrel-style lens: push outward and grow a little, more toward the edges
           const nx = (sx - cx) / cx;
@@ -575,10 +581,10 @@ const config = JSON.stringify({
     position: absolute;
     left: 0;
     top: 0;
-    width: calc(7200 * var(--px) * var(--s));
-    height: calc(4500 * var(--px) * var(--s));
+    /* 3 × 3 tiles (TILE_W × TILE_H); grey so the objects' multiply has a backdrop */
+    width: calc(3 * var(--tile-w) * var(--px) * var(--s));
+    height: calc(3 * var(--tile-h) * var(--px) * var(--s));
     background: var(--color-grey-200);
-    transform: translate(calc(50vw - 3600 * var(--px) * var(--s)), calc(50vh - 2250 * var(--px) * var(--s)));
     will-change: transform;
   }
   /* Figma noise layer: black 6% grain over everything */
@@ -631,6 +637,11 @@ const config = JSON.stringify({
     transition:
       opacity var(--duration-smooth) var(--ease-out),
       filter var(--duration-smooth) var(--ease-out);
+  }
+  .team.is-wrapping .team-obj,
+  .team.is-wrapping .team-obj *,
+  .team.is-wrapping .team-obj :global(img) {
+    transition: none !important;
   }
   .team.is-dragging .team-obj {
     cursor: grabbing;
