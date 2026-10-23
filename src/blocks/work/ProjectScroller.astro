@@ -12,7 +12,7 @@
  * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px);
  * the front name is at full opacity and the others fade fast (FADE), for contrast.
  * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
- * into one continuous turn; one project ≈ 70% of a screen of scrolling. A CSS CRT layer (scanlines,
+ * into one continuous turn; one project = a screen of scrolling on Home, 70% on Work. A CSS CRT layer (scanlines,
  * aperture mask, vignette, noise, flicker, rolling band — values from the Figma shader)
  * sits on top until the WebGL step.
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
@@ -173,7 +173,10 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 
     // Smooth follow: the drum eases toward `target`, time-based so it feels the same at
     // any frame rate. SMOOTH = seconds to cover ~63% of the remaining turn.
-    const SMOOTH = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.001 : 0.28;
+    // Home (scroll-driven) is softer than the Work page, where input drives the drum directly
+    const SMOOTH = matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 0.001
+      : root.hasAttribute('data-infinite') ? 0.28 : 0.45;
     let offset = 0;
     let target = 0;
     let running = 0;
@@ -297,13 +300,30 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     // VIEW: only while the front name (or the button itself) is hovered or focused;
     // it sits just after the name (128 in Figma)
     let hideTimer = 0;
-    const show = () => {
-      const front = root.querySelector<HTMLElement>('.project-wheel__name.is-front a');
-      if (!front || !view) return;
-      window.clearTimeout(hideTimer);
+    // VIEW sits at one spot for every project: Figma's x 1051, or — if a project name is
+    // longer than Figma's — 24 after the longest name, so it never covers a name and
+    // never jumps between projects. Measured once per size with an off-screen copy.
+    const placeView = () => {
+      if (!view) return;
+      const probe = document.createElement('span');
+      probe.className = 't-h2';
+      probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0';
+      canvas.appendChild(probe);
+      let widest = 0;
+      for (const item of data.items) {
+        probe.textContent = item.name;
+        widest = Math.max(widest, probe.getBoundingClientRect().width);
+      }
+      probe.remove();
       const unit = canvas.clientWidth / 1728;
-      const left = front.getBoundingClientRect().right - canvas.getBoundingClientRect().left + 128 * unit;
+      const left = Math.max(1051 * unit, 319 * unit + widest + 24 * unit);
       view.style.left = `${left}px`;
+    };
+    document.fonts.ready.then(placeView);
+    window.addEventListener('resize', placeView);
+    const show = () => {
+      if (!view) return;
+      window.clearTimeout(hideTimer);
       stage.classList.add('is-hovering');
     };
     const hide = () => {
@@ -362,7 +382,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 </script>
 
 <style>
-  /* One screen to show the block + 70% of a screen per project while the wheel turns */
+  /* One screen to show the block + one screen per project while the wheel turns (Home) */
   /* Work page: one screen, the wheel turns in place (no page scroll) */
   .project-wheel--infinite {
     height: 100vh !important;
@@ -372,7 +392,8 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   .project-wheel {
     position: relative;
     --expand: 0;
-    height: calc(100vh + (var(--expand) + var(--count) * 0.7) * 100vh);
+    --per-project: 1; /* screens of scrolling per project (Home) */
+    height: calc(100vh + (var(--expand) + var(--count) * var(--per-project)) * 100vh);
   }
   .project-wheel__stage {
     position: sticky;
