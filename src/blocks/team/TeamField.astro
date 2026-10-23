@@ -13,8 +13,9 @@
  * - Hover an object: every other object blurs and fades more the further it is from it,
  *   with a lens distortion that grows toward the screen edges.
  * - Click: the canvas glides so the object lands in the middle of the left half (beside
- *   the card), the rest stays out of focus, and the card fades in on the right. For now
- *   the card is a random team member (not the same twice in a row).
+ *   the card), the rest stays out of focus, and the card fades in on the right. The robot
+ *   (hello_robo) opens the studio card — Hello Robo, no photo (Figma 10104:398); every
+ *   other object, for now, a random team member (not the same twice in a row).
  * - Close (×, a click outside the card, or Esc): the card fades out and the canvas
  *   returns to normal. /team#<person> opens that person's card on load.
  * Objects are 2× renders on white, drawn with mix-blend-mode: multiply so the white
@@ -50,6 +51,9 @@ const OBJECTS: Record<string, { label: string; image: ImageMetadata }> = {
   cat_mode_active: { label: 'CAT_MODE_ACTIVE.OBJ', image: catMode },
 };
 const KEYS = Object.keys(OBJECTS);
+// The robot stands for the whole studio: it opens the Hello Robo card, not a person's
+const STUDIO_OBJECT = 'hello_robo';
+const STUDIO_ID = 'hello-robo';
 const personByObject = new Map(people.map((p) => [p.data.object, p]));
 
 // ── One tile of the endless canvas (Figma px). A COLS × ROWS jittered grid, one object
@@ -116,7 +120,7 @@ const items = grid.map((key, i) => {
 });
 // 3 × 3 copies of the tile; the middle one (0, 0) is the focusable one
 const tiles = [-1, 0, 1].flatMap((ty) => [-1, 0, 1].map((tx) => ({ tx, ty })));
-const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map((p) => p.id) });
+const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map((p) => p.id), studio: STUDIO_ID });
 ---
 <section class="team" aria-label="The team" data-team={config}>
   <div class="team__viewport">
@@ -132,6 +136,7 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
               class="team-obj"
               data-object={it.key}
               data-person={owner?.id}
+              data-card={it.key === STUDIO_OBJECT ? STUDIO_ID : undefined}
               data-model={owner?.data.model}
               data-x={(tx + 1) * TILE_W + it.x}
               data-y={(ty + 1) * TILE_H + it.y}
@@ -175,14 +180,36 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     </article>
   ))}
 
+  <!-- Studio card (Figma 10104:398): opened by the robot; no photo, the culture text -->
+  <article class="team-card team-card--studio" id={STUDIO_ID} aria-label="Hello Robo" aria-hidden="true">
+    <a class="team-card__close" href="#" aria-label="Close" data-team-close>
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M17.6719 14.3303L25.6023 6.3999" stroke="currentColor" stroke-width="1.28" />
+        <path d="M6.42578 25.574L14.3562 17.6436" stroke="currentColor" stroke-width="1.28" />
+        <path d="M6.39844 6.3999L25.5984 25.5999" stroke="currentColor" stroke-width="1.28" />
+      </svg>
+    </a>
+    <img class="team-card__stamp" src="/images/services/stamp-thinkers.svg" alt="" width="252" height="82" style="--w: 252" />
+    <header class="team-card__names">
+      <p class="team-card__ja t-h3" lang="ja">ハローロボ</p>
+      <h2 class="t-h2">Hello Robo</h2>
+    </header>
+    <div class="team-card__quote t-body">
+      <p>Our culture</p>
+      <p>Robots are complex. Working together shouldn’t be. We’re a curious, collaborative team that shares ideas early, asks honest questions and leaves ego at the door.</p>
+      <p>We care about the details, support one another and make space for different perspectives. Everyone has a voice, good ideas can come from anywhere, and the best work is something we build together.</p>
+    </div>
+  </article>
+
   <!-- Keyboard / screen reader access to every card -->
   <ul class="visually-hidden">
+    <li><a href={`#${STUDIO_ID}`} data-team-open={STUDIO_ID}>Hello Robo — our culture</a></li>
     {people.map((p) => <li><a href={`#${p.id}`} data-team-open={p.id}>{p.data.name}, {p.data.role}</a></li>)}
   </ul>
 </section>
 
 <script>
-  type Config = { tileW: number; tileH: number; people: string[] };
+  type Config = { tileW: number; tileH: number; people: string[]; studio: string };
 
   const root = document.querySelector<HTMLElement>('[data-team]');
   if (root) {
@@ -221,8 +248,38 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     let lens = 0; // 0 → 1, eased
     let lensTarget = 0;
     let selected = -1;
+    // The 9 copies of each object (same spot in every tile). When the world wraps, the
+    // object in focus is handed to the copy that's now where it was, so it stays sharp.
+    const copyKey = (i: number) => `${wrap(pos[i].x, cfg.tileW)},${wrap(pos[i].y, cfg.tileH)}`;
+    const groups = new Map<string, number[]>();
+    pos.forEach((_, i) => groups.set(copyKey(i), [...(groups.get(copyKey(i)) || []), i]));
+    let focusAt: { x: number; y: number } | null = null;
+    const followFocus = () => {
+      if (focus < 0) return void (focusAt = null);
+      if (focusAt) {
+        let best = focus;
+        let bestD = Infinity;
+        for (const j of groups.get(copyKey(focus))!) {
+          const p = screenOf(j);
+          const d = Math.hypot(p.x - focusAt.x, p.y - focusAt.y);
+          if (d < bestD) [best, bestD] = [j, d];
+        }
+        if (best !== focus) {
+          const wasSelected = selected === focus;
+          objs[focus].classList.remove('is-focus', 'is-selected');
+          objs[best].classList.add('is-focus');
+          if (wasSelected) {
+            objs[best].classList.add('is-selected');
+            selected = best;
+          }
+          focus = best;
+        }
+      }
+      focusAt = screenOf(focus);
+    };
 
     const render = () => {
+      followFocus();
       const o = offset();
       world.style.transform = `translate3d(${o.x}px, ${o.y}px, 0)`;
       const vw = innerWidth;
@@ -281,6 +338,7 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
 
     const setFocus = (i: number) => {
       focus = i;
+      focusAt = null;
       lensTarget = i >= 0 ? 1 : 0;
       objs.forEach((el, j) => el.classList.toggle('is-focus', j === i));
       root.classList.toggle('is-focused', i >= 0);
@@ -334,9 +392,10 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
       const t = target();
       panAnim = { x0: panX, y0: panY, x1: panX + (t.x - s.x), y1: panY + (t.y - s.y), t0: performance.now(), dur: reduce ? 0 : 1100 };
       kick();
-      // For now: a random person (never the same twice in a row), unless one is given
+      // The robot opens the studio card; any other object, for now, a random person
+      // (never the same twice in a row), unless one is given
       const pool = cfg.people.filter((p) => p !== lastPerson);
-      const id = person || pool[Math.floor(Math.random() * pool.length)];
+      const id = person || objs[i].dataset.card || pool[Math.floor(Math.random() * pool.length)];
       window.setTimeout(() => openCard(id), reduce ? 0 : 450);
     };
     const deselect = () => {
@@ -455,13 +514,20 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
       kick();
     });
 
-    // Screen-reader / keyboard list: open a person's own object
-    const objectOf = (person: string) => objs.findIndex((o) => o.dataset.person === person && o.tabIndex !== -1);
+    // Screen-reader / keyboard list: open a card on its own object (centre tile) — the
+    // robot for the studio; a person's object, or any other one if theirs is the robot
+    const objectOf = (id: string) => {
+      const centre = objs.filter((o) => o.tabIndex !== -1);
+      const own = id === cfg.studio
+        ? centre.find((o) => o.dataset.card === id)
+        : centre.find((o) => o.dataset.person === id && !o.dataset.card) || centre.find((o) => !o.dataset.card);
+      return own ? objs.indexOf(own) : 0;
+    };
     root.querySelectorAll<HTMLElement>('[data-team-open]').forEach((a) =>
       a.addEventListener('click', (e) => {
         e.preventDefault();
         const id = a.dataset.teamOpen!;
-        select(Math.max(0, objectOf(id)), id);
+        select(objectOf(id), id);
         cards.get(id)?.querySelector<HTMLElement>('[data-team-close]')?.focus();
       }),
     );
@@ -473,7 +539,7 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     render();
     root.classList.add('is-ready');
     const fromHash = decodeURIComponent(location.hash.slice(1));
-    if (cards.has(fromHash)) select(Math.max(0, objectOf(fromHash)), fromHash);
+    if (cards.has(fromHash)) select(objectOf(fromHash), fromHash);
     window.addEventListener('resize', () => {
       measure();
       render();
@@ -666,6 +732,21 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     gap: calc(24 * var(--px));
   }
 
+  /* Studio card: no photo — names on top, the stamp top-right, culture text at the bottom */
+  .team-card__stamp {
+    position: absolute;
+    top: var(--space-40);
+    right: var(--space-40);
+    height: auto;
+  }
+  .team-card--studio .team-card__names {
+    grid-column: 1 / -1;
+  }
+  .team-card--studio .team-card__quote {
+    align-self: end;
+    gap: var(--space-40);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .team-obj,
     .team-obj__lens,
@@ -719,6 +800,15 @@ const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map
     .team-card__quote {
       margin-top: var(--space-24);
       gap: var(--space-16);
+    }
+    .team-card__stamp {
+      top: var(--space-20);
+      right: var(--space-20);
+      width: 140px;
+    }
+    .team-card--studio .team-card__quote {
+      margin-top: 64px;
+      gap: var(--space-24);
     }
     .team-obj__label {
       font-size: 12px;
