@@ -152,6 +152,9 @@ The browser renders Alliance the same as Figma (checked: heading widths match wi
 | `--button-height` | 60 (min 44) |
 | `--nav-height` / `--nav-width` | 80 / 426 (min 56 / 300; 64 tall on mobile) |
 | `--icon-size` | 32 (min 24) |
+| `--ease-out` / `--ease-in-out` | `cubic-bezier(.23,1,.32,1)` / `cubic-bezier(.4,0,.2,1)` — motion style from telhaclarke.com.au/studio |
+| `--duration-fast / -normal / -smooth / -slow` | 0.35s / 0.45s / 0.7s / 1.1s |
+| `--stagger` | 0.04s between words / lines |
 | `--radius-ui` | 2px |
 | `--z-raised / -header / -nav / -overlay` | 10 / 100 / 200 / 300 (menu sits at nav − 1) |
 
@@ -216,7 +219,7 @@ Every block file starts with a comment naming its Figma node and link.
 | | `project/ProjectNext` — next project | 10100:13197 | rules |
 | Services | `services/ServicesHero` | 10103:138 | rules |
 | | `services/ServicesDevice` — device still (video later) | 10103:211 | needs design |
-| | `services/ServiceBlock` ×3 — branding / interface / video production | 10103:212 / 267 / 304 | rules |
+| | `services/ServicesScroller` — branding / interface / video production, one pinned block | 10103:212 / 267 / 304 | rules (stacked) |
 | | `services/ServicesBuilding` — "Building toward yes" + logos | 10103:1223 | rules |
 | Team | `team/TeamField` — objects field (WebGL poster) + 9 cards via `#id` | 10104:170, 10104:555 | needs design |
 | Careers | `careers/CareersHero` — title, stamps, text, photo strip | 10100:14718 | needs design |
@@ -240,7 +243,7 @@ Every block file starts with a comment naming its Figma node and link.
 rules (one column, 16 margins, Home spacing) · *needs design* = placeholder until
 there's a mobile frame.
 
-## Scroll interactions (Home)
+## Scroll interactions
 
 Each one is a small script that turns the scroll position into a few numbers; all the
 visuals are CSS on top of those, so the animation can be restyled without touching the
@@ -250,6 +253,7 @@ script. Transitions are placeholders for the motion step.
 |---|---|---|
 | **Showcase** "Make the … say yes" (`home/HomeShowcase`) | Starts inside the page margins. When it reaches the top it pins; the first half screen of scrolling widens it to full screen, then three screens move through the slides: the photo crossfades, the title and services list swap, the bright segment of the line grows. Mobile: already full width, slides only. | `--enter` (0→1, widening), `--progress` (0→1, line), `data-active` (slide 0–2) |
 | **Project wheel** (`work/ProjectScroller`) | Home: starts inside the margins, pins, widens to full screen, then one full turn of a looping cylinder of project names (Figma's sizes / fades / offsets by distance from the front). The front project sets the background (crossfade, 30% black overlay) and the services list. VIEW shows only while the front name is hovered or focused, 128px after it. CSS CRT layer from the Figma shader values (scanlines, aperture mask, vignette, noise, flicker, rolling band). Work page: full screen from the start. Mobile: no wheel — full-screen project slides that pin and change on scroll (photo crossfade, name / services / VIEW swap, progress line), like the showcase. | `--enter`, `.is-front`, `.is-current`, `.is-hovering`; mobile: `--progress`, `.is-current` |
+| **Services** (`services/ServicesScroller`) | Pins; one screen per service. Progress line on top fills a third per service. Left: label, title words and each service slide up out of a mask and the next service's slide in (staggered). Right: the next image slides in from the bottom over the previous one (clip-path + slight rise). Mobile: the three services stacked, no pin. | `data-state` (past / current / next), `--progress` |
 | **News** (`home/HomeNews`) | The card row scrolls sideways: trackpad / shift + wheel, arrow keys when focused, click-and-drag with a mouse. Cards snap to the page margin; a drag never opens a card. | `.is-dragging` |
 
 Phones: progress is measured against the pinned block's own height (not the window),
