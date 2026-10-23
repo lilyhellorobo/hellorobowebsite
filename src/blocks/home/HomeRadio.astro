@@ -3,24 +3,27 @@
  * Home — Robo Radio teaser
  * Figma: "block" (10093:1424), 1728×2122
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1424
- * Posters are episode artwork (CMS later); exported at 2× from Figma.
+ * Posters: covers of the episodes marked "Displayed on homepage" in the CMS (up to 4, in list
+ * order), each linking to its episode.
  */
 import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import Button from '../../components/ui/Button.astro';
-import snell from '../../assets/radio/poster-jason-snell.png';
-import ringley from '../../assets/radio/poster-brian-ringley.png';
-import kline from '../../assets/radio/poster-jason-kline.png';
-import piccinno from '../../assets/radio/poster-andrea-piccinno.png';
+
+const episodes = (await getCollection('episodes', (e) => e.data.homepage && e.data.cover))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 4);
 
 // 3×2 grid in reading order; stamps sit in the two empty cells
-const cells = [
-  { poster: snell, alt: 'Robo Radio poster — Jason J. Snell, musical neurofeedback artist' },
-  { poster: ringley, alt: 'Robo Radio 12 poster — Brian Ringley' },
-  { stamp: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
-  { stamp: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
-  { poster: kline, alt: 'Robo Radio 10 poster — Jason Kline' },
-  { poster: piccinno, alt: 'Robo Radio poster — Andrea Piccinno' },
-];
+const stamps: Record<number, { src: string; w: number; h: number }> = {
+  2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
+  3: { src: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
+};
+const posters = [...episodes];
+const cells: ({ stamp: (typeof stamps)[number] } | { episode: (typeof episodes)[number] })[] = [];
+for (let i = 0; posters.length; i++) {
+  cells.push(stamps[i] ? { stamp: stamps[i] } : { episode: posters.shift()! });
+}
 ---
 <section class="home-radio container">
   <div class="home-radio__head">
@@ -36,24 +39,26 @@ const cells = [
 
   <ul class="home-radio__grid">
     {cells.map((c) => (
-      <li class:list={['home-radio__cell', { 'home-radio__cell--stamp': !c.poster }]}>
-        {c.poster ? (
-          <Image
-            class="home-radio__poster"
-            src={c.poster}
-            alt={c.alt}
-            widths={[541, 1082]}
-            sizes="(min-width: 1728px) 541px, 31vw"
-            loading="lazy"
-          />
+      <li class:list={['home-radio__cell', { 'home-radio__cell--stamp': 'stamp' in c }]}>
+        {'episode' in c ? (
+          <a class="home-radio__link" href={`/robo-radio/${c.episode.id}`}>
+            <Image
+              class="home-radio__poster"
+              src={c.episode.data.cover!}
+              alt={`${c.episode.data.title} poster`}
+              widths={[541, 1082]}
+              sizes="(min-width: 1728px) 541px, 31vw"
+              loading="lazy"
+            />
+          </a>
         ) : (
           <img
             class="home-radio__stamp"
-            src={c.stamp}
+            src={c.stamp.src}
             alt=""
-            width={c.w}
-            height={c.h}
-            style={`--w: ${c.w}; width: calc(${c.w} / 541 * 100%)`}
+            width={c.stamp.w}
+            height={c.stamp.h}
+            style={`--w: ${c.stamp.w}; width: calc(${c.stamp.w} / 541 * 100%)`}
             loading="lazy"
           />
         )}
@@ -90,6 +95,11 @@ const cells = [
     aspect-ratio: 541 / 765;
     display: grid;
     place-items: center;
+  }
+  .home-radio__link {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
   .home-radio :global(.home-radio__poster) {
     width: 100%;

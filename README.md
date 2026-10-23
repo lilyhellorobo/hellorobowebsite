@@ -328,11 +328,23 @@ The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321
   WebGL scene to load (e.g. three.js `GLTFLoader`).
 - Episodes store the YouTube video id; any YouTube link pasted in the CMS is converted.
   The episode page plays it on the TV screen (`RadioTV`, loaded only on click).
+- Episodes marked **Featured** (up to 6) are the posters under “One talk. One future” on
+  Robo Radio; **Displayed on homepage** (up to 4) are the posters in the Home Robo Radio
+  section. Both follow the list order. A boolean field's `limit` in `collections.ts`
+  caps how many entries can have it on.
+- **Contact form responses** (`/admin/responses`): the contact flow (`/contact`, reached
+  from Get in touch and the pre-footer) posts to `POST /api/contact`, which saves each
+  submission as a JSON file in `data/contact-responses/` (git-ignored: personal data never
+  goes into the repo). The CMS lists them newest first and can delete them. The endpoint
+  only accepts posts from the site itself, has a hidden bot trap and allows 5 sends per
+  visitor per 10 minutes. In production, keep `data/` on persistent storage (or point
+  `CONTACT_RESPONSES_DIR` at it) so redeploys don't wipe responses.
 
 | Path | What |
 |---|---|
 | `src/cms/` | auth, field definitions, file store, admin layout + styles, browser editor |
-| `src/pages/admin/` | login, logout, list / new / edit pages, `api/` (save, delete), `media` (image previews) |
+| `src/pages/admin/` | login, logout, list / new / edit pages, `responses/`, `api/` (save, delete), `media` (image previews) |
+| `src/cms/responses.ts`, `src/pages/api/contact.ts` | contact form responses: storage and the public endpoint |
 | `scripts/cms-user.mjs` | `npm run cms:user` |
 
 **Production:** `npm run build` outputs the static site plus a Node server
@@ -355,7 +367,7 @@ hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open it
 - Real social links (`src/data/site.ts`).
 - Placeholder copy in Figma: Team (Paulina, Greg quotes; Alex's names swapped); episode rows share one description.
 - Heavy SVGs to simplify with the designer: approved stamp (~965 KB), department stamp (~738 KB), logo rows (~990 KB), menu micrographic (~518 KB). Bedrock logo only exists as PNG.
-- Motion step: menu reveal, value tabs, contact form logic and copy-email; polish of the Home scroll interactions (easing, timing).
+- Motion step: menu reveal, value tabs, contact copy-email and receipt with real data; polish of the Home scroll interactions (easing, timing).
 - Project wheel: some project reveal images may need a better crop for the wheel background.
 - CMS publishing: choose hosting for hellorobo.co and how CMS saves reach the live site.
 

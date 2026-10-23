@@ -3,27 +3,27 @@
  * Robo Radio — Poster collage ("One talk. One future")
  * Figma: "collage" (10105:481), 1730×2826, black
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-481
- * 3×3 grid of posters (2× exports) and stamps. TODO (CMS): posters from episodes.
+ * 3×3 grid: the six featured episodes' covers (CMS "Featured", in list order), each linking
+ * to its episode, with stamps in the remaining cells.
  */
 import { Image } from 'astro:assets';
-import snell from '../../assets/radio/poster-jason-snell.png';
-import ringley from '../../assets/radio/poster-brian-ringley.png';
-import kline from '../../assets/radio/poster-jason-kline.png';
-import piccinno from '../../assets/radio/poster-andrea-piccinno.png';
-import otalora from '../../assets/radio/poster-alejandro-otalora.png';
-import schneider from '../../assets/radio/poster-michael-schneider.png';
+import { getCollection } from 'astro:content';
 
-const cells = [
-  { poster: snell, alt: 'Poster — Jason J. Snell' },
-  { poster: ringley, alt: 'Robo Radio 12 poster — Brian Ringley' },
-  { stamp: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
-  { stamp: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
-  { poster: kline, alt: 'Robo Radio 10 poster — Jason Kline' },
-  { poster: piccinno, alt: 'Poster — Andrea Piccinno' },
-  { poster: otalora, alt: 'Robo Radio 14 poster — Alejandro Otalora' },
-  { stamp: '/images/radio/stamp-departure.png', w: 126, h: 82 },
-  { poster: schneider, alt: 'Robo Radio 8 poster — Michael Schneider' },
-];
+const featured = (await getCollection('episodes', (e) => e.data.featured && e.data.cover))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 6);
+
+// Poster slots are filled in order; stamps keep their place in the Figma layout
+const stamps: Record<number, { src: string; w: number; h: number }> = {
+  2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
+  3: { src: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
+  7: { src: '/images/radio/stamp-departure.png', w: 126, h: 82 },
+};
+const posters = [...featured];
+const cells: ({ stamp: (typeof stamps)[number] } | { episode: (typeof featured)[number] })[] = [];
+for (let i = 0; posters.length; i++) {
+  cells.push(stamps[i] ? { stamp: stamps[i] } : { episode: posters.shift()! });
+}
 ---
 <section class="radio-collage theme-dark">
   <header class="radio-collage__head container">
@@ -33,10 +33,12 @@ const cells = [
   <ul class="radio-collage__grid container">
     {cells.map((c) => (
       <li class="radio-collage__cell">
-        {c.poster ? (
-          <Image src={c.poster} alt={c.alt} widths={[541, 1080]} sizes="(min-width: 1728px) 541px, 31vw" loading="lazy" />
+        {'episode' in c ? (
+          <a class="radio-collage__poster" href={`/robo-radio/${c.episode.id}`}>
+            <Image src={c.episode.data.cover!} alt={`${c.episode.data.title} poster`} widths={[541, 1080]} sizes="(min-width: 1728px) 541px, 31vw" loading="lazy" />
+          </a>
         ) : (
-          <img class="radio-collage__stamp" src={c.stamp} alt="" width={c.w} height={c.h} style={`--w: ${c.w}; width: calc(${c.w} / 541 * 100%)`} loading="lazy" />
+          <img class="radio-collage__stamp" src={c.stamp.src} alt="" width={c.stamp.w} height={c.stamp.h} style={`--w: ${c.stamp.w}; width: calc(${c.stamp.w} / 541 * 100%)`} loading="lazy" />
         )}
       </li>
     ))}
@@ -70,7 +72,12 @@ const cells = [
     display: grid;
     place-items: center;
   }
-  .radio-collage__cell :global(img:not(.radio-collage__stamp)) {
+  .radio-collage__poster {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .radio-collage__poster :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;

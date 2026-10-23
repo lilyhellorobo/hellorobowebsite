@@ -380,6 +380,46 @@
   }
 }
 
+/* --- Contact form responses --- */
+
+.cms-nav__split {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-line);
+}
+.cms-responses {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cms-response {
+  gap: 16px;
+}
+.cms-response__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.cms-response__fields {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+}
+.cms-response__fields dt {
+  color: var(--c-muted);
+}
+.cms-response__fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.cms-response__message {
+  white-space: pre-wrap;
+}
+
 /* --- Editor form --- */
 
 .cms-editor {

@@ -7,5 +7,7 @@
   "youtube": "BZzSYdaw-ZI",
   "description": "Robo Radio 11 is live. This month Hello Robo hosted Andrea Piccinno, a mechanical engineer from Italy building 3D-printed exoskeletons. We talked about the story behind exoskeletons, why functional alone isn't enough, and why robotics should be about augmenting humans — not replacing them.",
   "listed": true,
+  "featured": true,
+  "homepage": true,
   "order": 4
 }

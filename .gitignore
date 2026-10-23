@@ -13,6 +13,9 @@ out/
 .env.*
 !.env.example
 
+# Contact form responses (personal data, saved by /api/contact)
+/data/
+
 # OS / editor
 .DS_Store
 .vscode/

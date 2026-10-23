@@ -18,7 +18,8 @@ export type Field =
       sizeOf?: { field: string; dimension: 'width' | 'height' };
     }
   | { kind: 'select'; key: string; label: string; options: { value: string; label: string }[]; hint?: string }
-  | { kind: 'boolean'; key: string; label: string; default?: boolean; hint?: string }
+  /** `limit`: at most this many entries in the collection can have it switched on */
+  | { kind: 'boolean'; key: string; label: string; default?: boolean; limit?: number; hint?: string }
   /** A hex color like #FF6B03; empty means the default */
   | { kind: 'color'; key: string; label: string; placeholder?: string; hint?: string }
   /** A graphic from the asset library (src/cms/library.ts), stored as its public path */
@@ -329,6 +330,22 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
       { kind: 'textarea', key: 'description', label: 'Description', required: true },
       { kind: 'text', key: 'portfolioUrl', label: 'Guest’s portfolio link', hint: 'Optional. Shown as “Follow <name>’s work”.' },
       { kind: 'boolean', key: 'listed', label: 'Show in “All of the episodes”', default: true },
+      {
+        kind: 'boolean',
+        key: 'featured',
+        label: 'Featured',
+        default: false,
+        limit: 6,
+        hint: 'Shown as a poster under “One talk. One future” on Robo Radio. Up to 6 episodes, in list order.',
+      },
+      {
+        kind: 'boolean',
+        key: 'homepage',
+        label: 'Displayed on homepage',
+        default: false,
+        limit: 4,
+        hint: 'Shown as a poster in the Robo Radio section on Home. Up to 4 episodes, in list order.',
+      },
       order,
     ],
   },
