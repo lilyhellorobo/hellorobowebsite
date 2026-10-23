@@ -29,10 +29,12 @@ interface Props {
   as?: 'section' | 'div';
   /** Inside the page margins (Home) instead of full screen (Work) */
   framed?: boolean;
+  /** Work page: the wheel takes the scroll input itself and turns endlessly (no page scroll) */
+  infinite?: boolean;
   /** Limit the number of mobile slides (default: every project) */
   mobileLimit?: number;
 }
-const { as: Tag = 'section', framed = false, mobileLimit } = Astro.props;
+const { as: Tag = 'section', framed = false, infinite = false, mobileLimit } = Astro.props;
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 const active = projects[0];
@@ -58,7 +60,7 @@ const wheelData = JSON.stringify({ step: STEP, fade: FADE, faces: FACES, items: 
 const cards = projects.slice(0, mobileLimit ?? projects.length);
 ---
 {active && (
-<Tag class:list={['project-wheel', 'theme-dark', 'only-desktop', { 'project-wheel--framed': framed }]} aria-label="Selected work" style={`--count: ${projects.length}`} data-wheel={wheelData}>
+<Tag class:list={['project-wheel', 'theme-dark', 'only-desktop', { 'project-wheel--framed': framed, 'project-wheel--infinite': infinite }]} aria-label="Selected work" style={`--count: ${projects.length}`} data-wheel={wheelData} data-infinite={infinite ? '' : undefined}>
   <div class="project-wheel__stage" data-active="0">
     <div class="project-wheel__frame">
       <div class="project-wheel__canvas">
@@ -190,23 +192,85 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
       }
     };
 
-    const update = () => {
-      frame = 0;
-      const rect = root.getBoundingClientRect();
-      const travel = rect.height - stage.offsetHeight;
-      // Framed (Home): the first part of the scroll widens the block to full screen
-      const expand = stage.offsetHeight * (Number(getComputedStyle(root).getPropertyValue('--expand')) || 0);
-      const clamp = (v: number) => Math.min(1, Math.max(0, v));
-      stage.style.setProperty('--enter', String(expand > 0 ? clamp(-rect.top / expand) : 1));
-      const progress = travel - expand > 0 ? clamp((-rect.top - expand) / (travel - expand)) : 0;
-      place(progress * N);
-    };
-    const request = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    window.addEventListener('scroll', request, { passive: true });
-    window.addEventListener('resize', request);
-    update();
+    // ── Work page: endless wheel ─────────────────────────────────
+    // Wheel / trackpad / touch / keys turn the drum directly; the offset never stops,
+    // so it loops forever both ways. It eases toward the target and, once input stops,
+    // settles the nearest project at the front.
+    if (root.hasAttribute('data-infinite')) {
+      let offset = 0;
+      let target = 0;
+      let idle = 0;
+      let running = 0;
+      const perProject = () => window.innerHeight * 0.4; // same feel as the pinned wheel
+      const tick = () => {
+        offset += (target - offset) * 0.12;
+        if (Math.abs(target - offset) < 0.0005) offset = target;
+        place(offset);
+        running = offset === target ? 0 : requestAnimationFrame(tick);
+      };
+      const nudge = (projects: number) => {
+        target += projects;
+        window.clearTimeout(idle);
+        idle = window.setTimeout(() => {
+          target = Math.round(target);
+          if (!running) running = requestAnimationFrame(tick);
+        }, 140);
+        if (!running) running = requestAnimationFrame(tick);
+      };
+      root.addEventListener(
+        'wheel',
+        (e) => {
+          e.preventDefault();
+          const px = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+          nudge(px / perProject());
+        },
+        { passive: false },
+      );
+      let touchY: number | null = null;
+      root.addEventListener('touchstart', (e) => (touchY = e.touches[0].clientY), { passive: true });
+      root.addEventListener(
+        'touchmove',
+        (e) => {
+          if (touchY === null) return;
+          e.preventDefault();
+          const y = e.touches[0].clientY;
+          nudge((touchY - y) / perProject());
+          touchY = y;
+        },
+        { passive: false },
+      );
+      root.addEventListener('touchend', () => (touchY = null));
+      window.addEventListener('keydown', (e) => {
+        if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return;
+        if (document.documentElement.dataset.menu === 'open') return;
+        const step = { ArrowDown: 1, ArrowUp: -1, PageDown: 1, PageUp: -1, ' ': e.shiftKey ? -1 : 1 }[e.key];
+        if (step === undefined) return;
+        e.preventDefault();
+        target = Math.round(target) + step;
+        if (!running) running = requestAnimationFrame(tick);
+      });
+      stage.style.setProperty('--enter', '1');
+      place(0);
+    } else {
+      // ── Home: the wheel turns with the page scroll while the block is pinned ──
+      const update = () => {
+        frame = 0;
+        const rect = root.getBoundingClientRect();
+        const travel = rect.height - stage.offsetHeight;
+        // Framed (Home): the first part of the scroll widens the block to full screen
+        const expand = stage.offsetHeight * (Number(getComputedStyle(root).getPropertyValue('--expand')) || 0);
+        const clamp = (v: number) => Math.min(1, Math.max(0, v));
+        stage.style.setProperty('--enter', String(expand > 0 ? clamp(-rect.top / expand) : 1));
+        const progress = travel - expand > 0 ? clamp((-rect.top - expand) / (travel - expand)) : 0;
+        place(progress * N);
+      };
+      const request = () => {
+        if (!frame) frame = requestAnimationFrame(update);
+      };
+      window.addEventListener('scroll', request, { passive: true });
+      window.addEventListener('resize', request);
+      update();
+    }
 
     // VIEW: only while the front name (or the button itself) is hovered or focused;
     // it sits just after the name (128 in Figma)
@@ -277,6 +341,12 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 
 <style>
   /* One screen to show the block + 40% of a screen per project while the wheel turns */
+  /* Work page: one screen, the wheel turns in place (no page scroll) */
+  .project-wheel--infinite {
+    height: 100vh !important;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
   .project-wheel {
     position: relative;
     --expand: 0;
