@@ -56,7 +56,7 @@ icons, lines) and `/blocks` (every block and page).
 | `/work` | Work — project wheel (full screen, no footer) | Portfolio page | `projects` collection |
 | `/work/[slug]` | Project, e.g. `/work/weekly-robotics` | Project (Weekly Robotics) | `projects` collection |
 | `/services` | Services | Services | static |
-| `/team` | Team field + person cards (`/team#lily-a`) | team + card | `team` collection |
+| `/team` | Endless object canvas + person cards (`/team#lily-a` opens a card) | team + card | `team` collection |
 | `/careers` | Careers | Careers | `positions` collection |
 | `/careers/[slug]` | Position, e.g. `/careers/content-creator` | Careers (Content Creator) | `positions` collection |
 | `/robo-radio` | Robo Radio | Robo radio | `episodes` collection |
@@ -221,7 +221,7 @@ Every block file starts with a comment naming its Figma node and link.
 | | `services/ServicesDevice` — device still (video later) | 10103:211 | needs design |
 | | `services/ServicesScroller` — branding / interface / video production, one pinned block | 10103:212 / 267 / 304 | rules (stacked) |
 | | `services/ServicesBuilding` — "Building toward yes" + logos | 10103:1223 | rules |
-| Team | `team/TeamField` — objects field (WebGL poster) + 9 cards via `#id` | 10104:170, 10104:555 | needs design |
+| Team | `team/TeamField` — endless draggable object canvas + 9 cards | 10104:170, 235, 324, 463, 573, 555 | same canvas (touch drag, scaled 55%), card = sheet |
 | Careers | `careers/CareersHero` — title, stamps, text, photo strip | 10100:14718 | needs design |
 | | `careers/CareersValues` — values 01–03 (Curiosity / Care / Craft), pinned, + robot (WebGL poster) | 10100:14871, 9457:5217, 9457:5246 | pinned (text + robot) |
 | | `careers/CareersPositions` — list from `positions` | 10100:14936 | rules |
@@ -255,6 +255,7 @@ script. Transitions are placeholders for the motion step.
 | **Project wheel** (`work/ProjectScroller`) | Home: starts inside the margins, pins, widens to full screen, then the names turn on a real 3D drum (CSS perspective + rotateX/translateZ, faces all the way round, a whole number of project loops): names away from the front are foreshortened, keystoned and pulled toward the vanishing point; fade = Figma's wheel opacities. The front project sets the background (crossfade, 30% black overlay) and the services list. VIEW shows only while the front name is hovered or focused, 128px after it. CSS CRT layer from the Figma shader values (scanlines, aperture mask, vignette, noise, flicker, rolling band). Work page: full screen and **endless** — the page doesn't scroll; wheel / trackpad / touch drag / arrow, Page Up/Down and space keys turn the drum forever in both directions, easing and settling the nearest project at the front (`infinite` prop). Mobile: no wheel — full-screen project slides that pin and change on scroll (photo crossfade, name / services / VIEW swap, progress line), like the showcase. | `--enter`, `--rot` (drum angle), `.is-front`, `.is-current`, `.is-hovering`; mobile: `--progress`, `.is-current` |
 | **Services** (`services/ServicesScroller`) | Pins; one screen per service. Progress line on top fills a third per service. Left: label, title words and each service slide up out of a mask and the next service's slide in (staggered). Right: the next image slides in from the bottom over the previous one (clip-path + slight rise). Mobile: the three services stacked, no pin. | `data-state` (past / current / next), `--progress` |
 | **Careers values** (`careers/CareersValues`) | Pins; one screen per value (Curiosity → Care → Craft). Kanji, label and description slide up out of a mask and the next value's slide in, word by word (same style as Services). Tabs 01–03 = progress: the active tab turns black and its underline fills through that value; clicking a tab scrolls to it. The robot stays (same image for all values). Mobile: pinned too, robot below the text. | `data-state`, `--local`, `.is-active` |
+| **Team canvas** (`team/TeamField`) | Endless canvas of the 9 objects (`src/assets/team/objects/`, multiply-blended into the grey): one 2400×1500 tile with every object twice on a jittered grid, never next to itself (also across tile edges), drawn 3×3 and wrapped as you drag (mouse / touch / trackpad / arrows, with a glide). Hover: the others blur and fade by distance, with a lens push toward the screen edges. Click: the canvas glides the object to the middle of the left half (slightly enlarged), the card fades in on the right — a random person for now. ×, a click outside or Esc closes. | `.is-focus`, `.is-selected`, `--blur`, `--fade`, `.team-card.is-open` |
 | **News** (`home/HomeNews`) | The card row scrolls sideways: trackpad / shift + wheel, arrow keys when focused, click-and-drag with a mouse. Cards snap to the page margin; a drag never opens a card. | `.is-dragging` |
 
 Phones: progress is measured against the pinned block's own height (not the window),
@@ -299,7 +300,7 @@ The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321
   `/admin/login`.
 - `src/cms/collections.ts` lists the editable fields per section. **If you change a
   schema in `src/content.config.ts`, update the matching fields there.** The Team
-  field object ids also mirror `objects` in `src/blocks/team/TeamField.astro`.
+  field object ids also mirror `OBJECTS` in `src/blocks/team/TeamField.astro`.
 - Passwords are stored as scrypt hashes; sessions are signed cookies (7 days).
   Removing a user from `.env` signs them out.
 - Deleting an entry (or replacing an image) also deletes images nothing else uses.
@@ -350,7 +351,7 @@ hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open it
 
 ## Open items
 
-- Mobile designs needed: Team field, Robo Radio TV, Contact, Careers hero, Services device image, poster collage, Project hero.
+- Mobile designs needed: Robo Radio TV, Contact, Careers hero, Services device image, poster collage, Project hero.
 - Real social links (`src/data/site.ts`).
 - Placeholder copy in Figma: Team (Paulina, Greg quotes; Alex's names swapped); episode rows share one description.
 - Heavy SVGs to simplify with the designer: approved stamp (~965 KB), department stamp (~738 KB), logo rows (~990 KB), menu micrographic (~518 KB). Bedrock logo only exists as PNG.

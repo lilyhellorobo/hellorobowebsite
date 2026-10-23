@@ -1,60 +1,160 @@
 ---
 /**
- * Team — Object field + person cards
- * Figma: "team" (10104:170, 1728×1117) and "card" (10104:555, 819×1037) ×9
+ * Team — infinite object canvas + person cards
+ * Figma: "team" (10104:170, 1728×1117), hover / selected states (10104:235, 324, 463, 573)
+ * and "card" (10104:555, 819×1037) ×9
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10104-170
- * The field is marked "3d web gl": the poster includes the objects and their labels.
- * Each object is a link to #<person>; the card opens with :target (no JS yet).
- * WebGL: each object <li> carries data-person, data-object and, when uploaded in the CMS,
- * data-model (a .glb URL in public/models/team/) for the interactive gallery.
+ *
+ * - The objects repeat on an endless canvas you can drag in any direction (mouse, touch,
+ *   trackpad, arrow keys), with a little glide after a drag. One tile of TILE_W × TILE_H
+ *   holds every object twice, placed on a jittered grid so the same object is never next
+ *   to itself — also across the tile edges, so the repeat stays hidden. 3 × 3 copies of
+ *   the tile are drawn and the world wraps around as you drag.
+ * - Hover an object: every other object blurs and fades more the further it is from it,
+ *   with a lens distortion that grows toward the screen edges.
+ * - Click: the canvas glides so the object lands in the middle of the left half (beside
+ *   the card), the rest stays out of focus, and the card fades in on the right. For now
+ *   the card is a random team member (not the same twice in a row).
+ * - Close (×, a click outside the card, or Esc): the card fades out and the canvas
+ *   returns to normal. /team#<person> opens that person's card on load.
+ * Objects are 2× renders on white, drawn with mix-blend-mode: multiply so the white
+ * disappears into the canvas grey and only the object + its shadow remain.
+ * Each object button carries data-object and, for its person, data-person / data-model
+ * (a .glb set in the CMS) for the future WebGL gallery.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import WebGLSlot from '../../components/ui/WebGLSlot.astro';
-import field from '../../assets/team/team-field.png';
+import type { ImageMetadata } from 'astro';
+import brightIdeas from '../../assets/team/objects/bright_ideas_01.png';
+import catMode from '../../assets/team/objects/cat_mode_active.png';
+import nuts from '../../assets/team/objects/nuts_about_details_03.png';
+import goodChaos from '../../assets/team/objects/good_chaos_13.png';
+import seriouslyPlayful from '../../assets/team/objects/seriously_playful.png';
+import tinyObsession from '../../assets/team/objects/tiny_obsession_12.png';
+import biteFirst from '../../assets/team/objects/bite_first_05.png';
+import helloRobo from '../../assets/team/objects/hello_robo.png';
+import innerCalm from '../../assets/team/objects/inner_calm_02.png';
 
 const people = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
 
-// Object hit areas in the 1728×1117 frame
-const objects: Record<string, { label: string; x: number; y: number; w: number; h: number }> = {
-  hello_robo: { label: 'hello_robo.OBJ', x: 681, y: 315, w: 334, h: 334 },
-  inner_calm_02: { label: 'INNER_CALM_02.OBJ', x: 266, y: 131, w: 250, h: 291 },
-  bright_ideas_01: { label: 'BRIGHT_IDEAS_01.OBJ', x: -97, y: -105, w: 250, h: 291 },
-  bite_first_05: { label: 'BITE_FIRST_05.OBJ', x: -125, y: 413, w: 250, h: 291 },
-  tiny_obsession_12: { label: 'TINY_OBSESSION_12.OBJ', x: 621, y: -174, w: 250, h: 291 },
-  seriously_playful: { label: 'SERIOUSLY_PLAYFUL.OBJ', x: 1207, y: 549, w: 250, h: 291 },
-  good_chaos_13: { label: 'GOOD_CHAOS_13.OBJ', x: 1559, y: 320, w: 250, h: 291 },
-  nuts_about_details_03: { label: 'NUTS_ABOUT_DETAILS_03.OBJ', x: 1087, y: 96, w: 250, h: 291 },
-  cat_mode_active: { label: 'CAT_MODE_ACTIVE.OBJ', x: 1418, y: -142, w: 250, h: 291 },
+// The 9 objects (keys = the "3D object" field in the CMS). Images are 2× renders.
+const OBJECTS: Record<string, { label: string; image: ImageMetadata }> = {
+  hello_robo: { label: 'hello_robo.OBJ', image: helloRobo },
+  inner_calm_02: { label: 'INNER_CALM_02.OBJ', image: innerCalm },
+  bright_ideas_01: { label: 'BRIGHT_IDEAS_01.OBJ', image: brightIdeas },
+  bite_first_05: { label: 'BITE_FIRST_05.OBJ', image: biteFirst },
+  tiny_obsession_12: { label: 'TINY_OBSESSION_12.OBJ', image: tinyObsession },
+  seriously_playful: { label: 'SERIOUSLY_PLAYFUL.OBJ', image: seriouslyPlayful },
+  good_chaos_13: { label: 'GOOD_CHAOS_13.OBJ', image: goodChaos },
+  nuts_about_details_03: { label: 'NUTS_ABOUT_DETAILS_03.OBJ', image: nuts },
+  cat_mode_active: { label: 'CAT_MODE_ACTIVE.OBJ', image: catMode },
 };
-const pct = (v: number, of: number) => `${(v / of) * 100}%`;
----
-<section class="team-field" aria-label="The team">
-  <div class="team-field__canvas">
-  <WebGLSlot name="team-field" class="team-field__scene">
-    <Image src={field} alt="" widths={[1728, 3456]} sizes="100vw" loading="eager" />
-  </WebGLSlot>
+const KEYS = Object.keys(OBJECTS);
+const personByObject = new Map(people.map((p) => [p.data.object, p]));
 
-  <ul class="team-field__objects">
-    {people.map((p) => {
-      const o = objects[p.data.object];
-      return o ? (
-        <li
-          style={`left:${pct(o.x, 1728)};top:${pct(o.y, 1117)};width:${pct(o.w, 1728)};height:${pct(o.h, 1117)}`}
-          data-person={p.id}
-          data-object={p.data.object}
-          data-model={p.data.model}
-        >
-          <a class="team-field__hit" href={`#${p.id}`} aria-label={`${p.data.name}, ${p.data.role} (${o.label})`}></a>
-        </li>
-      ) : null;
-    })}
-  </ul>
+// ── One tile of the endless canvas (Figma px). A COLS × ROWS jittered grid, one object
+// per cell, every object used twice; no object next to itself (8 neighbours, wrapping).
+const TILE_W = 2400;
+const TILE_H = 1500;
+const COLS = 6;
+const ROWS = 3;
+const CELL_W = TILE_W / COLS;
+const CELL_H = TILE_H / ROWS;
+const USES = (COLS * ROWS) / KEYS.length; // 2
+
+// Small seeded random (same layout on every load and on the server)
+let seed = 20261023;
+const rand = () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const shuffle = <T,>(a: T[]) => {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const wrapI = (v: number, m: number) => ((v % m) + m) % m;
+const grid: (string | null)[] = Array(COLS * ROWS).fill(null);
+const used: Record<string, number> = Object.fromEntries(KEYS.map((k) => [k, 0]));
+const neighbours = (i: number) => {
+  const c = i % COLS;
+  const r = Math.floor(i / COLS);
+  const out: number[] = [];
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) if (dr || dc) out.push(wrapI(r + dr, ROWS) * COLS + wrapI(c + dc, COLS));
+  return out;
+};
+const fill = (i: number): boolean => {
+  if (i === grid.length) return true;
+  for (const k of shuffle([...KEYS])) {
+    if (used[k] >= USES || neighbours(i).some((n) => grid[n] === k)) continue;
+    grid[i] = k;
+    used[k]++;
+    if (fill(i + 1)) return true;
+    grid[i] = null;
+    used[k]--;
+  }
+  return false;
+};
+fill(0);
+const items = grid.map((key, i) => {
+  const c = i % COLS;
+  const r = Math.floor(i / COLS);
+  const img = OBJECTS[key!].image;
+  return {
+    key: key!,
+    // cell centre, every other row shifted half a cell, plus a little jitter
+    x: Math.round((c + 0.5 + (r % 2) * 0.5) * CELL_W + (rand() - 0.5) * CELL_W * 0.35),
+    y: Math.round((r + 0.5) * CELL_H + (rand() - 0.5) * CELL_H * 0.3),
+    w: Math.round(img.width / 2),
+    h: Math.round(img.height / 2),
+  };
+});
+// 3 × 3 copies of the tile; the middle one (0, 0) is the focusable one
+const tiles = [-1, 0, 1].flatMap((ty) => [-1, 0, 1].map((tx) => ({ tx, ty })));
+const config = JSON.stringify({ tileW: TILE_W, tileH: TILE_H, people: people.map((p) => p.id) });
+---
+<section class="team" aria-label="The team" data-team={config}>
+  <div class="team__viewport">
+    <div class="team__world">
+      {tiles.map(({ tx, ty }) =>
+        items.map((it) => {
+          const o = OBJECTS[it.key];
+          const owner = personByObject.get(it.key);
+          const centre = tx === 0 && ty === 0;
+          return (
+            <button
+              type="button"
+              class="team-obj"
+              data-object={it.key}
+              data-person={owner?.id}
+              data-model={owner?.data.model}
+              data-x={(tx + 1) * TILE_W + it.x}
+              data-y={(ty + 1) * TILE_H + it.y}
+              style={`--x: ${(tx + 1) * TILE_W + it.x}; --y: ${(ty + 1) * TILE_H + it.y}; --w: ${it.w}; --h: ${it.h}`}
+              tabindex={centre ? undefined : -1}
+              aria-hidden={centre ? undefined : 'true'}
+              aria-label={`Meet the team — ${o.label}`}
+            >
+              <span class="team-obj__lens">
+                <Image src={o.image} alt="" widths={[it.w, it.w * 2]} sizes={`${it.w}px`} loading="eager" draggable="false" />
+                <span class="team-obj__label t-button">{o.label}</span>
+              </span>
+            </button>
+          );
+        }),
+      )}
+    </div>
   </div>
+  <div class="team__noise" aria-hidden="true"></div>
 
   {people.map((p) => (
-    <article class="team-card" id={p.id} aria-label={p.data.name}>
-      <a class="team-card__close" href="#" aria-label="Close">
+    <article class="team-card" id={p.id} aria-label={p.data.name} aria-hidden="true">
+      <a class="team-card__close" href="#" aria-label="Close" data-team-close>
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path d="M17.6719 14.3303L25.6023 6.3999" stroke="currentColor" stroke-width="1.28" />
           <path d="M6.42578 25.574L14.3562 17.6436" stroke="currentColor" stroke-width="1.28" />
@@ -74,43 +174,414 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       </blockquote>
     </article>
   ))}
+
+  <!-- Keyboard / screen reader access to every card -->
+  <ul class="visually-hidden">
+    {people.map((p) => <li><a href={`#${p.id}`} data-team-open={p.id}>{p.data.name}, {p.data.role}</a></li>)}
+  </ul>
 </section>
 
+<script>
+  type Config = { tileW: number; tileH: number; people: string[] };
+
+  const root = document.querySelector<HTMLElement>('[data-team]');
+  if (root) {
+    const cfg: Config = JSON.parse(root.dataset.team || '{}');
+    const viewport = root.querySelector<HTMLElement>('.team__viewport')!;
+    const world = root.querySelector<HTMLElement>('.team__world')!;
+    const objs = [...root.querySelectorAll<HTMLButtonElement>('.team-obj')];
+    const cards = new Map([...root.querySelectorAll<HTMLElement>('.team-card')].map((c) => [c.id, c]));
+    const pos = objs.map((o) => ({ x: Number(o.dataset.x), y: Number(o.dataset.y), lens: o.firstElementChild as HTMLElement }));
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // 1 Figma px in screen px (the site's --px × the canvas scale --s), from a hidden probe
+    let unit = 1;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;width:calc(1000 * var(--px) * var(--s));height:0';
+    root.appendChild(probe);
+    const measure = () => {
+      unit = probe.getBoundingClientRect().width / 1000 || 1;
+    };
+
+    // ── Pan state (screen px). The world is 3×3 tiles; it wraps every tile.
+    let panX = 0;
+    let panY = 0;
+    const wrap = (v: number, m: number) => ((v % m) + m) % m;
+    const offset = () => ({
+      x: wrap(panX, cfg.tileW * unit) - cfg.tileW * unit,
+      y: wrap(panY, cfg.tileH * unit) - cfg.tileH * unit,
+    });
+    const screenOf = (i: number) => {
+      const o = offset();
+      return { x: o.x + pos[i].x * unit, y: o.y + pos[i].y * unit };
+    };
+
+    // ── Focus (hover / selected): blur by distance + lens distortion toward the edges
+    let focus = -1; // index of the object in focus
+    let lens = 0; // 0 → 1, eased
+    let lensTarget = 0;
+    let selected = -1;
+
+    const render = () => {
+      const o = offset();
+      world.style.transform = `translate3d(${o.x}px, ${o.y}px, 0)`;
+      const vw = innerWidth;
+      const vh = innerHeight;
+      const cx = vw / 2;
+      const cy = vh / 2;
+      const f = focus >= 0 ? screenOf(focus) : null;
+      const diag = Math.hypot(vw, vh);
+      for (let i = 0; i < objs.length; i++) {
+        const sx = o.x + pos[i].x * unit;
+        const sy = o.y + pos[i].y * unit;
+        const off = sx < -600 || sx > vw + 600 || sy < -600 || sy > vh + 600;
+        const el = objs[i];
+        if (off) {
+          el.style.setProperty('--blur', '0');
+          continue;
+        }
+        if (lens > 0.001 && i !== focus) {
+          // barrel-style lens: push outward and grow a little, more toward the edges
+          const nx = (sx - cx) / cx;
+          const ny = (sy - cy) / cy;
+          const r2 = nx * nx + ny * ny;
+          const k = 0.07 * lens * r2;
+          pos[i].lens.style.transform = `translate(${(sx - cx) * k}px, ${(sy - cy) * k}px) scale(${1 + 0.08 * lens * r2})`;
+          const d = f ? Math.min(1, Math.hypot(sx - f.x, sy - f.y) / (diag * 0.6)) : 0.5;
+          el.style.setProperty('--blur', String(lens * (3 + 13 * d)));
+          el.style.setProperty('--fade', String(1 - lens * (0.45 + 0.3 * d)));
+        } else {
+          pos[i].lens.style.transform = '';
+          el.style.setProperty('--blur', '0');
+          el.style.setProperty('--fade', '1');
+        }
+      }
+    };
+
+    let raf = 0;
+    const tick = () => {
+      raf = 0;
+      // ease the lens in / out
+      lens += (lensTarget - lens) * (reduce ? 1 : 0.12);
+      if (Math.abs(lensTarget - lens) < 0.002) lens = lensTarget;
+      // glide after a drag
+      if (!dragging && (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) && !panAnim) {
+        panX += vx;
+        panY += vy;
+        vx *= 0.93;
+        vy *= 0.93;
+      }
+      if (panAnim) stepPanAnim(performance.now());
+      render();
+      if (lens !== lensTarget || Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05 || panAnim) raf = requestAnimationFrame(tick);
+    };
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    const setFocus = (i: number) => {
+      focus = i;
+      lensTarget = i >= 0 ? 1 : 0;
+      objs.forEach((el, j) => el.classList.toggle('is-focus', j === i));
+      root.classList.toggle('is-focused', i >= 0);
+      kick();
+    };
+
+    // ── Animated pan (to bring the selected object beside the card)
+    let panAnim: { x0: number; y0: number; x1: number; y1: number; t0: number; dur: number } | null = null;
+    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const stepPanAnim = (now: number) => {
+      if (!panAnim) return;
+      const t = Math.min(1, (now - panAnim.t0) / panAnim.dur);
+      const e = ease(t);
+      panX = panAnim.x0 + (panAnim.x1 - panAnim.x0) * e;
+      panY = panAnim.y0 + (panAnim.y1 - panAnim.y0) * e;
+      if (t >= 1) panAnim = null;
+    };
+    // Where the selected object goes: the middle of the space left of the card
+    const target = () => {
+      const anyCard = cards.values().next().value as HTMLElement | undefined;
+      if (innerWidth <= 767 || !anyCard) return { x: innerWidth / 2, y: innerHeight / 2 };
+      const cardLeft = innerWidth - anyCard.offsetWidth - parseFloat(getComputedStyle(anyCard).right || '0');
+      return { x: cardLeft / 2, y: innerHeight / 2 };
+    };
+
+    // ── Cards
+    let lastPerson = '';
+    const openCard = (id: string) => {
+      cards.forEach((c, cid) => {
+        const on = cid === id;
+        c.classList.toggle('is-open', on);
+        c.setAttribute('aria-hidden', String(!on));
+      });
+      history.replaceState(null, '', `#${id}`);
+      lastPerson = id;
+    };
+    const closeAll = () => {
+      cards.forEach((c) => {
+        c.classList.remove('is-open');
+        c.setAttribute('aria-hidden', 'true');
+      });
+      history.replaceState(null, '', location.pathname + location.search);
+    };
+
+    const select = (i: number, person?: string) => {
+      selected = i;
+      objs.forEach((el, j) => el.classList.toggle('is-selected', j === i));
+      setFocus(i);
+      vx = vy = 0;
+      const s = screenOf(i);
+      const t = target();
+      panAnim = { x0: panX, y0: panY, x1: panX + (t.x - s.x), y1: panY + (t.y - s.y), t0: performance.now(), dur: reduce ? 0 : 1100 };
+      kick();
+      // For now: a random person (never the same twice in a row), unless one is given
+      const pool = cfg.people.filter((p) => p !== lastPerson);
+      const id = person || pool[Math.floor(Math.random() * pool.length)];
+      window.setTimeout(() => openCard(id), reduce ? 0 : 450);
+    };
+    const deselect = () => {
+      if (selected < 0) return;
+      selected = -1;
+      objs.forEach((el) => el.classList.remove('is-selected'));
+      closeAll();
+      setFocus(-1);
+    };
+
+    // ── Dragging (pointer), with a glide after release
+    let dragging = false;
+    let down: { x: number; y: number; px: number; py: number; t: number; obj: number } | null = null;
+    let vx = 0;
+    let vy = 0;
+    let lastMove = { x: 0, y: 0, t: 0 };
+    viewport.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      const obj = (e.target as HTMLElement).closest<HTMLElement>('.team-obj');
+      down = { x: e.clientX, y: e.clientY, px: panX, py: panY, t: performance.now(), obj: obj ? objs.indexOf(obj as HTMLButtonElement) : -1 };
+      lastMove = { x: e.clientX, y: e.clientY, t: performance.now() };
+      panAnim = null;
+      vx = vy = 0;
+      viewport.setPointerCapture(e.pointerId);
+    });
+    viewport.addEventListener('pointermove', (e) => {
+      if (!down || !viewport.hasPointerCapture(e.pointerId)) return;
+      const dx = e.clientX - down.x;
+      const dy = e.clientY - down.y;
+      if (!dragging && Math.hypot(dx, dy) > 6) {
+        if (selected >= 0) return; // the canvas stays put while a card is open
+        dragging = true;
+        root.classList.add('is-dragging');
+        if (focus >= 0) setFocus(-1);
+      }
+      if (!dragging) return;
+      const now = performance.now();
+      const dt = Math.max(1, now - lastMove.t);
+      vx = ((e.clientX - lastMove.x) / dt) * 16;
+      vy = ((e.clientY - lastMove.y) / dt) * 16;
+      lastMove = { x: e.clientX, y: e.clientY, t: now };
+      panX = down.px + dx;
+      panY = down.py + dy;
+      kick();
+    });
+    const end = (e: PointerEvent) => {
+      if (!down) return;
+      if (viewport.hasPointerCapture(e.pointerId)) viewport.releasePointerCapture(e.pointerId);
+      const wasDrag = dragging;
+      const hit = down.obj;
+      dragging = false;
+      down = null;
+      root.classList.remove('is-dragging');
+      if (wasDrag) {
+        if (performance.now() - lastMove.t > 80) vx = vy = 0; // held still before letting go
+        kick();
+        return;
+      }
+      vx = vy = 0;
+      if (hit >= 0) select(hit);
+      else if (selected >= 0) deselect(); // a tap outside the card closes it
+    };
+    viewport.addEventListener('pointerup', end);
+    viewport.addEventListener('pointercancel', end);
+
+    // Trackpad / wheel pans the canvas
+    viewport.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        if (selected >= 0) return;
+        if (focus >= 0) setFocus(-1);
+        panX -= e.deltaX;
+        panY -= e.deltaY;
+        kick();
+      },
+      { passive: false },
+    );
+
+    // Hover focus (mouse only, not while dragging or with a card open)
+    objs.forEach((el, i) => {
+      el.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'mouse' && !dragging && selected < 0) setFocus(i);
+      });
+      el.addEventListener('pointerleave', (e) => {
+        if (e.pointerType === 'mouse' && selected < 0 && focus === i) setFocus(-1);
+      });
+      // keyboard (Enter / Space) — pointer clicks are handled on pointerup
+      el.addEventListener('click', (e) => {
+        if (e.detail === 0) select(i);
+      });
+      el.addEventListener('focus', () => {
+        if (selected < 0) setFocus(i);
+      });
+      el.addEventListener('blur', () => {
+        if (selected < 0 && focus === i) setFocus(-1);
+      });
+    });
+
+    // Close: ×, Esc
+    root.querySelectorAll<HTMLElement>('[data-team-close]').forEach((a) =>
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        deselect();
+      }),
+    );
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && selected >= 0) deselect();
+      if (selected >= 0 || (e.target as HTMLElement).closest('input, textarea')) return;
+      const step = 120;
+      const moves: Record<string, [number, number]> = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
+      const m = moves[e.key];
+      if (!m) return;
+      e.preventDefault();
+      panAnim = { x0: panX, y0: panY, x1: panX + m[0], y1: panY + m[1], t0: performance.now(), dur: reduce ? 0 : 350 };
+      kick();
+    });
+
+    // Screen-reader / keyboard list: open a person's own object
+    const objectOf = (person: string) => objs.findIndex((o) => o.dataset.person === person && o.tabIndex !== -1);
+    root.querySelectorAll<HTMLElement>('[data-team-open]').forEach((a) =>
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = a.dataset.teamOpen!;
+        select(Math.max(0, objectOf(id)), id);
+        cards.get(id)?.querySelector<HTMLElement>('[data-team-close]')?.focus();
+      }),
+    );
+
+    // Start: the middle tile centred on screen; /team#<person> opens that card
+    measure();
+    panX = innerWidth / 2 - (cfg.tileW * unit) / 2;
+    panY = innerHeight / 2 - (cfg.tileH * unit) / 2;
+    render();
+    root.classList.add('is-ready');
+    const fromHash = decodeURIComponent(location.hash.slice(1));
+    if (cards.has(fromHash)) select(Math.max(0, objectOf(fromHash)), fromHash);
+    window.addEventListener('resize', () => {
+      measure();
+      render();
+    });
+  }
+</script>
+
 <style>
-  .team-field {
+  /* ── Canvas ──────────────────────────────────────────────────── */
+  .team {
+    --s: 1; /* canvas scale on top of the site's --px (smaller on phones) */
     position: relative;
+    height: 100vh;
+    height: 100svh;
     overflow: hidden;
-    background: var(--color-grey-200);
+    background: var(--color-grey-200); /* Figma #EDEDED */
   }
-  .team-field__canvas {
-    position: relative;
-    aspect-ratio: 1728 / 1117;
-  }
-  .team-field :global(.team-field__scene) {
+  .team__viewport {
     position: absolute;
     inset: 0;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  .team-field :global(.team-field__scene img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .team.is-dragging .team__viewport {
+    cursor: grabbing;
   }
-  .team-field__objects li {
+  /* Before the script runs, show the middle tile centred (no-JS view) */
+  /* The world carries the canvas grey itself, so the objects' multiply blend has
+     something to blend with (its transform makes it its own layer) */
+  .team__world {
     position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(7200 * var(--px) * var(--s));
+    height: calc(4500 * var(--px) * var(--s));
+    background: var(--color-grey-200);
+    transform: translate(calc(50vw - 3600 * var(--px) * var(--s)), calc(50vh - 2250 * var(--px) * var(--s)));
+    will-change: transform;
   }
-  .team-field__hit {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-  }
-  .team-field__hit:focus-visible {
-    outline-offset: calc(-8 * var(--px));
+  /* Figma noise layer: black 6% grain over everything */
+  .team__noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    opacity: 0.06;
+    mix-blend-mode: multiply;
   }
 
-  /* Card: 819×1037 white panel, calc(40 * var(--px)) from the top and right of the viewport */
+  /* ── Objects ─────────────────────────────────────────────────── */
+  .team-obj {
+    position: absolute;
+    left: calc((var(--x) - var(--w) / 2) * var(--px) * var(--s));
+    top: calc((var(--y) - var(--h) / 2) * var(--px) * var(--s));
+    width: calc(var(--w) * var(--px) * var(--s));
+    padding: 0;
+    cursor: pointer;
+    opacity: var(--fade, 1);
+    filter: blur(calc(var(--blur, 0) * 1px));
+    /* the white render background disappears into the canvas grey (on the button, because
+       its filter / opacity make it a group of its own) */
+    mix-blend-mode: multiply;
+    transition:
+      opacity var(--duration-smooth) var(--ease-out),
+      filter var(--duration-smooth) var(--ease-out);
+  }
+  .team.is-dragging .team-obj {
+    cursor: grabbing;
+  }
+  .team-obj__lens {
+    display: grid;
+    justify-items: center;
+    transform-origin: center;
+    transition: transform var(--duration-smooth) var(--ease-out);
+  }
+  .team-obj :global(img) {
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+  .team-obj__label {
+    margin-top: calc(-12 * var(--px));
+    padding: calc(6 * var(--px)) calc(12 * var(--px));
+    color: var(--color-black);
+    white-space: nowrap;
+  }
+  .team-obj:focus-visible {
+    outline: none;
+  }
+  .team-obj:focus-visible .team-obj__label {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 2px;
+  }
+  /* The object in focus: sharp; selected: a little closer */
+  .team-obj.is-focus {
+    z-index: 2;
+  }
+  .team-obj.is-selected :global(img) {
+    transform: scale(1.15);
+  }
+
+  /* ── Card: 819×1037 white panel, 40 from the top and right; fades in ───────── */
   .team-card {
-    display: none;
+    display: grid;
     position: fixed;
     top: var(--space-40);
     right: var(--page-margin);
@@ -128,9 +599,22 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
        the screen without scrolling and nothing overlaps. */
     grid-template-rows: minmax(0, 1fr) auto;
     column-gap: calc(56 * var(--px));
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(calc(32 * var(--px)));
+    transition:
+      opacity var(--duration-smooth) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out),
+      visibility 0s linear var(--duration-slow);
   }
-  .team-card:target {
-    display: grid;
+  .team-card.is-open {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-smooth) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out),
+      visibility 0s;
   }
   /* Close sits in the card's top-left corner, above the names */
   .team-card__close {
@@ -182,19 +666,22 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     gap: calc(24 * var(--px));
   }
 
-  /* ── Mobile: the field fills the screen height and pans sideways (same hit areas);
-     the card becomes a full-screen sheet above the nav pill ── */
-  @media (max-width: 767px) {
-    .team-field {
-      height: 100svh;
-      overflow-x: auto;
-      scrollbar-width: none;
+  @media (prefers-reduced-motion: reduce) {
+    .team-obj,
+    .team-obj__lens,
+    .team-obj :global(img),
+    .team-card {
+      transition-duration: 0.01s !important;
     }
-    .team-field__canvas {
-      height: 100%;
-      width: auto;
+  }
+
+  /* ── Mobile: the same endless canvas (touch drag); the card is a scrolling sheet ── */
+  @media (max-width: 767px) {
+    .team {
+      --s: 0.55;
     }
     .team-card {
+      display: block;
       top: var(--page-margin);
       left: var(--page-margin);
       right: var(--page-margin);
@@ -203,19 +690,10 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       max-width: none;
       height: auto;
       padding: var(--space-20);
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: none;
+      transform: translateY(calc(24px));
     }
-    .team-card__close,
-    .team-card__names,
-    .team-card__photo,
-    .team-card__quote {
-      grid-column: 1;
-      grid-row: auto;
-    }
-    /* A plain scrolling column: nothing is squeezed to fit the sheet */
-    .team-card:target {
-      display: block;
+    .team-card.is-open {
+      transform: none;
     }
     .team-card__close {
       position: static;
@@ -224,13 +702,11 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     .team-card__names {
       margin-top: var(--space-24);
     }
-    .team-card__photo {
-      width: 100%;
-      margin-top: var(--space-24);
-    }
     /* The mobile sheet scrolls, so the photo keeps its full size */
     .team-card__photo {
       display: block;
+      width: 100%;
+      margin-top: var(--space-24);
     }
     .team-card__photo :global(img) {
       flex: none;
@@ -243,6 +719,9 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     .team-card__quote {
       margin-top: var(--space-24);
       gap: var(--space-16);
+    }
+    .team-obj__label {
+      font-size: 12px;
     }
   }
 </style>
