@@ -3,16 +3,15 @@
  * Home — Latest news
  * Figma: "Frame 2147232796" (10093:1889), 1728×1531
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1889
- * Cards come from the news collection. The row is wider than the page and
- * runs off the right edge (it becomes a carousel in the motion step).
+ * Cards come from the news collection (CMS "Updates"). The row runs off the right
+ * edge and scrolls sideways: trackpad / shift + wheel, arrow keys when focused, and
+ * click-and-drag with a mouse. Cards snap to the page margin.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import ArrowLink from '../../components/ui/ArrowLink.astro';
 
 const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.order);
-// Figma shows a 4th card past the right edge; repeat the first item to fill it until there's more news.
-const cards = news.length < 4 ? [...news, news[0]] : news;
 ---
 <section class="home-news">
   <header class="home-news__head container">
@@ -20,9 +19,9 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
     <h2 class="t-h1">Latest news</h2>
   </header>
 
-  <ul class="home-news__row">
-    {cards.map((item, i) => (
-      <li class:list={['home-news__card', `home-news__card--${item.data.size}`]} aria-hidden={i >= news.length ? 'true' : undefined}>
+  <ul class="home-news__row" tabindex="0" aria-label="Latest news — scroll sideways" data-drag-scroll>
+    {news.map((item) => (
+      <li class:list={['home-news__card', `home-news__card--${item.data.size}`]}>
         <div class="home-news__media">
           <Image
             src={item.data.image}
@@ -39,6 +38,44 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
   </ul>
 </section>
 
+<script>
+  // Click-and-drag scrolling for mouse users (touch and trackpads scroll natively)
+  for (const row of document.querySelectorAll<HTMLElement>('[data-drag-scroll]')) {
+    let startX = 0;
+    let startScroll = 0;
+    let dragged = false;
+    row.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      startX = e.clientX;
+      startScroll = row.scrollLeft;
+      dragged = false;
+      row.classList.add('is-dragging');
+      row.setPointerCapture(e.pointerId);
+    });
+    row.addEventListener('pointermove', (e) => {
+      if (!row.hasPointerCapture(e.pointerId)) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) dragged = true;
+      row.scrollLeft = startScroll - dx;
+    });
+    const end = (e: PointerEvent) => {
+      if (row.hasPointerCapture(e.pointerId)) row.releasePointerCapture(e.pointerId);
+      row.classList.remove('is-dragging');
+    };
+    row.addEventListener('pointerup', end);
+    row.addEventListener('pointercancel', end);
+    // A drag shouldn't open the card it ended on
+    row.addEventListener('click', (e) => {
+      if (dragged) {
+        e.preventDefault();
+        e.stopPropagation();
+        dragged = false;
+      }
+    }, true);
+    row.addEventListener('dragstart', (e) => e.preventDefault());
+  }
+</script>
+
 <style>
   .home-news {
     padding-top: calc(120 * var(--px));
@@ -51,17 +88,36 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
     align-items: flex-start;
     gap: calc(42 * var(--px));
   }
+  /* Sideways scroller: starts at the page margin, snaps cards to it, no visible scrollbar */
   .home-news__row {
     display: flex;
     align-items: flex-start;
     gap: var(--gutter);
     margin-top: calc(104 * var(--px));
-    padding-left: var(--page-margin);
+    padding-inline: var(--page-margin);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--page-margin);
+    scrollbar-width: none;
+    cursor: grab;
+  }
+  .home-news__row::-webkit-scrollbar {
+    display: none;
+  }
+  .home-news__row.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
+  }
+  .home-news__row:focus-visible {
+    outline-offset: calc(-4 * var(--px));
   }
   .home-news__card {
     flex: none;
     display: grid;
     justify-items: start;
+    scroll-snap-align: start;
   }
   .home-news__card--wide {
     width: calc(815 * var(--px));
@@ -109,9 +165,6 @@ const cards = news.length < 4 ? [...news, news[0]] : news;
     }
     .home-news__row {
       margin-top: 64px;
-      padding-right: var(--page-margin);
-      overflow-x: auto;
-      scrollbar-width: none;
     }
     .home-news__card--wide {
       width: 276px;
