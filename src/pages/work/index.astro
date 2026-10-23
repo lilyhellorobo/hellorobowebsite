@@ -1,12 +1,13 @@
 ---
 /**
  * Work — the project scroller is the whole page
- * Figma: "Portfolio page" (10100:11973), 1728×1117 — same block as Home's featured work
+ * Figma: "Portfolio page" (10100:11973), 1728×1117 — same block as Home's featured work.
+ * `infinite`: the wheel turns endlessly in both directions (no page scroll).
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectScroller from '../../blocks/work/ProjectScroller.astro';
 ---
 <BaseLayout title={'Work'} prefooter={false} footer={false} headerVariant="light">
   <h1 class="visually-hidden">Work</h1>
-  <ProjectScroller />
+  <ProjectScroller infinite />
 </BaseLayout>
