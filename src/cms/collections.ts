@@ -28,10 +28,14 @@ export type Field =
   | { kind: 'model'; key: string; label: string; required?: boolean; hint?: string }
   /** A YouTube link; any YouTube URL is accepted and stored as the 11-character video id */
   | { kind: 'youtube'; key: string; label: string; required?: boolean; hint?: string }
-  /** `video: true` also accepts MP4 / WebM, stored as { video: "/videos/..." } */
-  | { kind: 'image'; key: string; label: string; required?: boolean; video?: boolean; hint?: string }
+  /**
+   * `video: true` also accepts MP4 / WebM: uploaded, stored as { video: "/videos/..." }, or a
+   * pasted https link to a hosted file (AWS etc.), stored as { video: "https://..." }.
+   * `youtube: true` also accepts a pasted YouTube link, stored as { youtube: "<id>" }.
+   */
+  | { kind: 'image'; key: string; label: string; required?: boolean; video?: boolean; youtube?: boolean; hint?: string }
   /** 1..max images (or videos) side by side */
-  | { kind: 'images'; key: string; label: string; max: number; video?: boolean; hint?: string }
+  | { kind: 'images'; key: string; label: string; max: number; video?: boolean; youtube?: boolean; hint?: string }
   /** `omitEmpty`: leave the key out instead of writing [] (for schema fields that default to []) */
   | { kind: 'strings'; key: string; label: string; item: string; multiline?: boolean; omitEmpty?: boolean; hint?: string }
   /** A nested object; `optional` adds an on/off switch and omits it when off */
@@ -57,6 +61,8 @@ export interface CmsCollection {
   /** Field used as the list title and to suggest the file name of a new entry */
   titleField: string;
   subtitleField?: string;
+  /** Fields shown stacked on the right of each list row (a list field gives one line per item) */
+  metaFields?: string[];
   thumbField?: string;
   /** Where the entry shows on the site, for the "View on site" link */
   siteUrl?: (id: string) => string;
@@ -154,7 +160,6 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     label: 'Updates',
     singular: 'update',
     titleField: 'text',
-    subtitleField: 'href',
     thumbField: 'image',
     siteUrl: () => '/',
     sortable: true,
@@ -180,7 +185,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     label: 'Projects',
     singular: 'project',
     titleField: 'name',
-    subtitleField: 'services',
+    metaFields: ['services'],
     thumbField: 'reveal',
     siteUrl: (id) => `/work/${id}`,
     sortable: true,
@@ -192,10 +197,10 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
       {
         kind: 'image',
         key: 'reveal',
-        label: 'Cover (full bleed)',
+        label: 'Cover',
         required: true,
         video: true,
-        hint: 'The full-width visual under the title, also the Work wheel background. Image (JPG, PNG, GIF) or video (MP4, WebM — plays muted on a loop).',
+        hint: 'The Work wheel background (Home and /work); not shown on the project page. Image (JPG, PNG, GIF) or video (MP4, WebM — plays muted on a loop): upload one or paste a link to a hosted video.',
       },
       {
         kind: 'color',
@@ -215,33 +220,14 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         ],
       },
       {
-        kind: 'group',
-        key: 'summary',
-        label: 'Summary',
-        fields: [
-          { kind: 'text', key: 'label', label: 'Label', required: true },
-          { kind: 'textarea', key: 'text', label: 'Text', required: true },
-        ],
-      },
-      {
-        kind: 'list',
-        key: 'facts',
-        label: 'Facts',
-        item: 'fact',
-        fields: [
-          { kind: 'text', key: 'label', label: 'Label', required: true },
-          { kind: 'text', key: 'value', label: 'Value', required: true },
-        ],
-      },
-      {
         kind: 'blocks',
         key: 'sections',
         label: 'Page sections',
-        hint: 'The project page body, top to bottom.',
+        hint: 'The project page body under the hero, top to bottom. Add media, text or facts and move them with the arrows.',
         variants: [
           {
             type: 'media',
-            label: 'Images',
+            label: 'Media',
             fields: [
               {
                 kind: 'images',
@@ -249,7 +235,8 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
                 label: 'Images or videos (1–3, side by side)',
                 max: 3,
                 video: true,
-                hint: 'JPG, PNG, GIF, or MP4 / WebM video (plays muted on a loop).',
+                youtube: true,
+                hint: 'Upload JPG, PNG, GIF or MP4 / WebM (plays muted on a loop), or paste a link: a hosted MP4 / WebM (e.g. AWS S3 or CloudFront) or a YouTube video.',
               },
             ],
           },
@@ -259,6 +246,25 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
             fields: [
               { kind: 'text', key: 'label', label: 'Label', required: true },
               { kind: 'textarea', key: 'text', label: 'Text', required: true },
+            ],
+          },
+          {
+            type: 'facts',
+            label: 'Facts',
+            fields: [
+              { kind: 'text', key: 'label', label: 'Headline', hint: 'Left column, e.g. “What Made People Say Yes”.' },
+              { kind: 'textarea', key: 'text', label: 'Text', hint: 'Right column, next to the headline.' },
+              {
+                kind: 'list',
+                key: 'facts',
+                label: 'Lines',
+                item: 'line',
+                hint: 'Under the text, one per line: left and right, e.g. Industry — Construction robotics.',
+                fields: [
+                  { kind: 'text', key: 'label', label: 'Left', required: true },
+                  { kind: 'text', key: 'value', label: 'Right', required: true },
+                ],
+              },
             ],
           },
         ],
@@ -304,7 +310,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     label: 'Careers',
     singular: 'position',
     titleField: 'title',
-    subtitleField: 'type',
+    metaFields: ['location', 'hours', 'type'],
     siteUrl: (id) => `/careers/${id}`,
     sortable: true,
     fields: [
@@ -345,7 +351,6 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     label: 'Robo Radio',
     singular: 'episode',
     titleField: 'title',
-    subtitleField: 'guest',
     thumbField: 'cover',
     siteUrl: (id) => `/robo-radio/${id}`,
     sortable: true,

@@ -10,25 +10,26 @@
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
-  "summary": {
-    "label": "What Made People Say Yes",
-    "text": "We redesigned the Robotics media ecosystem around how people actually consume content — making it easier to read, navigate, and discover across platforms. A unified system built for growth."
-  },
-  "facts": [
-    {
-      "label": "Industry",
-      "value": "Robotics"
-    },
-    {
-      "label": "Operator said yes",
-      "value": "UX/UI"
-    },
-    {
-      "label": "The world said yes",
-      "value": "Brand Identity"
-    }
-  ],
   "sections": [
+    {
+      "type": "facts",
+      "label": "What Made People Say Yes",
+      "text": "We redesigned the Robotics media ecosystem around how people actually consume content — making it easier to read, navigate, and discover across platforms. A unified system built for growth.",
+      "facts": [
+        {
+          "label": "Industry",
+          "value": "Robotics"
+        },
+        {
+          "label": "Operator said yes",
+          "value": "UX/UI"
+        },
+        {
+          "label": "The world said yes",
+          "value": "Brand Identity"
+        }
+      ]
+    },
     {
       "type": "media",
       "images": [

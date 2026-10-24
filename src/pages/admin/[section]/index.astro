@@ -27,10 +27,6 @@ const deleted = Astro.url.searchParams.get('deleted');
   <header class="cms-head">
     <div>
       <h1>{c.label}</h1>
-      <p class="cms-muted">
-        {entries.length} {entries.length === 1 ? c.singular : `${c.singular}s`}
-        {c.sortable && entries.length > 1 && ' · drag ⠿ to change the order on the site'}
-      </p>
     </div>
     <div class="cms-head__actions">
       <a class="cms-btn" href={`/admin/${c.slug}/new`}>+ Add {c.singular}</a>
@@ -45,7 +41,7 @@ const deleted = Astro.url.searchParams.get('deleted');
         <li class="cms-row">
           <a class="cms-row__main" href={`/admin/${s.slug}/${id}`}>
             <p class="cms-row__title">{text(data[s.titleField]) || id}</p>
-            <p class="cms-row__sub cms-muted cms-small">{s.subtitleField && text(data[s.subtitleField])}</p>
+            {s.subtitleField && <p class="cms-row__sub cms-muted">{text(data[s.subtitleField])}</p>}
           </a>
           <div class="cms-row__actions">
             {s.badge && <span class="cms-badge">{s.badge}</span>}
@@ -84,10 +80,18 @@ const deleted = Astro.url.searchParams.get('deleted');
             ))}
             <a class="cms-row__main" href={`/admin/${c.slug}/${id}`}>
               <p class="cms-row__title">{title}</p>
-              <p class="cms-row__sub cms-muted cms-small">
-                {c.subtitleField && text(data[c.subtitleField])}
-              </p>
+              {c.subtitleField && text(data[c.subtitleField]) && (
+                <p class="cms-row__sub cms-muted">{text(data[c.subtitleField])}</p>
+              )}
             </a>
+            {c.metaFields && (
+              <ul class="cms-row__meta">
+                {c.metaFields
+                  .flatMap((key) => (Array.isArray(data[key]) ? data[key] : [data[key]]))
+                  .filter((v) => typeof v === 'string' && v)
+                  .map((v) => <li>{v}</li>)}
+              </ul>
+            )}
             <div class="cms-row__actions">
               <span class="cms-badge" title="Order">{String(data.order ?? 0)}</span>
               <a class="cms-btn cms-btn--ghost cms-btn--small" href={`/admin/${c.slug}/${id}`}>Edit</a>

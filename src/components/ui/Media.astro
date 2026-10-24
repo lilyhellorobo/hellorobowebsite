@@ -1,15 +1,16 @@
 ---
 /**
  * Media — renders a CMS media value: an image (optimized by astro:assets), an
- * animated GIF (served as-is so it keeps moving) or a video ({ video: "/videos/..." },
- * muted, looping, inline — it behaves like a moving image).
+ * animated GIF (served as-is so it keeps moving), a video ({ video: "/videos/..." } or a
+ * hosted "https://..." file; muted, looping, inline — it behaves like a moving image) or
+ * a YouTube video ({ youtube: id }, a 16:9 player).
  * Style it like an image: the class lands on the <img> / <video>.
  */
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 
 interface Props {
-  media: ImageMetadata | { video: string };
+  media: ImageMetadata | { video: string } | { youtube: string };
   alt?: string;
   widths?: number[];
   sizes?: string;
@@ -18,9 +19,18 @@ interface Props {
 }
 const { media, alt = '', widths, sizes, loading = 'lazy', class: className } = Astro.props;
 const isVideo = 'video' in media;
-const type = isVideo && media.video.endsWith('.webm') ? 'video/webm' : 'video/mp4';
+const type = isVideo && /\.webm(\?|$)/i.test(media.video) ? 'video/webm' : 'video/mp4';
 ---
-{isVideo ? (
+{'youtube' in media ? (
+  <iframe
+    class:list={['media-youtube', className]}
+    src={`https://www.youtube-nocookie.com/embed/${media.youtube}?rel=0`}
+    title={alt || 'YouTube video'}
+    loading={loading}
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+    allowfullscreen
+  ></iframe>
+) : isVideo ? (
   <video
     class:list={['media-video', className]}
     muted
@@ -33,7 +43,7 @@ const type = isVideo && media.video.endsWith('.webm') ? 'video/webm' : 'video/mp
   >
     <source src={media.video} type={type} />
   </video>
-) : media.format === 'gif' ? (
+) : 'format' in media && media.format === 'gif' ? (
   <img class={className} src={media.src} width={media.width} height={media.height} alt={alt} loading={loading} decoding="async" />
 ) : (
   <Image class={className} src={media} alt={alt} widths={widths} sizes={sizes} loading={loading} />
@@ -53,5 +63,11 @@ const type = isVideo && media.video.endsWith('.webm') ? 'video/webm' : 'video/mp
   .media-video {
     display: block;
     max-width: 100%;
+  }
+  .media-youtube {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
   }
 </style>

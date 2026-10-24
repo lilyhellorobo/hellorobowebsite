@@ -11,21 +11,22 @@
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
-  "summary": {
-    "label": "What Made People Say Yes",
-    "text": "Flight Ops is the first AI-based app built to help pilots manage their daily tasks — designed for a publicly traded airline operator."
-  },
-  "facts": [
-    {
-      "label": "Industry",
-      "value": "Aviation"
-    },
-    {
-      "label": "Client",
-      "value": "Surf Air Mobility"
-    }
-  ],
   "sections": [
+    {
+      "type": "facts",
+      "label": "What Made People Say Yes",
+      "text": "Flight Ops is the first AI-based app built to help pilots manage their daily tasks — designed for a publicly traded airline operator.",
+      "facts": [
+        {
+          "label": "Industry",
+          "value": "Aviation"
+        },
+        {
+          "label": "Client",
+          "value": "Surf Air Mobility"
+        }
+      ]
+    },
     {
       "type": "media",
       "images": [

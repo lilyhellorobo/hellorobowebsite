@@ -12,21 +12,22 @@
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
-  "summary": {
-    "label": "What Made People Say Yes",
-    "text": "A brand identity, strategy and website for a new smartphone maker built by former Nokia engineers."
-  },
-  "facts": [
-    {
-      "label": "Industry",
-      "value": "Consumer electronics"
-    },
-    {
-      "label": "Services",
-      "value": "Brand, Website"
-    }
-  ],
   "sections": [
+    {
+      "type": "facts",
+      "label": "What Made People Say Yes",
+      "text": "A brand identity, strategy and website for a new smartphone maker built by former Nokia engineers.",
+      "facts": [
+        {
+          "label": "Industry",
+          "value": "Consumer electronics"
+        },
+        {
+          "label": "Services",
+          "value": "Brand, Website"
+        }
+      ]
+    },
     {
       "type": "media",
       "images": [

@@ -306,6 +306,10 @@ The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321
 - Deleting an entry (or replacing an image) also deletes images nothing else uses.
 - The Work wheel (Home + `/work`) lists the projects by `order`; the first one is the
   active project and its reveal image is the wheel background.
+- Project **page sections** are Media (1–3 images, videos or YouTube side by side), Text
+  and Facts blocks, in any order. A Facts block is a headline + text (like a text row)
+  with left / right lines under it; each project's first one is "What Made People Say
+  Yes" (it replaced the old fixed summary). The cover (`reveal`) only shows on the Work wheel.
 - Projects have a **background color** (the dark sections of the project page; text,
   lines and muted text turn black on light colors) and two hero **micrographics**.
   Micrographics come from the asset library (`src/cms/library.ts`): every
