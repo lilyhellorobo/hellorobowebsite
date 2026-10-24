@@ -1,0 +1,87 @@
+---
+/**
+ * Project — Facts block: headline + text (a text row), then label / value lines in the
+ * right half, ruled. The first one on each page is "What Made People Say Yes".
+ * Figma: "Frame 2147232893" (10100:12615), 1728×632, black
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12615
+ * Without a headline or text, the lines get the row's top padding themselves.
+ */
+import ProjectTextRow from './ProjectTextRow.astro';
+
+interface Props {
+  label?: string;
+  text?: string;
+  facts: { label: string; value: string }[];
+}
+const { label = '', text = '', facts } = Astro.props;
+const hasHead = !!(label || text);
+---
+<section class:list={['project-facts', { 'project-facts--head': hasHead }]}>
+  {hasHead && <ProjectTextRow label={label} text={text} />}
+  {facts.length > 0 && (
+    <div class="project-facts__lines container">
+      <dl class="project-facts__list t-body">
+        {facts.map((f) => (
+          <div class="project-facts__fact">
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )}
+</section>
+
+<style>
+  .project-facts {
+    padding-block: calc(120 * var(--px));
+  }
+  .project-facts :global(.project-text-row) {
+    padding-block: 0;
+  }
+  .project-facts__lines {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+  }
+  .project-facts--head .project-facts__lines {
+    margin-top: calc(120 * var(--px));
+  }
+  .project-facts__list {
+    grid-column: 2;
+  }
+  .project-facts__fact {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-20);
+  }
+  .project-facts__fact dd {
+    margin: 0;
+    text-align: right;
+  }
+  .project-facts__fact + .project-facts__fact {
+    margin-top: calc(32 * var(--px));
+    padding-top: calc(32 * var(--px));
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .project-facts {
+      padding-block: 64px;
+    }
+    .project-facts__lines {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .project-facts--head .project-facts__lines {
+      margin-top: 64px;
+    }
+    .project-facts__list {
+      grid-column: auto;
+    }
+    .project-facts__fact + .project-facts__fact {
+      margin-top: var(--space-20);
+      padding-top: var(--space-20);
+    }
+  }
+</style>

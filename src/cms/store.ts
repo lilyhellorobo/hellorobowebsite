@@ -137,8 +137,12 @@ export async function suggestId(c: CmsCollection, title: string) {
 
 // --- Validate ---
 
-/** An image path, or { video } when videos are allowed; null when empty */
-function checkMedia(v: unknown, allowVideo: boolean, at: string, errors: string[]): string | { video: string } | null {
+type MediaRef = string | { video: string } | { youtube: string };
+const VIDEO_URL_RE = /^https:\/\/[^\s"'<>]{4,2000}$/;
+
+/** An image path, { video } when videos are allowed, { youtube } when YouTube is; null when empty */
+function checkMedia(v: unknown, f: { video?: boolean; youtube?: boolean }, at: string, errors: string[]): MediaRef | null {
+  const allowVideo = !!f.video;
   if (typeof v === 'string') {
     if (!v) return null;
     const file = v.startsWith(ASSET_PREFIX) ? assetFile(v) : null;
@@ -151,9 +155,28 @@ function checkMedia(v: unknown, allowVideo: boolean, at: string, errors: string[
       errors.push(`${at}: videos aren’t allowed here`);
       return null;
     }
+    // A hosted video: an https link, played straight from where it lives
+    if (video.startsWith('https://')) {
+      if (!VIDEO_URL_RE.test(video)) errors.push(`${at}: that video link doesn’t look right`);
+      return { video };
+    }
+    if (/^http:\/\//i.test(video)) {
+      errors.push(`${at}: video links need to start with https://`);
+      return null;
+    }
     const file = video.startsWith(VIDEO_PREFIX) ? assetFile(video) : null;
     if (!file || !existsSync(file)) errors.push(`${at}: video not found`);
     return { video };
+  }
+  const yt = (v as { youtube?: unknown } | null)?.youtube;
+  if (typeof yt === 'string' && yt) {
+    if (!f.youtube) {
+      errors.push(`${at}: YouTube videos aren’t allowed here`);
+      return null;
+    }
+    const id = youtubeId(yt);
+    if (!id) errors.push(`${at}: paste a YouTube video link`);
+    return id ? { youtube: id } : null;
   }
   return null;
 }
@@ -231,7 +254,7 @@ function validateFields(fields: Field[], input: unknown, where: string, errors: 
         break;
       }
       case 'image': {
-        const m = checkMedia(v, !!f.video, at, errors);
+        const m = checkMedia(v, f, at, errors);
         if (m === null) {
           if (f.required) errors.push(`${at} is required`);
           break;
@@ -241,7 +264,7 @@ function validateFields(fields: Field[], input: unknown, where: string, errors: 
       }
       case 'images': {
         const list = (Array.isArray(v) ? v : [])
-          .map((item) => checkMedia(item, !!f.video, at, errors))
+          .map((item) => checkMedia(item, f, at, errors))
           .filter((m) => m !== null);
         if (list.length < 1 || list.length > f.max) errors.push(`${at}: add 1 to ${f.max} ${f.video ? 'images or videos' : 'images'}`);
         out[f.key] = list;

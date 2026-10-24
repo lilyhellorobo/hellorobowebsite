@@ -73,29 +73,59 @@ function mediaUrl(ref: string) {
   return `/admin/media?ref=${encodeURIComponent(ref)}`;
 }
 
-type MediaValue = string | { video: string };
+type MediaValue = string | { video: string } | { youtube: string };
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,image/avif,image/svg+xml';
 const VIDEO_ACCEPT = 'video/mp4,video/webm,.mp4,.webm';
 const isVideoValue = (v: unknown): v is { video: string } =>
   !!v && typeof v === 'object' && typeof (v as { video?: unknown }).video === 'string';
+const isYoutubeValue = (v: unknown): v is { youtube: string } =>
+  !!v && typeof v === 'object' && typeof (v as { youtube?: unknown }).youtube === 'string';
+/** A hosted video (AWS etc.) is played from its own link; uploads go through /admin/media */
+const videoSrc = (video: string) => (video.startsWith('https://') ? video : mediaUrl(video));
 
-/** One image (or, with allowVideo, video) slot: shows the current media, click or drop to replace */
-function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false) {
-  let ref: MediaValue = isVideoValue(initial) ? { video: initial.video } : typeof initial === 'string' ? initial : '';
+/**
+ * One image slot: shows the current media, click or drop to replace. With allowVideo it
+ * also takes an MP4 / WebM upload or a pasted link to a hosted video; with allowYoutube,
+ * a pasted YouTube link.
+ */
+function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false, allowYoutube = false) {
+  let ref: MediaValue = isVideoValue(initial)
+    ? { video: initial.video }
+    : isYoutubeValue(initial)
+      ? { youtube: initial.youtube }
+      : typeof initial === 'string'
+        ? initial
+        : '';
   let token = '';
   let preview = '';
   let previewIsVideo = false;
   const kind = allowVideo ? 'an image or video' : 'an image';
-  const input = h('input', { type: 'file', accept: allowVideo ? `${IMAGE_ACCEPT},${VIDEO_ACCEPT}` : IMAGE_ACCEPT });
+  const input = h('input', { type: 'file', accept: allowVideo ? `${IMAGE_ACCEPT},${VIDEO_ACCEPT}` : IMAGE_ACCEPT, title: `Click or drop ${kind}` });
   const box = h('div', { class: 'cms-image' });
   const error = h('span', { class: 'cms-image__error' });
+  const linkOf = (r: MediaValue) =>
+    isYoutubeValue(r) ? `https://www.youtube.com/watch?v=${r.youtube}` : isVideoValue(r) && r.video.startsWith('https://') ? r.video : '';
+  const link = h('input', {
+    type: 'url',
+    class: 'cms-image__link',
+    placeholder: allowYoutube ? 'or paste a video or YouTube link' : 'or paste a video link',
+    'aria-label': allowYoutube ? 'Video or YouTube link' : 'Video link',
+    spellcheck: false,
+    value: linkOf(ref),
+  });
+  const el = h('div', { class: 'cms-image-slot' }, box, allowVideo ? link : null);
 
   const render = () => {
     box.replaceChildren();
     const isVideo = preview ? previewIsVideo : isVideoValue(ref);
-    const src = preview || (isVideoValue(ref) ? mediaUrl(ref.video) : ref ? mediaUrl(ref) : '');
-    box.classList.toggle('cms-image--filled', !!src);
-    if (src && isVideo) {
+    const src = preview || (isVideoValue(ref) ? videoSrc(ref.video) : isYoutubeValue(ref) ? '' : ref ? mediaUrl(ref) : '');
+    box.classList.toggle('cms-image--filled', !!src || isYoutubeValue(ref));
+    if (!preview && isYoutubeValue(ref)) {
+      box.append(
+        h('img', { src: `https://i.ytimg.com/vi/${ref.youtube}/hqdefault.jpg`, alt: '' }),
+        h('span', { class: 'cms-image__tag', text: 'YouTube' }),
+      );
+    } else if (src && isVideo) {
       box.append(
         h('video', { src, muted: true, loop: true, autoplay: true, playsInline: true, preload: 'metadata' }),
         h('span', { class: 'cms-image__tag', text: 'Video' }),
@@ -106,7 +136,7 @@ function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false) 
       box.append(h('span', { text: `Click or drop ${kind}` }));
     }
     if (error.textContent) box.append(error);
-    if (src && onRemove) {
+    if ((src || isYoutubeValue(ref)) && onRemove) {
       box.append(
         h('button', {
           type: 'button',
@@ -141,10 +171,50 @@ function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false) 
     uploads.set(token, file);
     preview = URL.createObjectURL(file);
     previewIsVideo = video;
+    link.value = '';
     box.closest('.cms-field')?.classList.remove('cms-field--invalid');
     box.dispatchEvent(new Event('input', { bubbles: true }));
     render();
   };
+
+  // A pasted link: YouTube (when allowed) or an https link to a hosted MP4 / WebM
+  const setLink = () => {
+    const text = link.value.trim();
+    error.textContent = '';
+    link.setCustomValidity('');
+    if (!text) {
+      if (linkOf(ref)) {
+        ref = '';
+        render();
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+    const yt = youtubeId(text);
+    let next: MediaValue | null = null;
+    if (yt && allowYoutube) next = { youtube: yt };
+    else if (yt) link.setCustomValidity('YouTube videos can’t be used here: paste a link to an MP4 or WebM file');
+    else if (/^https:\/\/\S+$/.test(text)) next = { video: text };
+    else link.setCustomValidity(allowYoutube ? 'Paste an https link to an MP4 / WebM file, or a YouTube link' : 'Paste an https link to an MP4 / WebM file');
+    if (!next) {
+      link.reportValidity();
+      return;
+    }
+    if (token) uploads.delete(token);
+    if (preview) URL.revokeObjectURL(preview);
+    token = preview = '';
+    ref = next;
+    box.closest('.cms-field')?.classList.remove('cms-field--invalid');
+    render();
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  link.addEventListener('change', setLink);
+  link.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setLink();
+    }
+  });
 
   input.addEventListener('change', () => setFile(input.files?.[0]));
   box.addEventListener('dragover', (e) => {
@@ -160,12 +230,13 @@ function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false) 
   render();
 
   return {
-    el: box,
+    el,
     input,
     get: (): MediaValue => token || ref,
     clear() {
       if (token) uploads.delete(token);
       ref = token = preview = '';
+      link.value = '';
       render();
     },
   };
@@ -585,7 +656,7 @@ function control(f: Field, value: Value, path: string): Control {
     }
     case 'image': {
       let slot: ReturnType<typeof imageSlot>;
-      slot = imageSlot(value, f.required ? undefined : () => slot.clear(), f.video);
+      slot = imageSlot(value, f.required ? undefined : () => slot.clear(), f.video, f.youtube);
       slot.input.id = id;
       const el = h('div', { class: 'cms-field' }, labelRow(f.label, id, f.required), slot.el, hint(f.hint));
       return {
@@ -611,7 +682,7 @@ function control(f: Field, value: Value, path: string): Control {
           slots.splice(slots.indexOf(slot), 1);
           slot.el.remove();
           ensureEmpty();
-        }, f.video);
+        }, f.video, f.youtube);
         slot.el.addEventListener('input', ensureEmpty);
         slots.push(slot);
         wrap.append(slot.el);
@@ -695,8 +766,11 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
   const renumber = () => {
     entries.forEach((e, i) => {
       const bar = e.el.querySelector('.cms-item__bar span')!;
-      const variant = f.kind === 'blocks' ? f.variants.find((v) => v.type === e.type)?.label : f.item;
-      bar.textContent = `${variant} ${i + 1}`;
+      // Sections read "Section 2: Media"; plain list items "fact 2"
+      bar.textContent =
+        f.kind === 'blocks'
+          ? `Section ${i + 1}: ${f.variants.find((v) => v.type === e.type)?.label}`
+          : `${f.item} ${i + 1}`;
       const [up, down] = e.el.querySelectorAll<HTMLButtonElement>('[data-move]');
       up.disabled = i === 0;
       down.disabled = i === entries.length - 1;
@@ -706,7 +780,8 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
   const add = (data: Data, type?: string) => {
     const fields = f.kind === 'blocks' ? (f.variants.find((v) => v.type === type)?.fields ?? []) : f.fields;
     const inner = fieldsControl(fields, data, path);
-    const entry = { el: h('div', { class: 'cms-item' }), type, inner };
+    // Page sections (blocks) are cards with a title; list items are lighter rows inside them
+    const entry = { el: h('div', { class: f.kind === 'blocks' ? 'cms-item cms-item--section' : 'cms-item' }), type, inner };
     const move = (by: number) => {
       const i = entries.indexOf(entry);
       const j = i + by;

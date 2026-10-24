@@ -10,21 +10,23 @@
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
-  "summary": {
-    "label": "What Made People Say Yes",
-    "text": "Hello Robo was named UX & Product Design Partner for Bedrock Robotics. The full case study is available upon request."
-  },
-  "facts": [
+  "sections": [
     {
-      "label": "Industry",
-      "value": "Autonomous construction"
-    },
-    {
-      "label": "Total funding",
-      "value": "$350M"
+      "type": "facts",
+      "label": "What Made People Say Yes",
+      "text": "Hello Robo was named UX & Product Design Partner for Bedrock Robotics. The full case study is available upon request.",
+      "facts": [
+        {
+          "label": "Industry",
+          "value": "Autonomous construction"
+        },
+        {
+          "label": "Total funding",
+          "value": "$350M"
+        }
+      ]
     }
   ],
-  "sections": [],
   "credits": [],
   "next": {
     "name": "Cosmic Robotics",

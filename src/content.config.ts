@@ -6,11 +6,15 @@ import { z } from 'astro/zod';
 
 /**
  * An image (path in src/assets, optimized by astro:assets; GIFs keep their animation)
- * or a video in public/videos/, written as { "video": "/videos/..." }.
+ * or a video: a file in public/videos/ or a hosted MP4 / WebM link (e.g. AWS S3 /
+ * CloudFront), written as { "video": "/videos/..." | "https://..." }.
  * Rendered by src/components/ui/Media.astro.
  */
-const media = (image: () => z.ZodTypeAny) =>
-  z.union([image(), z.object({ video: z.string().regex(/^\/videos\//) })]);
+const video = z.object({ video: z.string().regex(/^(\/videos\/|https:\/\/)/) });
+const media = (image: () => z.ZodTypeAny) => z.union([image(), video]);
+/** Project page rows also take a YouTube video: { "youtube": "<11-character id>" } */
+const sectionMedia = (image: () => z.ZodTypeAny) =>
+  z.union([image(), video, z.object({ youtube: z.string().regex(/^[\w-]{11}$/) })]);
 
 const projects = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/projects' }),
@@ -19,7 +23,7 @@ const projects = defineCollection({
       name: z.string(),
       intro: z.string(),
       services: z.array(z.string()),
-      /** Cover: the full-bleed image or video under the hero ("show logo") */
+      /** Cover: the Work wheel background (Home + /work); not shown on the project page */
       reveal: media(image),
       /** Page background for the dark sections; text turns black on light colors */
       background: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
@@ -27,13 +31,20 @@ const projects = defineCollection({
       micrographics: z
         .object({ left: z.string().optional(), right: z.string().optional() })
         .default({}),
-      summary: z.object({ label: z.string(), text: z.string() }),
-      facts: z.array(z.object({ label: z.string(), value: z.string() })),
-      /** Page body: media rows (1–3 images side by side) and text rows, in order */
+      /**
+       * Page body, in order: media rows (1–3 side by side), text rows and facts blocks
+       * (headline + text like a text row, then label / value lines; "What Made People Say Yes")
+       */
       sections: z.array(
         z.discriminatedUnion('type', [
-          z.object({ type: z.literal('media'), images: z.array(media(image)).min(1).max(3) }),
+          z.object({ type: z.literal('media'), images: z.array(sectionMedia(image)).min(1).max(3) }),
           z.object({ type: z.literal('text'), label: z.string(), text: z.string() }),
+          z.object({
+            type: z.literal('facts'),
+            label: z.string().optional(),
+            text: z.string().optional(),
+            facts: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
+          }),
         ]),
       ),
       testimonial: z

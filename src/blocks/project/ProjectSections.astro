@@ -3,11 +3,13 @@
  * Project — Body sections
  * Figma: media rows "Frame 2147232899" (10100:12637, gap 48) and text rows
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12637
- * Media row = 1, 2 or 3 images or videos side by side (gap 12), radius 4.
+ * Media row = 1, 2 or 3 images, videos (uploaded or hosted) or YouTube players side by
+ * side (gap 12), radius 4.
  */
 import Media from '../../components/ui/Media.astro';
 import type { CollectionEntry } from 'astro:content';
 import ProjectTextRow from './ProjectTextRow.astro';
+import ProjectFacts from './ProjectFacts.astro';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -18,6 +20,8 @@ const { sections, name } = Astro.props.project.data;
   {sections.map((s, i) =>
     s.type === 'text' ? (
       <ProjectTextRow label={s.label} text={s.text} />
+    ) : s.type === 'facts' ? (
+      <ProjectFacts label={s.label} text={s.text} facts={s.facts} />
     ) : (
       <div class:list={['project-media container', `project-media--${s.images.length}`, { 'is-after-media': i > 0 && sections[i - 1].type === 'media' }]}>
         {s.images.map((img) => (
@@ -49,10 +53,14 @@ const { sections, name } = Astro.props.project.data;
     grid-template-columns: repeat(3, 1fr);
   }
   .project-media :global(img),
-  .project-media :global(video) {
+  .project-media :global(video),
+  .project-media :global(iframe) {
     width: 100%;
     height: auto;
     border-radius: calc(4 * var(--px));
+  }
+  .project-media :global(iframe) {
+    aspect-ratio: 16 / 9;
   }
 
   /* Mobile: 3-up rows become one column; 2-up rows stay side by side */

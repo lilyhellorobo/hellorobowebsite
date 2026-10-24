@@ -11,21 +11,22 @@
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
-  "summary": {
-    "label": "What Made People Say Yes",
-    "text": "A new brand and website for the platform robotics teams use to build, operate, and scale their own robot fleets."
-  },
-  "facts": [
-    {
-      "label": "Industry",
-      "value": "Robotics software"
-    },
-    {
-      "label": "Services",
-      "value": "Brand, Website"
-    }
-  ],
   "sections": [
+    {
+      "type": "facts",
+      "label": "What Made People Say Yes",
+      "text": "A new brand and website for the platform robotics teams use to build, operate, and scale their own robot fleets.",
+      "facts": [
+        {
+          "label": "Industry",
+          "value": "Robotics software"
+        },
+        {
+          "label": "Services",
+          "value": "Brand, Website"
+        }
+      ]
+    },
     {
       "type": "media",
       "images": [
