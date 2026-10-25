@@ -458,6 +458,11 @@ export async function saveEntry(
     const data = validateFields(c.fields, resolved, '', errors);
     if (errors.length) throw new CmsError('Please fix the highlighted fields', 422, errors);
     await checkLimits(c, id, data);
+    // A new entry in a draggable list goes to the end (order is set by dragging, not typed)
+    if (mode === 'create' && c.sortable && !Number(data.order)) {
+      const others = await listEntries(c);
+      data.order = Math.max(0, ...others.map((e) => Number(e.data.order) || 0)) + 1;
+    }
     await writeJson(file, data);
     const after = collectRefs(data);
     await removeUnreferenced([...before].filter((r) => !after.has(r)));

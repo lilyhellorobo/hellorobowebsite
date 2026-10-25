@@ -11,8 +11,8 @@ export function makeSortable(list: HTMLElement, section: string, status: HTMLEle
 
   const renumber = () =>
     rows().forEach((row, i) => {
-      const badge = row.querySelector('.cms-badge');
-      if (badge) badge.textContent = String(i + 1);
+      const num = row.querySelector('.cms-row__num');
+      if (num) num.textContent = String(i + 1);
     });
 
   const say = (text: string, error = false) => {

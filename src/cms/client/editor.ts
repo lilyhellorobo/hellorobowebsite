@@ -244,6 +244,49 @@ function imageSlot(initial: unknown, onRemove?: () => void, allowVideo = false, 
 
 // --- Micrographics library ---
 
+/**
+ * Background for a graphic preview, from the graphic's own colours: black when it has
+ * white parts (so they show), white otherwise (orange or black graphics).
+ */
+const tileBackgrounds = new Map<string, Promise<string>>();
+function graphicBackground(src: string): Promise<string> {
+  let bg = tileBackgrounds.get(src);
+  if (!bg) {
+    bg = new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 96;
+        const w = img.naturalWidth || size;
+        const ht = img.naturalHeight || size;
+        const scale = Math.min(size / w, size / ht);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+        ctx.drawImage(img, 0, 0, w * scale, ht * scale);
+        const px = ctx.getImageData(0, 0, size, size).data;
+        let ink = 0;
+        let white = 0;
+        for (let i = 0; i < px.length; i += 4) {
+          if (px[i + 3] < 128) continue;
+          ink++;
+          if (Math.min(px[i], px[i + 1], px[i + 2]) > 200) white++;
+        }
+        resolve(ink && white / ink >= 0.2 ? '#000000' : '#ffffff');
+      };
+      img.onerror = () => resolve('#ffffff');
+      img.src = src;
+    });
+    tileBackgrounds.set(src, bg);
+  }
+  return bg;
+}
+function paintTile(tile: HTMLElement, src: string) {
+  tile.style.background = '';
+  graphicBackground(src).then((bg) => {
+    if (tile.querySelector('img')?.getAttribute('src') === src) tile.style.background = bg;
+  });
+}
+
 interface LibraryItem {
   path: string;
   name: string;
@@ -319,7 +362,11 @@ function pickFromLibrary(current: string): Promise<LibraryItem | null> {
                     dialog.close();
                   },
                 },
-                h('span', { class: 'cms-graphic-tile' }, h('img', { src: i.path, alt: '', loading: 'lazy' })),
+                (() => {
+                  const tile = h('span', { class: 'cms-graphic-tile' }, h('img', { src: i.path, alt: '', loading: 'lazy' }));
+                  paintTile(tile, i.path);
+                  return tile;
+                })(),
                 h('span', { class: 'cms-library__name', text: i.name }),
               ),
             ),
@@ -395,6 +442,7 @@ function control(f: Field, value: Value, path: string): Control {
       };
     }
     case 'number': {
+      if (f.hidden) return { el: h('span', { hidden: true }), get: () => value ?? f.default ?? 0 };
       const input = h('input', { id, type: 'number', step: 'any', value: String(value ?? f.default ?? 0) });
       return {
         el: h('div', { class: 'cms-field' }, labelRow(f.label, id), input, hint(f.hint)),
@@ -429,8 +477,6 @@ function control(f: Field, value: Value, path: string): Control {
       const sync = () => {
         const v = text.value.trim();
         text.setCustomValidity(v && !HEX.test(v) ? 'Use a hex color like #FF6B03' : '');
-        // Micrographic previews (here and in the library dialog) sit on the project's background
-        document.documentElement.style.setProperty('--cms-graphic-bg', HEX.test(v) ? v : '');
       };
       swatch.addEventListener('input', () => {
         text.value = swatch.value.toUpperCase();
@@ -470,6 +516,8 @@ function control(f: Field, value: Value, path: string): Control {
       const file = h('input', { type: 'file', accept: 'image/svg+xml,image/png,image/webp', hidden: true });
       const render = () => {
         tile.replaceChildren(current ? h('img', { src: current, alt: '' }) : h('span', { text: 'None' }));
+        if (current) paintTile(tile, current);
+        else tile.style.background = '';
         name.textContent = current ? current.split('/').pop()! : 'No graphic';
         remove.hidden = !current;
       };
@@ -738,16 +786,30 @@ function control(f: Field, value: Value, path: string): Control {
       const inner = fieldsControl(f.fields, (value as Data) ?? {}, path);
       const set = h('fieldset', { class: 'cms-fieldset' });
       if (f.optional) {
-        const toggle = h('input', { type: 'checkbox', checked: value != null });
-        const sync = () => {
-          set.toggleAttribute('data-off', !toggle.checked);
-          set.disabled = !toggle.checked;
+        // Same as a list: "+ Add testimonial" when empty, the fields and a × once added.
+        // The fields sit in their own fieldset so, while removed, it's disabled and skipped
+        // by the browser's required-field checks.
+        let on = value != null;
+        const body = h('fieldset', { class: 'cms-optional' }, hint(f.hint) ?? '', ...inner.els);
+        const add = h('button', {
+          type: 'button',
+          class: 'cms-btn cms-btn--ghost cms-btn--small cms-optional__add',
+          text: `+ Add ${f.label.toLowerCase()}`,
+        });
+        const remove = iconButton(`Remove ${f.label.toLowerCase()}`, '×', () => toggle(false), true);
+        const toggle = (next: boolean) => {
+          on = next;
+          body.hidden = body.disabled = !on;
+          add.hidden = on;
+          remove.hidden = !on;
+          set.dispatchEvent(new Event('input', { bubbles: true }));
         };
-        toggle.addEventListener('change', sync);
-        set.append(h('legend', {}, h('label', { class: 'cms-switch' }, toggle, f.label)));
-        set.append(hint(f.hint) ?? '', ...inner.els);
-        sync();
-        return { el: set, get: () => (toggle.checked ? inner.get() : null), check: () => (toggle.checked ? inner.check() : []) };
+        add.addEventListener('click', () => toggle(true));
+        set.append(h('legend', { class: 'cms-fieldset__head' }, h('span', { text: f.label }), remove), body, add);
+        body.hidden = body.disabled = !on;
+        add.hidden = on;
+        remove.hidden = !on;
+        return { el: set, get: () => (on ? inner.get() : null), check: () => (on ? inner.check() : []) };
       }
       set.append(h('legend', { text: f.label }), hint(f.hint) ?? '', ...inner.els);
       return { el: set, get: inner.get, check: inner.check };
@@ -771,43 +833,159 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
         f.kind === 'blocks'
           ? `Section ${i + 1}: ${f.variants.find((v) => v.type === e.type)?.label}`
           : `${f.item} ${i + 1}`;
-      const [up, down] = e.el.querySelectorAll<HTMLButtonElement>('[data-move]');
-      up.disabled = i === 0;
-      down.disabled = i === entries.length - 1;
     });
   };
+  // Order changes go into the form like any edit (saved with Save changes)
+  const changed = () => items.dispatchEvent(new Event('input', { bubbles: true }));
 
   const add = (data: Data, type?: string) => {
     const fields = f.kind === 'blocks' ? (f.variants.find((v) => v.type === type)?.fields ?? []) : f.fields;
     const inner = fieldsControl(fields, data, path);
     // Page sections (blocks) are cards with a title; list items are lighter rows inside them
     const entry = { el: h('div', { class: f.kind === 'blocks' ? 'cms-item cms-item--section' : 'cms-item' }), type, inner };
-    const move = (by: number) => {
+    const moveTo = (j: number) => {
       const i = entries.indexOf(entry);
-      const j = i + by;
-      if (j < 0 || j >= entries.length) return;
+      if (j < 0 || j >= entries.length || j === i) return false;
       entries.splice(i, 1);
       entries.splice(j, 0, entry);
-      items.replaceChildren(...entries.map((e) => e.el));
+      // Move just this section (the others, and their image / video previews, stay put)
+      items.insertBefore(entry.el, entries[j + 1]?.el ?? null);
       renumber();
+      return true;
     };
-    const up = iconButton('Move up', '↑', () => move(-1));
-    const down = iconButton('Move down', '↓', () => move(1));
-    up.dataset.move = down.dataset.move = '';
+
+    // Page sections are dragged by their ⠿ handle (or ↑ / ↓ on the focused handle),
+    // like the list pages; list items (lines, credits) only get ×
+    let handle: HTMLButtonElement | null = null;
+    if (f.kind === 'blocks') {
+      handle = h('button', {
+        type: 'button',
+        class: 'cms-drag',
+        'aria-label': 'Move section. Drag, or use the up and down arrow keys.',
+        title: 'Drag to reorder',
+        text: '⠿',
+      });
+      handle.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        e.preventDefault();
+        if (moveTo(entries.indexOf(entry) + (e.key === 'ArrowUp' ? -1 : 1))) changed();
+        handle!.focus();
+      });
+      handle.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || entries.length < 2) return;
+        e.preventDefault();
+        // The section follows the pointer and the others slide out of its way, all with
+        // transforms only: nothing moves in the DOM until the drop, when the order is
+        // applied once. The pointer is captured by the handle (which stays put), so the
+        // drag always ends, wherever the button is released.
+        const el = entry.el;
+        const from = entries.indexOf(entry);
+        const gap = parseFloat(getComputedStyle(items).rowGap) || 0;
+        const shift = el.offsetHeight + gap;
+        // Layout at the start, in page coordinates
+        const mids = entries.map((x) => {
+          const r = x.el.getBoundingClientRect();
+          return r.top + window.scrollY + r.height / 2;
+        });
+        const startPageY = e.clientY + window.scrollY;
+        let pointerY = e.clientY;
+        let to = from;
+        try {
+          handle!.setPointerCapture(e.pointerId);
+        } catch {
+          // no active pointer to capture (synthetic events); the window listeners below still end the drag
+        }
+        items.classList.add('is-sorting');
+        el.classList.add('is-dragging');
+        for (const x of entries) if (x !== entry) x.el.style.transition = 'transform 0.25s cubic-bezier(0.2, 1, 0.3, 1)';
+
+        const update = () => {
+          const dy = pointerY + window.scrollY - startPageY;
+          const mid = mids[from] + dy;
+          // Target slot: how many other sections now sit above the dragged one's middle
+          to = 0;
+          entries.forEach((x, i) => {
+            if (i !== from && mids[i] < mid) to++;
+          });
+          entries.forEach((x, i) => {
+            if (i === from) return;
+            const by = i > from && i <= to ? -shift : i < from && i >= to ? shift : 0;
+            x.el.style.transform = by ? `translateY(${by}px)` : '';
+          });
+          el.style.transform = `translateY(${dy}px)`;
+        };
+
+        // Scroll the page while the pointer is near the top / bottom edge
+        const EDGE = 100;
+        let frame = 0;
+        const autoScroll = () => {
+          const speed =
+            pointerY < EDGE ? -(EDGE - pointerY) / 3 : pointerY > innerHeight - EDGE ? (pointerY - (innerHeight - EDGE)) / 3 : 0;
+          if (speed) {
+            window.scrollBy(0, speed);
+            update();
+          }
+          frame = requestAnimationFrame(autoScroll);
+        };
+        frame = requestAnimationFrame(autoScroll);
+
+        const onMove = (ev: PointerEvent) => {
+          pointerY = ev.clientY;
+          update();
+        };
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          cancelAnimationFrame(frame);
+          handle!.removeEventListener('pointermove', onMove);
+          handle!.removeEventListener('pointerup', finish);
+          handle!.removeEventListener('pointercancel', finish);
+          handle!.removeEventListener('lostpointercapture', finish);
+          window.removeEventListener('pointerup', finish);
+          window.removeEventListener('blur', finish);
+          document.removeEventListener('visibilitychange', finish);
+          // Apply the order once, then let the dragged section ease into its slot
+          const before = el.getBoundingClientRect().top;
+          for (const x of entries) {
+            x.el.style.transition = '';
+            x.el.style.transform = '';
+          }
+          items.classList.remove('is-sorting');
+          if (to !== from && moveTo(to)) changed();
+          const after = el.getBoundingClientRect().top;
+          el.style.transform = `translateY(${before - after}px)`;
+          el.getBoundingClientRect();
+          el.style.transition = 'transform 0.25s cubic-bezier(0.2, 1, 0.3, 1)';
+          el.style.transform = '';
+          setTimeout(() => {
+            el.style.transition = '';
+            el.classList.remove('is-dragging');
+          }, 260);
+        };
+        handle!.addEventListener('pointermove', onMove);
+        handle!.addEventListener('pointerup', finish);
+        handle!.addEventListener('pointercancel', finish);
+        handle!.addEventListener('lostpointercapture', finish);
+        window.addEventListener('pointerup', finish);
+        window.addEventListener('blur', finish);
+        document.addEventListener('visibilitychange', finish);
+      });
+    }
+
     entry.el.append(
       h(
         'div',
         { class: 'cms-item__bar' },
-        h('span'),
+        h('div', { class: 'cms-item__title' }, handle, h('span')),
         h(
           'div',
           { class: 'cms-item__tools' },
-          up,
-          down,
           iconButton('Remove', '×', () => {
             entries.splice(entries.indexOf(entry), 1);
             entry.el.remove();
             renumber();
+            changed();
           }, true),
         ),
       ),
@@ -849,7 +1027,14 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
       h('legend', { text: f.label }),
       hint(f.hint),
       items,
-      h('div', { class: 'cms-add-row' }, ...addButtons),
+      f.kind === 'blocks'
+        ? h(
+            'div',
+            { class: 'cms-add-sections' },
+            h('p', { class: 'cms-add-sections__title', text: 'Add new section' }),
+            h('div', { class: 'cms-add-row' }, ...addButtons),
+          )
+        : h('div', { class: 'cms-add-row' }, ...addButtons),
     ),
     get: () => entries.map((e) => (e.type ? { type: e.type, ...e.inner.get() } : e.inner.get())),
     check: () => entries.flatMap((e) => e.inner.check()),

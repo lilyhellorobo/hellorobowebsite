@@ -43,8 +43,12 @@ const deleted = Astro.url.searchParams.get('deleted');
             <p class="cms-row__title">{text(data[s.titleField]) || id}</p>
             {s.subtitleField && <p class="cms-row__sub cms-muted">{text(data[s.subtitleField])}</p>}
           </a>
+          {s.metaFields && (
+            <ul class="cms-row__meta">
+              {s.metaFields.map((key) => text(data[key])).filter(Boolean).map((v) => <li>{v}</li>)}
+            </ul>
+          )}
           <div class="cms-row__actions">
-            {s.badge && <span class="cms-badge">{s.badge}</span>}
             <a class="cms-btn cms-btn--ghost cms-btn--small" href={`/admin/${s.slug}/${id}`}>Edit</a>
           </div>
         </li>
@@ -59,7 +63,7 @@ const deleted = Astro.url.searchParams.get('deleted');
       class:list={['cms-list', { 'cms-list--no-thumbs': !c.thumbField, 'cms-list--sortable': c.sortable }]}
       data-sortable={c.sortable ? c.slug : undefined}
     >
-      {entries.map(({ id, data }) => {
+      {entries.map(({ id, data }, i) => {
         const title = text(data[c.titleField]) || id;
         const thumbValue = c.thumbField ? data[c.thumbField] : undefined;
         const thumbVideo = (thumbValue as { video?: string } | undefined)?.video;
@@ -71,6 +75,7 @@ const deleted = Astro.url.searchParams.get('deleted');
                 <span aria-hidden="true">⠿</span>
               </button>
             )}
+            {c.sortable && <span class="cms-row__num" title="Position on the site">{i + 1}</span>}
             {c.thumbField && (thumbVideo ? (
               <video class="cms-row__thumb" src={`/admin/media?ref=${encodeURIComponent(thumbVideo)}#t=0.5`} muted preload="metadata" />
             ) : thumb ? (
@@ -93,7 +98,6 @@ const deleted = Astro.url.searchParams.get('deleted');
               </ul>
             )}
             <div class="cms-row__actions">
-              <span class="cms-badge" title="Order">{String(data.order ?? 0)}</span>
               <a class="cms-btn cms-btn--ghost cms-btn--small" href={`/admin/${c.slug}/${id}`}>Edit</a>
               <button
                 class="cms-btn cms-btn--danger cms-btn--small"
