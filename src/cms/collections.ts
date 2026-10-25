@@ -16,6 +16,8 @@ export type Field =
       default?: number;
       /** When left at 0, take the value from a sibling graphic field's own size */
       sizeOf?: { field: string; dimension: 'width' | 'height' };
+      /** Kept and saved, but not shown in the editor (e.g. order, set by dragging) */
+      hidden?: boolean;
     }
   | { kind: 'select'; key: string; label: string; options: { value: string; label: string }[]; hint?: string }
   /** `limit`: at most this many entries in the collection can have it switched on */
@@ -77,17 +79,16 @@ export interface CmsCollection {
   parent?: string;
   /** Fixed entries: they can be edited, not added or deleted */
   fixed?: boolean;
-  /** Badge on its row in the parent's list */
-  badge?: string;
   fields: Field[];
 }
 
+// Set by dragging rows on the list page, so the editor keeps it without showing it
 const order: Field = {
   kind: 'number',
   key: 'order',
   label: 'Order',
   default: 0,
-  hint: 'Lower numbers come first.',
+  hidden: true,
 };
 
 // Object ids on the Team field. Mirrors `objects` in src/blocks/team/TeamField.astro.
@@ -110,27 +111,26 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     label: 'Team',
     singular: 'team member',
     titleField: 'name',
-    subtitleField: 'role',
+    metaFields: ['role'],
     thumbField: 'photo',
     siteUrl: (id) => `/team#${id}`,
+    sortable: true,
     fields: [
-      { kind: 'text', key: 'name', label: 'Name', required: true, hint: 'As shown on the card, e.g. “Lily A.”' },
+      { kind: 'text', key: 'name', label: 'Name', required: true },
       { kind: 'text', key: 'nameJa', label: 'Name in Japanese', required: true, lang: 'ja' },
       { kind: 'text', key: 'role', label: 'Role', required: true },
       { kind: 'textarea', key: 'quote', label: 'Quote', required: true },
-      { kind: 'image', key: 'photo', label: 'Photo', required: true, hint: 'Portrait PNG or JPG, exported at 2×.' },
+      { kind: 'image', key: 'photo', label: 'Photo', required: true },
       {
         kind: 'select',
         key: 'object',
         label: 'Object on the Team field',
         options: TEAM_OBJECTS.map((id) => ({ value: id, label: `${id.toUpperCase()}.OBJ` })),
-        hint: 'The 3D object that opens this person’s card. Each object should belong to one person.',
       },
       {
         kind: 'model',
         key: 'model',
         label: '3D object',
-        hint: 'For the interactive WebGL team gallery. GLB format (binary glTF, textures embedded), ideally under 5 MB. In Blender: File → Export → glTF 2.0, format “glTF Binary (.glb)”.',
       },
       order,
     ],
@@ -141,16 +141,15 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     label: 'Studio card',
     singular: 'studio card',
     titleField: 'name',
-    subtitleField: 'heading',
+    metaFields: ['heading'],
     siteUrl: (id) => `/team#${id}`,
     parent: 'team',
     fixed: true,
-    badge: 'Studio card · opened by the robot',
     fields: [
       { kind: 'text', key: 'nameJa', label: 'Name in Japanese', required: true, lang: 'ja' },
       { kind: 'text', key: 'name', label: 'Name', required: true },
-      { kind: 'graphic', key: 'stamp', label: 'Stamp', hint: 'Top right of the card.' },
-      { kind: 'text', key: 'heading', label: 'Heading', required: true, hint: 'e.g. “Our culture”' },
+      { kind: 'graphic', key: 'stamp', label: 'Stamp' },
+      { kind: 'text', key: 'heading', label: 'Heading', required: true },
       { kind: 'strings', key: 'text', label: 'Text', item: 'paragraph', multiline: true },
     ],
   },
@@ -164,7 +163,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     siteUrl: () => '/',
     sortable: true,
     fields: [
-      { kind: 'textarea', key: 'text', label: 'Text', required: true, hint: 'The headline on the Home carousel card.' },
+      { kind: 'textarea', key: 'text', label: 'Text', required: true },
       { kind: 'image', key: 'image', label: 'Image', required: true },
       {
         kind: 'select',
@@ -175,7 +174,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
           { value: 'wide', label: 'Wide (815)' },
         ],
       },
-      { kind: 'text', key: 'href', label: 'Link', required: true, hint: 'A page on the site (/careers/content-creator) or a full URL.' },
+      { kind: 'text', key: 'href', label: 'Link', required: true },
       order,
     ],
   },
@@ -200,30 +199,26 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         label: 'Cover',
         required: true,
         video: true,
-        hint: 'The Work wheel background (Home and /work); not shown on the project page. Image (JPG, PNG, GIF) or video (MP4, WebM — plays muted on a loop): upload one or paste a link to a hosted video.',
       },
       {
         kind: 'color',
         key: 'background',
         label: 'Background color',
         placeholder: '#000000',
-        hint: 'Background of the project page. Leave empty for black. Text turns black on light colors.',
       },
       {
         kind: 'group',
         key: 'micrographics',
         label: 'Micrographics',
-        hint: 'The two graphics at the bottom left of the hero. Pick from the Hello Robo library or upload a new one (SVG preferred).',
         fields: [
-          { kind: 'graphic', key: 'left', label: 'Left (round badge)' },
-          { kind: 'graphic', key: 'right', label: 'Right (stamp)' },
+          { kind: 'graphic', key: 'left', label: '1' },
+          { kind: 'graphic', key: 'right', label: '2' },
         ],
       },
       {
         kind: 'blocks',
         key: 'sections',
         label: 'Page sections',
-        hint: 'The project page body under the hero, top to bottom. Add media, text or facts and move them with the arrows.',
         variants: [
           {
             type: 'media',
@@ -236,7 +231,6 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
                 max: 3,
                 video: true,
                 youtube: true,
-                hint: 'Upload JPG, PNG, GIF or MP4 / WebM (plays muted on a loop), or paste a link: a hosted MP4 / WebM (e.g. AWS S3 or CloudFront) or a YouTube video.',
               },
             ],
           },
@@ -252,14 +246,13 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
             type: 'facts',
             label: 'Facts',
             fields: [
-              { kind: 'text', key: 'label', label: 'Headline', hint: 'Left column, e.g. “What Made People Say Yes”.' },
-              { kind: 'textarea', key: 'text', label: 'Text', hint: 'Right column, next to the headline.' },
+              { kind: 'text', key: 'label', label: 'Headline' },
+              { kind: 'textarea', key: 'text', label: 'Text' },
               {
                 kind: 'list',
                 key: 'facts',
                 label: 'Lines',
                 item: 'line',
-                hint: 'Under the text, one per line: left and right, e.g. Industry — Construction robotics.',
                 fields: [
                   { kind: 'text', key: 'label', label: 'Left', required: true },
                   { kind: 'text', key: 'value', label: 'Right', required: true },
@@ -297,7 +290,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         optional: true,
         fields: [
           { kind: 'text', key: 'name', label: 'Name', required: true },
-          { kind: 'text', key: 'href', label: 'Link', required: true, hint: 'e.g. /work/transitive' },
+          { kind: 'text', key: 'href', label: 'Link', required: true },
           { kind: 'image', key: 'image', label: 'Image', required: true },
         ],
       },
@@ -315,8 +308,8 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     sortable: true,
     fields: [
       { kind: 'text', key: 'title', label: 'Job title', required: true },
-      { kind: 'text', key: 'location', label: 'Location', required: true, hint: 'e.g. “Remote” or “New York”' },
-      { kind: 'text', key: 'hours', label: 'Hours', required: true, hint: 'e.g. “US-friendly hours”' },
+      { kind: 'text', key: 'location', label: 'Location', required: true },
+      { kind: 'text', key: 'hours', label: 'Hours', required: true },
       {
         kind: 'select',
         key: 'type',
@@ -329,11 +322,10 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         key: 'stamp',
         label: 'Stamp next to the title',
         optional: true,
-        hint: 'Shown in the Careers list.',
         fields: [
           { kind: 'graphic', key: 'src', label: 'Graphic', required: true },
-          { kind: 'number', key: 'w', label: 'Width (px)', hint: 'Leave at 0 to use the graphic’s own size.', sizeOf: { field: 'src', dimension: 'width' } },
-          { kind: 'number', key: 'h', label: 'Height (px)', hint: 'Leave at 0 to use the graphic’s own size.', sizeOf: { field: 'src', dimension: 'height' } },
+          { kind: 'number', key: 'w', label: 'Width (px)', sizeOf: { field: 'src', dimension: 'width' } },
+          { kind: 'number', key: 'h', label: 'Height (px)', sizeOf: { field: 'src', dimension: 'height' } },
         ],
       },
       { kind: 'strings', key: 'intro', label: 'Intro', item: 'paragraph', multiline: true, omitEmpty: true },
@@ -341,8 +333,8 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
       { kind: 'strings', key: 'bring', label: 'What you bring', item: 'point', multiline: true, omitEmpty: true },
       { kind: 'strings', key: 'niceToHave', label: 'Nice to have', item: 'point', multiline: true, omitEmpty: true },
       { kind: 'strings', key: 'howWeWork', label: 'How we work', item: 'paragraph', multiline: true, omitEmpty: true },
-      { kind: 'strings', key: 'applySteps', label: 'To apply, send', item: 'step', multiline: true, omitEmpty: true, hint: 'Numbered 01, 02… on the page.' },
-      { kind: 'textarea', key: 'outro', label: 'Closing line', hint: 'Optional. Shown under “How to apply”.' },
+      { kind: 'strings', key: 'applySteps', label: 'To apply, send', item: 'step', multiline: true, omitEmpty: true },
+      { kind: 'textarea', key: 'outro', label: 'Closing line' },
     ],
   },
   {
@@ -355,14 +347,14 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     siteUrl: (id) => `/robo-radio/${id}`,
     sortable: true,
     fields: [
-      { kind: 'text', key: 'title', label: 'Title', required: true, hint: 'e.g. “Robo Radio 14: Alejandro Otalora”' },
-      { kind: 'number', key: 'number', label: 'Episode number', hint: 'Leave at 0 if it has no number.' },
+      { kind: 'text', key: 'title', label: 'Title', required: true },
+      { kind: 'number', key: 'number', label: 'Episode number' },
       { kind: 'text', key: 'guest', label: 'Guest name', required: true },
-      { kind: 'text', key: 'guestTitle', label: 'Guest title', required: true, hint: 'What they do, e.g. “Head of Design at Humanoid”.' },
-      { kind: 'image', key: 'cover', label: 'Cover image', required: true, hint: 'The episode poster (tall, about 1080×1530).' },
-      { kind: 'youtube', key: 'youtube', label: 'YouTube video', required: true, hint: 'Paste the video link, e.g. https://www.youtube.com/watch?v=FczVAM_6H8Q' },
+      { kind: 'text', key: 'guestTitle', label: 'Guest title', required: true },
+      { kind: 'image', key: 'cover', label: 'Cover image', required: true },
+      { kind: 'youtube', key: 'youtube', label: 'YouTube video', required: true },
       { kind: 'textarea', key: 'description', label: 'Description', required: true },
-      { kind: 'text', key: 'portfolioUrl', label: 'Guest’s portfolio link', hint: 'Optional. Shown as “Follow <name>’s work”.' },
+      { kind: 'text', key: 'portfolioUrl', label: 'Guest’s portfolio link' },
       { kind: 'boolean', key: 'listed', label: 'Show in “All of the episodes”', default: true },
       {
         kind: 'boolean',
@@ -370,7 +362,6 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         label: 'Featured',
         default: false,
         limit: 6,
-        hint: 'Shown as a poster under “One talk. One future” on Robo Radio. Up to 6 episodes, in list order.',
       },
       {
         kind: 'boolean',
@@ -378,7 +369,6 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         label: 'Displayed on homepage',
         default: false,
         limit: 4,
-        hint: 'Shown as a poster in the Robo Radio section on Home. Up to 4 episodes, in list order.',
       },
       order,
     ],

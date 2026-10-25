@@ -316,7 +316,7 @@ The first run also creates `CMS_SESSION_SECRET`. Then open http://localhost:4321
   `stamp-*` / `badge-*` / globe / micrographic SVG in `public/images`, plus uploads,
   which go to `public/images/micrographics/` and are available to every project.
   SVG uploads with scripts or event handlers are refused.
-- Projects, Updates, Careers and Robo Radio can be **dragged into order** on their list page
+- Team, Projects, Updates, Careers and Robo Radio can be **dragged into order** on their list page
   (drag the ⠿ handle, or focus it and use ↑ / ↓). Dropping saves right away by
   rewriting each entry's `order` (1, 2, 3…); `sortable: true` in `collections.ts`
   turns it on for a section.

@@ -49,10 +49,9 @@ const user = Astro.locals.user;
             </ul>
           </nav>
           <div class="cms-side__foot">
-            <a class="cms-link" href="/" target="_blank" rel="noopener">View site ↗</a>
-            <p class="cms-muted cms-small" title={user.email}>{user.email}</p>
+            <a class="cms-btn cms-btn--ghost cms-btn--block" href="/" target="_blank" rel="noopener">View site ↗</a>
             <form method="post" action="/admin/logout">
-              <button class="cms-btn cms-btn--ghost cms-btn--small" type="submit">Log out</button>
+              <button class="cms-btn cms-btn--ghost cms-btn--block" type="submit">Log out</button>
             </form>
           </div>
         </aside>
@@ -63,5 +62,9 @@ const user = Astro.locals.user;
     ) : (
       <slot />
     )}
+    <script>
+      import './client/winona';
+      import './client/toast';
+    </script>
   </body>
 </html>
