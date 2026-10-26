@@ -5,338 +5,298 @@
   {
    "key": "good_chaos_13",
    "label": "BRIGHT_IDEAS_01.OBJ",
-   "x": -232,
-   "y": -157,
+   "x": -272,
+   "y": -183,
    "labelX": 140,
    "labelY": 240
   },
   {
    "key": "tiny_obsession_12",
    "label": "TINY_OBSESSION_12.OBJ",
-   "x": 645,
-   "y": -201,
+   "x": 642,
+   "y": -230,
    "labelX": 92,
    "labelY": 208
   },
   {
    "key": "cat_mode_active",
    "label": "CAT_MODE_ACTIVE.OBJ",
-   "x": 1557,
-   "y": -218,
+   "x": 1592,
+   "y": -246,
    "labelX": 90,
    "labelY": 258
   },
   {
    "key": "inner_calm_02",
    "label": "INNER_CALM_02.OBJ",
-   "x": 209,
-   "y": 151,
+   "x": 187,
+   "y": 138,
    "labelX": 117,
    "labelY": 206
   },
   {
    "key": "nuts_about_details_03",
    "label": "NUTS_ABOUT_DETAILS_03.OBJ",
-   "x": 1179,
-   "y": 108,
+   "x": 1199,
+   "y": 93,
    "labelX": 92,
    "labelY": 207
   },
   {
    "key": "hello_robo",
    "label": "hello_robo.OBJ",
-   "x": 746,
-   "y": 322,
+   "x": 749,
+   "y": 317,
    "labelX": 109,
    "labelY": 289
   },
   {
    "key": "good_chaos_13",
    "label": "GOOD_CHAOS_13.OBJ",
-   "x": 1667,
-   "y": 319,
+   "x": 1710,
+   "y": 314,
    "labelX": 145,
    "labelY": 251
   },
   {
    "key": "cat_mode_active",
    "label": "BITE_FIRST_05.OBJ",
-   "x": -217,
-   "y": 421,
+   "x": -260,
+   "y": 420,
    "labelX": 90,
    "labelY": 258
   },
   {
    "key": "seriously_playful",
    "label": "SERIOUSLY_PLAYFUL.OBJ",
-   "x": 1324,
-   "y": 609,
+   "x": 1350,
+   "y": 615,
    "labelX": 88,
    "labelY": 227
   },
   {
    "key": "bite_first_05",
    "label": "WILD_IDEA_FINAL.OBJ",
-   "x": 217,
-   "y": 677,
+   "x": 197,
+   "y": 686,
    "labelX": 165,
    "labelY": 215
   },
   {
    "key": "bright_ideas_01",
    "label": "BRIGHT_IDEAS_01.OBJ",
-   "x": 899,
-   "y": 935,
-   "labelX": 147,
-   "labelY": 249
+   "x": 907,
+   "y": 956,
+   "labelX": 125,
+   "labelY": 246
   },
   {
    "key": "tiny_obsession_12",
    "label": "TINY_OBSESSION_12.OBJ",
-   "x": -165,
-   "y": 981,
-   "labelX": 148,
-   "labelY": 217
+   "x": -203,
+   "y": 1004,
+   "labelX": 90,
+   "labelY": 202
   },
   {
    "key": "inner_calm_02",
    "label": "INNER_CALM_02.OBJ",
-   "x": 1610,
-   "y": 977,
-   "labelX": 157,
-   "labelY": 209
+   "x": 1649,
+   "y": 999,
+   "labelX": 128,
+   "labelY": 196
   },
   {
-   "key": "good_chaos_13",
-   "label": "GOOD_CHAOS_13.OBJ",
-   "x": 2250,
-   "y": 1760,
-   "labelX": 178,
-   "labelY": 240
-  },
-  {
-   "key": "bright_ideas_01",
-   "label": "BRIGHT_IDEAS_01.OBJ",
-   "x": 2519,
-   "y": 1389,
-   "labelX": 147,
-   "labelY": 249
-  },
-  {
-   "key": "nuts_about_details_03",
-   "label": "NUTS_ABOUT_DETAILS_03.OBJ",
-   "x": 2583,
-   "y": 2123,
-   "labelX": 139,
-   "labelY": 191
+   "key": "seriously_playful",
+   "label": "SERIOUSLY_PLAYFUL.OBJ",
+   "x": 2512,
+   "y": 2083,
+   "labelX": 106,
+   "labelY": 218
   },
   {
    "key": "inner_calm_02",
    "label": "INNER_CALM_02.OBJ",
-   "x": 2500,
-   "y": 482,
-   "labelX": 157,
-   "labelY": 209
+   "x": 2798,
+   "y": 1714,
+   "labelX": 128,
+   "labelY": 196
   },
   {
-   "key": "inner_calm_02",
-   "label": "INNER_CALM_02.OBJ",
-   "x": 2747,
-   "y": 1762,
-   "labelX": 157,
-   "labelY": 209
+   "key": "hello_robo",
+   "label": "hello_robo.OBJ",
+   "x": 2536,
+   "y": 1284,
+   "labelX": 104,
+   "labelY": 278
   },
   {
    "key": "nuts_about_details_03",
    "label": "NUTS_ABOUT_DETAILS_03.OBJ",
    "x": 2242,
-   "y": 1029,
-   "labelX": 139,
-   "labelY": 191
+   "y": 1717,
+   "labelX": 98,
+   "labelY": 192
   },
   {
-   "key": "seriously_playful",
-   "label": "SERIOUSLY_PLAYFUL.OBJ",
-   "x": 2581,
-   "y": 36,
-   "labelX": 150,
-   "labelY": 220
-  },
-  {
-   "key": "hello_robo",
-   "label": "hello_robo.OBJ",
-   "x": 2128,
-   "y": 56,
-   "labelX": 175,
-   "labelY": 275
-  },
-  {
-   "key": "tiny_obsession_12",
-   "label": "TINY_OBSESSION_12.OBJ",
-   "x": 1848,
-   "y": 1779,
-   "labelX": 148,
-   "labelY": 217
+   "key": "bright_ideas_01",
+   "label": "BRIGHT_IDEAS_01.OBJ",
+   "x": 2587,
+   "y": 95,
+   "labelX": 125,
+   "labelY": 246
   },
   {
    "key": "good_chaos_13",
    "label": "GOOD_CHAOS_13.OBJ",
-   "x": 2920,
-   "y": 629,
-   "labelX": 178,
+   "x": 2856,
+   "y": 955,
+   "labelX": 159,
    "labelY": 240
   },
   {
    "key": "nuts_about_details_03",
    "label": "NUTS_ABOUT_DETAILS_03.OBJ",
-   "x": -99,
-   "y": 1606,
-   "labelX": 139,
-   "labelY": 191
+   "x": 2240,
+   "y": 453,
+   "labelX": 98,
+   "labelY": 192
+  },
+  {
+   "key": "hello_robo",
+   "label": "hello_robo.OBJ",
+   "x": 167,
+   "y": 1476,
+   "labelX": 104,
+   "labelY": 278
   },
   {
    "key": "bite_first_05",
    "label": "WILD_IDEA_FINAL.OBJ",
-   "x": 1878,
-   "y": 2124,
-   "labelX": 189,
-   "labelY": 209
+   "x": 997,
+   "y": 2091,
+   "labelX": 185,
+   "labelY": 207
+  },
+  {
+   "key": "good_chaos_13",
+   "label": "GOOD_CHAOS_13.OBJ",
+   "x": 416,
+   "y": 1083,
+   "labelX": 159,
+   "labelY": 240
+  },
+  {
+   "key": "bright_ideas_01",
+   "label": "BRIGHT_IDEAS_01.OBJ",
+   "x": 3246,
+   "y": 1398,
+   "labelX": 125,
+   "labelY": 246
+  },
+  {
+   "key": "bite_first_05",
+   "label": "WILD_IDEA_FINAL.OBJ",
+   "x": 3273,
+   "y": 1818,
+   "labelX": 185,
+   "labelY": 207
+  },
+  {
+   "key": "bite_first_05",
+   "label": "WILD_IDEA_FINAL.OBJ",
+   "x": 1974,
+   "y": -84,
+   "labelX": 185,
+   "labelY": 207
+  },
+  {
+   "key": "seriously_playful",
+   "label": "SERIOUSLY_PLAYFUL.OBJ",
+   "x": 1316,
+   "y": 1702,
+   "labelX": 106,
+   "labelY": 218
   },
   {
    "key": "cat_mode_active",
    "label": "CAT_MODE_ACTIVE.OBJ",
-   "x": 2160,
-   "y": 1364,
-   "labelX": 108,
-   "labelY": 273
+   "x": 2435,
+   "y": 830,
+   "labelX": 98,
+   "labelY": 260
+  },
+  {
+   "key": "tiny_obsession_12",
+   "label": "TINY_OBSESSION_12.OBJ",
+   "x": 2935,
+   "y": 2105,
+   "labelX": 90,
+   "labelY": 202
+  },
+  {
+   "key": "cat_mode_active",
+   "label": "CAT_MODE_ACTIVE.OBJ",
+   "x": 523,
+   "y": 1510,
+   "labelX": 98,
+   "labelY": 260
+  },
+  {
+   "key": "tiny_obsession_12",
+   "label": "TINY_OBSESSION_12.OBJ",
+   "x": 1332,
+   "y": 1317,
+   "labelX": 90,
+   "labelY": 202
   },
   {
    "key": "inner_calm_02",
    "label": "INNER_CALM_02.OBJ",
-   "x": 1022,
-   "y": 1801,
-   "labelX": 157,
-   "labelY": 209
+   "x": 2816,
+   "y": 561,
+   "labelX": 128,
+   "labelY": 196
   },
   {
-   "key": "cat_mode_active",
-   "label": "CAT_MODE_ACTIVE.OBJ",
-   "x": 3178,
-   "y": 1690,
-   "labelX": 108,
-   "labelY": 273
-  },
-  {
-   "key": "hello_robo",
-   "label": "hello_robo.OBJ",
-   "x": 285,
-   "y": 1374,
-   "labelX": 175,
-   "labelY": 275
-  },
-  {
-   "key": "cat_mode_active",
-   "label": "CAT_MODE_ACTIVE.OBJ",
-   "x": 701,
-   "y": 1749,
-   "labelX": 108,
-   "labelY": 273
-  },
-  {
-   "key": "hello_robo",
-   "label": "hello_robo.OBJ",
-   "x": 2625,
-   "y": 991,
-   "labelX": 175,
-   "labelY": 275
-  },
-  {
-   "key": "seriously_playful",
-   "label": "SERIOUSLY_PLAYFUL.OBJ",
-   "x": 1442,
-   "y": 1793,
-   "labelX": 150,
-   "labelY": 220
-  },
-  {
-   "key": "bite_first_05",
-   "label": "WILD_IDEA_FINAL.OBJ",
-   "x": 1219,
-   "y": 1460,
-   "labelX": 189,
-   "labelY": 209
-  },
-  {
-   "key": "tiny_obsession_12",
-   "label": "TINY_OBSESSION_12.OBJ",
-   "x": 2966,
-   "y": 2095,
-   "labelX": 148,
-   "labelY": 217
-  },
-  {
-   "key": "tiny_obsession_12",
-   "label": "TINY_OBSESSION_12.OBJ",
-   "x": 2074,
-   "y": 678,
-   "labelX": 148,
-   "labelY": 217
-  },
-  {
-   "key": "nuts_about_details_03",
-   "label": "NUTS_ABOUT_DETAILS_03.OBJ",
-   "x": 834,
-   "y": 1365,
-   "labelX": 139,
-   "labelY": 191
-  },
-  {
-   "key": "bite_first_05",
-   "label": "WILD_IDEA_FINAL.OBJ",
-   "x": 173,
-   "y": 1921,
-   "labelX": 189,
-   "labelY": 209
+   "key": "bright_ideas_01",
+   "label": "BRIGHT_IDEAS_01.OBJ",
+   "x": 2104,
+   "y": 1274,
+   "labelX": 125,
+   "labelY": 246
   },
   {
    "key": "good_chaos_13",
    "label": "GOOD_CHAOS_13.OBJ",
-   "x": 436,
-   "y": 1010,
-   "labelX": 178,
+   "x": 1707,
+   "y": 1722,
+   "labelX": 159,
    "labelY": 240
-  },
-  {
-   "key": "bright_ideas_01",
-   "label": "BRIGHT_IDEAS_01.OBJ",
-   "x": 2985,
-   "y": 256,
-   "labelX": 147,
-   "labelY": 249
-  },
-  {
-   "key": "seriously_playful",
-   "label": "SERIOUSLY_PLAYFUL.OBJ",
-   "x": 3106,
-   "y": 1318,
-   "labelX": 150,
-   "labelY": 220
-  },
-  {
-   "key": "bright_ideas_01",
-   "label": "BRIGHT_IDEAS_01.OBJ",
-   "x": 1130,
-   "y": 2135,
-   "labelX": 147,
-   "labelY": 249
   },
   {
    "key": "hello_robo",
    "label": "hello_robo.OBJ",
-   "x": 1704,
-   "y": 1310,
-   "labelX": 175,
-   "labelY": 275
+   "x": 2997,
+   "y": 102,
+   "labelX": 104,
+   "labelY": 278
+  },
+  {
+   "key": "nuts_about_details_03",
+   "label": "NUTS_ABOUT_DETAILS_03.OBJ",
+   "x": 928,
+   "y": 1431,
+   "labelX": 98,
+   "labelY": 192
+  },
+  {
+   "key": "seriously_playful",
+   "label": "SERIOUSLY_PLAYFUL.OBJ",
+   "x": 223,
+   "y": 1935,
+   "labelX": 106,
+   "labelY": 218
   }
  ]
 }
