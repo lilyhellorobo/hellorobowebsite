@@ -3,61 +3,202 @@
  * Robo Radio — TV player
  * Figma: Robo Radio "1 hero" (10105:275, 1730×983) and Episode player (10105:2825, 1730×872)
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-275
- * Marked "3d web gl": the CRT screen, shaders and robot are a static poster for now.
- * Player controls are drawn from Figma; they get wired to the video in the motion step.
- * With `youtube` (episode page), the screen is a link to the video; clicking it plays
- * the video in place on the screen (privacy-enhanced embed, loaded only on click).
+ * The TV is a static poster (the screen, its CRT look and the robot). Play puts the
+ * episode's YouTube video on the screen with Figma's CRT shader over it (CrtScreen in
+ * overlay mode, the screen's Figma settings: scanlines 59 / 3, shadow mask 9 / 12, static
+ * 18, vignette 24, flicker 62, roll 0.93).
+ * Controls (Figma "player nav", 504×80): previous · play / pause · next, the progress
+ * line (seekable), and a sound button at the end (episodes play muted until it's on). They play the episodes that have a video, newest first: the hero starts
+ * with the newest, an episode page with its own; previous / next move along that list in
+ * place, and the next one starts when an episode ends.
+ * The YouTube player (privacy-enhanced, youtube-nocookie) loads only on the first play.
  */
 import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+import CrtScreen from '../../components/ui/CrtScreen.astro';
 import hero from '../../assets/radio/tv-hero.png';
 import episode from '../../assets/radio/tv-episode.png';
 
 interface Props {
   variant?: 'hero' | 'episode';
-  /** YouTube video id to play on the screen */
-  youtube?: string;
-  /** Accessible name of the video, e.g. the episode title */
-  title?: string;
+  /** YouTube id of the episode to start with (episode page); the hero starts with the newest */
+  start?: string;
 }
-const { variant = 'hero', youtube, title = 'Robo Radio episode' } = Astro.props;
+const { variant = 'hero', start } = Astro.props;
+const playlist = (await getCollection('episodes', (e) => !!e.data.youtube))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((e) => ({ id: e.data.youtube!, title: e.data.title }));
+const first = Math.max(0, start ? playlist.findIndex((p) => p.id === start) : 0);
 const poster = variant === 'hero' ? hero : episode;
 const h = variant === 'hero' ? 983 : 872;
-// Controls: hero (100, 843) · episode (105, 759)
-const controls = variant === 'hero' ? { x: 100, y: 843 } : { x: 105, y: 759 };
+// Player bar: hero (105, 843) · episode (110, 759) — Figma's controls frame + its 5px inset
+const bar = variant === 'hero' ? { x: 105, y: 843 } : { x: 110, y: 759 };
+const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 10, jitter: 3 };
 ---
-<section class:list={['radio-tv', `radio-tv--${variant}`]} style={`aspect-ratio: 1730 / ${h}`} aria-label="Robo Radio player">
+<section
+  class:list={['radio-tv', `radio-tv--${variant}`]}
+  style={`aspect-ratio: 1730 / ${h}`}
+  aria-label="Robo Radio player"
+  data-tv
+  data-playlist={JSON.stringify(playlist)}
+  data-index={first}
+>
   <WebGLSlot name="radio-tv" class="radio-tv__scene">
     <Image src={poster} alt="" widths={[1730, 3460]} sizes="100vw" loading={variant === 'hero' ? 'eager' : 'lazy'} />
   </WebGLSlot>
-  {youtube && (
-    <a
-      class="radio-tv__screen"
-      href={`https://www.youtube.com/watch?v=${youtube}`}
-      data-youtube={youtube}
-      data-title={title}
-      aria-label={`Play ${title}`}
-    ></a>
-  )}
-  <div class="radio-tv__controls" style={`left:${(controls.x / 1730) * 100}%;top:${(controls.y / h) * 100}%`}>
-    <img src="/images/radio/player-controls.svg" alt="" width="510" style="--w: 510" height="80" />
+  <div class="radio-tv__screen" data-screen>
+    <div class="radio-tv__video" data-video></div>
+    <CrtScreen overlay settings={crt} />
   </div>
+
+  {playlist.length > 0 && (
+    <div class="radio-tv__bar" style={`left:${(bar.x / 1730) * 100}%;top:${(bar.y / h) * 100}%`} role="group" aria-label="Player">
+      <button type="button" class="radio-tv__btn radio-tv__btn--prev" aria-label="Previous episode" data-prev>
+        <svg viewBox="0 24 32 32" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="m12.75 40.97 11.53 6.96 1.97-1.13V32.83l-1.89-1.15-11.61 6.9zm-.5-9.42h-5.5v16.5h5.5z" /></svg>
+      </button>
+      <button type="button" class="radio-tv__btn radio-tv__btn--play" aria-label="Play" data-play>
+        <svg class="radio-tv__icon-play" viewBox="46.4 9.8 60 60" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M85.38 41.55 70.4 50.34l-2.74-1.53V31.23l2.63-1.56 15.08 8.72z" /></svg>
+        <svg class="radio-tv__icon-pause" viewBox="46.4 9.8 60 60" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M68.4 31.25h5v17.5h-5zm11 0h5v17.5h-5z" /></svg>
+      </button>
+      <button type="button" class="radio-tv__btn radio-tv__btn--next" aria-label="Next episode" data-next>
+        <svg viewBox="124 24 32 32" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M141.05 40.97l-11.53 6.96-1.97-1.13V32.83l1.89-1.15 11.61 6.9zm.5-9.42h5.5v16.5h-5.5z" /></svg>
+      </button>
+      <input class="radio-tv__seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Position in the episode" data-seek />
+      <button type="button" class="radio-tv__btn radio-tv__btn--sound" aria-label="Sound on" aria-pressed="false" data-sound>
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path stroke="currentColor" stroke-width="1.5" d="M7 13h4l6-5v16l-6-5H7z" />
+          <path class="radio-tv__icon-muted" stroke="currentColor" stroke-width="1.5" d="m20.5 12.5 7 7m0-7-7 7" />
+          <path class="radio-tv__icon-sound" stroke="currentColor" stroke-width="1.5" d="M20.5 12.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13" />
+        </svg>
+      </button>
+      <p class="radio-tv__title visually-hidden" aria-live="polite" data-title></p>
+    </div>
+  )}
 </section>
 
 <script>
-  document.querySelectorAll<HTMLAnchorElement>('.radio-tv__screen[data-youtube]').forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const iframe = document.createElement('iframe');
-      iframe.className = 'radio-tv__video';
-      iframe.src = `https://www.youtube-nocookie.com/embed/${link.dataset.youtube}?autoplay=1&rel=0`;
-      iframe.title = link.dataset.title ?? 'Video';
-      iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-      iframe.allowFullscreen = true;
-      link.closest('.radio-tv')?.classList.add('is-playing');
-      link.replaceWith(iframe);
+  type Item = { id: string; title: string };
+  type YTPlayer = {
+    playVideo(): void;
+    pauseVideo(): void;
+    mute(): void;
+    unMute(): void;
+    loadVideoById(id: string): void;
+    getCurrentTime(): number;
+    getDuration(): number;
+    seekTo(s: number, allowAhead: boolean): void;
+    getPlayerState(): number;
+  };
+  type YTNamespace = {
+    Player: new (el: HTMLElement, opts: Record<string, unknown>) => YTPlayer;
+    PlayerState: { ENDED: number; PLAYING: number; PAUSED: number };
+  };
+  const w = window as unknown as { YT?: YTNamespace; onYouTubeIframeAPIReady?: () => void };
+
+  // Load YouTube's player API once, on the first play
+  let api: Promise<YTNamespace> | null = null;
+  const loadApi = () =>
+    (api ??= new Promise((resolve) => {
+      if (w.YT?.Player) return resolve(w.YT);
+      const prev = w.onYouTubeIframeAPIReady;
+      w.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        resolve(w.YT!);
+      };
+      const s = document.createElement('script');
+      s.src = 'https://www.youtube.com/iframe_api';
+      document.head.append(s);
+    }));
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-tv]')) {
+    const list: Item[] = JSON.parse(root.dataset.playlist || '[]');
+    if (!list.length) continue;
+    let index = Number(root.dataset.index) || 0;
+    const mount = root.querySelector<HTMLElement>('[data-video]')!;
+    const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+    const seek = root.querySelector<HTMLInputElement>('[data-seek]')!;
+    const title = root.querySelector<HTMLElement>('[data-title]')!;
+    const soundBtn = root.querySelector<HTMLButtonElement>('[data-sound]')!;
+    let player: YTPlayer | null = null;
+    let playing = false;
+    let sound = false; // muted until the visitor turns the sound on
+    let seeking = false;
+    let frame = 0;
+
+    const setPlaying = (on: boolean) => {
+      playing = on;
+      root.classList.toggle('is-playing', on);
+      playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play');
+      cancelAnimationFrame(frame);
+      if (on) frame = requestAnimationFrame(tick);
+    };
+    // The progress line follows the video while it plays
+    const tick = () => {
+      if (player && !seeking) {
+        const d = player.getDuration();
+        seek.value = d ? String(Math.round((player.getCurrentTime() / d) * 1000)) : '0';
+      }
+      if (playing) frame = requestAnimationFrame(tick);
+    };
+    const announce = () => (title.textContent = `Now playing: ${list[index].title}`);
+
+    const start = async () => {
+      if (player) return player;
+      root.classList.add('is-on');
+      const YT = await loadApi();
+      return new Promise<YTPlayer>((resolve) => {
+        const p = new YT.Player(mount, {
+          host: 'https://www.youtube-nocookie.com',
+          videoId: list[index].id,
+          playerVars: { autoplay: 1, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, iv_load_policy: 3 },
+          events: {
+            onReady: () => {
+              player = p;
+              if (sound) p.unMute();
+              else p.mute();
+              p.playVideo();
+              announce();
+              resolve(p);
+            },
+            onStateChange: (e: { data: number }) => {
+              if (e.data === YT.PlayerState.PLAYING) setPlaying(true);
+              else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
+              else if (e.data === YT.PlayerState.ENDED) go(1);
+            },
+          },
+        });
+      });
+    };
+    const go = async (step: number) => {
+      index = (index + step + list.length) % list.length;
+      seek.value = '0';
+      const p = await start();
+      p.loadVideoById(list[index].id);
+      announce();
+    };
+
+    playBtn.addEventListener('click', async () => {
+      if (!player) return void start();
+      if (playing) player.pauseVideo();
+      else player.playVideo();
     });
-  });
+    soundBtn.addEventListener('click', () => {
+      sound = !sound;
+      root.classList.toggle('is-sound', sound);
+      soundBtn.setAttribute('aria-pressed', String(sound));
+      soundBtn.setAttribute('aria-label', sound ? 'Mute' : 'Sound on');
+      if (sound) player?.unMute();
+      else player?.mute();
+    });
+    root.querySelector('[data-prev]')!.addEventListener('click', () => go(-1));
+    root.querySelector('[data-next]')!.addEventListener('click', () => go(1));
+    seek.addEventListener('input', () => (seeking = true));
+    seek.addEventListener('change', () => {
+      seeking = false;
+      if (player) player.seekTo((Number(seek.value) / 1000) * player.getDuration(), true);
+    });
+  }
 </script>
 
 <style>
@@ -75,48 +216,156 @@ const controls = variant === 'hero' ? { x: 100, y: 843 } : { x: 105, y: 759 };
     height: 100%;
     object-fit: cover;
   }
-  /* The CRT screen inside the poster: 6.25–93.5% across, 2–86.3% down */
-  .radio-tv__screen,
-  .radio-tv :global(.radio-tv__video) {
+  /* The CRT screen inside the poster: 6.25–93.5% across, 2–86.3% down. Black until the
+     first play, so the poster shows through; the video and the CRT layer fade in then */
+  .radio-tv__screen {
     position: absolute;
     left: 6.25%;
     top: 2%;
     width: 87.25%;
     height: 84.3%;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--color-black);
+    transition: opacity var(--duration-smooth) var(--ease-out);
+  }
+  .radio-tv.is-on .radio-tv__screen {
+    opacity: 1;
+  }
+  .radio-tv__video,
+  .radio-tv__screen :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     border: 0;
   }
-  .radio-tv__screen {
+
+  /* ── Player bar: Figma "player nav" 504×80, black, radius 2 (sizes in --u) ── */
+  .radio-tv__bar {
+    --u: var(--px);
+    position: absolute;
+    z-index: 3;
+    width: calc(504 * var(--u));
+    height: calc(80 * var(--u));
+    background: var(--color-black);
+    border-radius: var(--radius-ui);
+    color: var(--color-white);
+  }
+  .radio-tv__btn {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-radius: var(--radius-ui);
+    transform: translateY(-50%);
     cursor: pointer;
   }
-  .radio-tv :global(.radio-tv__video) {
-    background: var(--color-black);
+  .radio-tv__btn svg {
+    width: 100%;
+    height: 100%;
   }
-  .radio-tv.is-playing .radio-tv__controls {
+  /* prev 32 · 14.4 · play 60 · 14.4 · next 32, starting at 1.6 */
+  .radio-tv__btn--prev,
+  .radio-tv__btn--next {
+    width: calc(32 * var(--u));
+    height: calc(32 * var(--u));
+  }
+  .radio-tv__btn--prev {
+    left: calc(1.6 * var(--u));
+  }
+  .radio-tv__btn--play {
+    left: calc(48 * var(--u));
+    width: calc(60 * var(--u));
+    height: calc(60 * var(--u));
+  }
+  .radio-tv__btn--next {
+    left: calc(122.4 * var(--u));
+  }
+  /* Sound at the end of the bar, as far from the line as next is from play */
+  .radio-tv__btn--sound {
+    right: calc(20 * var(--u));
+    width: calc(32 * var(--u));
+    height: calc(32 * var(--u));
+  }
+  .radio-tv__icon-sound,
+  .radio-tv.is-sound .radio-tv__icon-muted {
     display: none;
   }
-  .radio-tv__controls {
-    position: absolute;
-    width: calc(510 / 1730 * 100%);
+  .radio-tv.is-sound .radio-tv__icon-sound {
+    display: inline;
   }
-  .radio-tv__controls img {
-    width: 100%;
-    height: auto;
+  .radio-tv__btn:hover,
+  .radio-tv__btn:focus-visible {
+    color: var(--color-orange);
+  }
+  .radio-tv__icon-pause,
+  .radio-tv.is-playing .radio-tv__icon-play {
+    display: none;
+  }
+  .radio-tv.is-playing .radio-tv__icon-pause {
+    display: block;
+  }
+  /* Progress: Figma's line (166 at 172, white 20%) with the 1×9 playhead; seekable */
+  .radio-tv__seek {
+    position: absolute;
+    left: calc(169 * var(--u));
+    top: 50%;
+    width: calc(169 * var(--u));
+    height: calc(24 * var(--u));
+    margin: 0;
+    transform: translateY(-50%);
+    appearance: none;
+    background: linear-gradient(rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.2)) no-repeat center / 100% 1px;
+    cursor: pointer;
+  }
+  .radio-tv__seek::-webkit-slider-thumb {
+    appearance: none;
+    width: 3px;
+    height: calc(9 * var(--u));
+    background: linear-gradient(var(--color-white), var(--color-white)) no-repeat center / 1px 100%;
+    border: 0;
+  }
+  .radio-tv__seek::-moz-range-thumb {
+    width: 3px;
+    height: calc(9 * var(--u));
+    background: linear-gradient(var(--color-white), var(--color-white)) no-repeat center / 1px 100%;
+    border: 0;
+    border-radius: 0;
+  }
+  .radio-tv__seek:focus-visible {
+    outline: 1px solid var(--color-orange);
+    outline-offset: 2px;
   }
 
-  /* ── Mobile: a 4:5 crop of the poster; controls across the bottom ── */
+  /* ── Mobile: a 4:5 crop of the poster; the player bar across the bottom ── */
   @media (max-width: 1023px) {
     .radio-tv {
       aspect-ratio: 4 / 5 !important;
     }
-    .radio-tv__controls {
+    .radio-tv__bar {
+      --u: calc((100vw - 2 * var(--page-margin)) / 504);
       left: var(--page-margin) !important;
       top: auto !important;
       bottom: var(--space-24);
-      width: calc(100% - 2 * var(--page-margin));
+    }
+    /* The small buttons get a 44px tap area */
+    .radio-tv__btn::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
     }
     /* The 4:5 crop shows the middle of the screen edge to edge */
-    .radio-tv__screen,
-    .radio-tv :global(.radio-tv__video) {
+    .radio-tv__screen {
       left: 0;
       width: 100%;
     }

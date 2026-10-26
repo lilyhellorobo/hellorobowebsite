@@ -13,10 +13,15 @@
  * renders them at 1×.
  * Animates only while visible; with reduced motion it draws one still frame. Without
  * WebGL the canvas hides and the plain image shows.
+ * `overlay`: for content the page can't read (a YouTube player) — the effect runs on a
+ * plain white signal and the canvas multiplies over whatever is underneath: scanlines,
+ * mask, flicker, roll band, static and vignette. Curvature and colour fringing need the
+ * picture's own pixels, so they don't apply there.
  */
 interface Props {
   /** Override any Figma property by its name (mask, scanlines, curvature, …) */
   settings?: Record<string, number | boolean>;
+  overlay?: boolean;
 }
 const figma = {
   mask: 9,
@@ -38,8 +43,9 @@ const figma = {
   speed: 1.01,
 };
 const settings = { ...figma, ...Astro.props.settings };
+const { overlay = false } = Astro.props;
 ---
-<canvas class="crt" aria-hidden="true" data-crt={JSON.stringify(settings)}></canvas>
+<canvas class:list={['crt', { 'crt--overlay': overlay }]} aria-hidden="true" data-crt={JSON.stringify(settings)} data-overlay={overlay ? '' : undefined}></canvas>
 
 <script>
   // Fragment shader: Figma's fs_main, line for line (WGSL → GLSL ES 1.0)
@@ -52,7 +58,7 @@ uniform vec4 uP0; // curvature, scanline, mask amount, aberration pixels
 uniform vec4 uP1; // reserved, brightness gain, scanlineSize, time
 uniform vec4 uP2; // flicker, noise, rollSpeed, jitter
 uniform vec4 uP3; // reserved, noiseSize, clipToCurve, maskPitch
-uniform vec4 uP4; // maskType, vignette, aberrationScheme, -
+uniform vec4 uP4; // maskType, vignette, aberrationScheme, overlay (1 = white signal)
 
 const float TAU = 6.28318530718;
 const float PI = 3.14159265359;
@@ -64,6 +70,7 @@ float coverage(vec2 p, vec2 texel) {
   return fx * fy;
 }
 vec4 sampleRaw(vec2 p) {
+  if (uP4.w > 0.5) return vec4(1.0);
   return texture2D(uTex, clamp(p, vec2(0.0), vec2(1.0)));
 }
 float hash21(vec2 p) {
@@ -301,7 +308,8 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     gl.uniform4f(U('uP0'), p.curvature / 100, p.scanlines / 100, p.mask / 100, (p.aberration / 100) * 12);
     gl.uniform4f(U('uP2'), p.flicker / 100, p.noise / 100, p.rollSpeed, p.jitter / 100);
     gl.uniform4f(U('uP3'), 0, p.noiseSize, p.clipToCurve ? 1 : 0, p.maskPitch);
-    gl.uniform4f(U('uP4'), p.maskType, p.vignette / 100, p.aberrationScheme, 0);
+    const overlay = canvas.hasAttribute('data-overlay');
+    gl.uniform4f(U('uP4'), p.maskType, p.vignette / 100, p.aberrationScheme, overlay ? 1 : 0);
     const gain = Math.pow(2, p.brightness);
 
     // The image goes into the texture the way the box shows it (object-fit: cover)
@@ -310,6 +318,7 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     let sourceKey = '';
     const current = () => box.querySelector<HTMLImageElement>('img.is-current') ?? box.querySelector('img');
     const upload = () => {
+      if (overlay) return true; // no picture to read: the white signal is the input
       const img = current();
       const w = canvas.width;
       const h = canvas.height;
@@ -328,7 +337,8 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     };
     const resize = () => {
       const r = box.getBoundingClientRect();
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      // an overlay is soft texture over a video: design pixels are enough, and much lighter
+      const dpr = overlay ? 1 : Math.min(2, window.devicePixelRatio || 1);
       const w = Math.round(r.width * dpr);
       const h = Math.round(r.height * dpr);
       if (canvas.width !== w || canvas.height !== h) {
@@ -353,8 +363,11 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     };
     // Animate only while the box is visible (e.g. the menu is open); otherwise check back
     // a few times a second so a newly shown box starts right away
-    const shown = () =>
-      document.visibilityState === 'visible' && box.offsetWidth > 0 && getComputedStyle(box).visibility === 'visible';
+    const shown = () => {
+      if (document.visibilityState !== 'visible' || !box.offsetWidth) return false;
+      const cs = getComputedStyle(box);
+      return cs.visibility === 'visible' && cs.opacity !== '0';
+    };
     const later = () => setTimeout(() => requestAnimationFrame(loop), 250);
     const loop = (now: number) => {
       if (!shown()) return later();
@@ -374,5 +387,8 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     width: 100%;
     height: 100%;
     pointer-events: none;
+  }
+  .crt--overlay {
+    mix-blend-mode: multiply;
   }
 </style>

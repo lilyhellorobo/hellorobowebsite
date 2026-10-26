@@ -14,6 +14,6 @@ const { episode } = Astro.props as { episode: CollectionEntry<'episodes'> };
 <BaseLayout title={episode.data.title} headerVariant="light" back="/robo-radio">
   <EpisodeHero episode={episode} />
   <EpisodeText episode={episode} />
-  <RadioTV variant="episode" youtube={episode.data.youtube} title={episode.data.title} />
+  <RadioTV variant="episode" start={episode.data.youtube} />
   <EpisodeText episode={episode} />
 </BaseLayout>
