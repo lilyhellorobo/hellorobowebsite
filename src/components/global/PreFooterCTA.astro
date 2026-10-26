@@ -7,8 +7,6 @@
  *   "building"     — "Tell us what you are building" + "[Click anywhere to start]"
  */
 import WebGLSlot from '../ui/WebGLSlot.astro';
-import Button from '../ui/Button.astro';
-import Icon from '../icons/Icon.astro';
 import { studio } from '../../data/site';
 
 interface Props {
@@ -38,14 +36,14 @@ const title = 'Tell us what you are building';
     )}
   </a>
 
-  <!-- Mobile layout (Figma 10129:31418): two buttons under the title, stamp + email bar at the bottom -->
+  <!-- Mobile layout (Figma 10129:31418): stamp under the title; at the bottom two buttons
+       side by side and "Copy our email" full width under them -->
   <div class="prefooter__actions only-mobile">
-    <Button href="/contact#name" variant="light" size="small" icon="arrow">Start a project</Button>
-    <Button href="/contact#message" variant="light" size="small" icon="hex">Drop a word</Button>
-  </div>
-  <div class="prefooter__mail only-mobile">
-    <a class="prefooter__address" href={`mailto:${studio.email}`}>{studio.email}</a>
-    <span class="prefooter__copy">Copy <Icon name="hex" size={16} /></span>
+    <a class="prefooter__button t-button" href="/contact#name">Start a project</a>
+    <a class="prefooter__button t-button" href="/contact#message">Drop a word</a>
+    <button class="prefooter__button prefooter__button--wide t-button" type="button" data-copy-email={studio.email}>
+      <span data-copy-label>Copy our email</span>
+    </button>
   </div>
 
   {variant === 'conversation' ? (
@@ -61,6 +59,29 @@ const title = 'Tell us what you are building';
     <p class="prefooter__hint t-body">[Click anywhere to start]</p>
   )}
 </section>
+
+<script>
+  // "Copy our email": puts the address on the clipboard and says so for a moment
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-copy-email]')) {
+    const label = btn.querySelector<HTMLElement>('[data-copy-label]');
+    if (!label) continue;
+    const text = label.textContent;
+    let timer = 0;
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.copyEmail ?? '';
+      try {
+        await navigator.clipboard.writeText(email);
+        label.textContent = 'Email copied';
+      } catch {
+        // no clipboard access (old browser / not https): open the mail app instead
+        location.href = `mailto:${email}`;
+        return;
+      }
+      clearTimeout(timer);
+      timer = window.setTimeout(() => (label.textContent = text), 2000);
+    });
+  }
+</script>
 
 <style>
   .prefooter {
@@ -113,12 +134,13 @@ const title = 'Tell us what you are building';
       aspect-ratio: auto;
       height: 694px;
     }
-    /* Printer photo 424×635 at (39, 97) */
+    /* Printer photo fitted (not cropped) in a 424×635 box at (39, 97), as in Figma */
     .prefooter__printer {
       left: 39px;
       top: 97px;
       width: 424px;
       height: 635px;
+      object-fit: contain;
     }
     /* Only the title is the link here; the buttons below do the rest */
     .prefooter__link {
@@ -135,26 +157,12 @@ const title = 'Tell us what you are building';
       line-height: var(--type-h3-line);
       letter-spacing: var(--type-h3-track);
     }
-    .prefooter__actions {
-      position: absolute;
-      top: 179px;
-      left: var(--page-margin);
-      right: var(--page-margin);
-      z-index: var(--z-raised);
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-    .prefooter__actions :global(.button) {
-      min-width: 0;
-      min-height: 44px;
-      padding-inline: var(--space-16);
-    }
-    /* Stamp 224×96 at (150, 514) */
+    /* Stamp 224×96 under the title, at (9, 168) — the SVG's stroke overflow takes it
+       7 left of the margin */
     .prefooter__stamp {
-      left: auto;
-      right: var(--page-margin);
-      bottom: 84px;
+      left: calc(var(--page-margin) - 7px);
+      top: 168px;
+      bottom: auto;
       width: 224px;
       min-width: 0;
     }
@@ -162,37 +170,37 @@ const title = 'Tell us what you are building';
     .prefooter__hint {
       display: none;
     }
-    /* Email bar 358×52 at the bottom */
-    .prefooter__mail {
+    /* Buttons: white, 48 tall, label centred; 8 between the pair, 12 above the email one,
+       20 from the bottom */
+    .prefooter__actions {
       position: absolute;
       left: var(--page-margin);
       right: var(--page-margin);
       bottom: 20px;
       z-index: var(--z-raised);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 8px;
+    }
+    .prefooter__button {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      height: 52px;
-      padding: 0 8px 0 12px;
+      justify-content: center;
+      height: 48px;
+      padding: 12px;
       background: var(--color-white);
       color: var(--color-black);
       border-radius: var(--radius-ui);
+      /* Figma: 12 in the Button style (the mobile button size) */
+      font-size: 12px;
+      white-space: nowrap;
+      transition: background-color 0.2s ease;
     }
-    /* Figma: 20px — the desktop Body size */
-    .prefooter__address {
-      font-size: 20px;
-      letter-spacing: var(--type-body-track);
+    .prefooter__button:active {
+      background: var(--color-grey-100);
     }
-    .prefooter__copy {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-12);
-      height: 36px;
-      padding: 0 var(--space-12);
-      background: var(--color-grey-300);
-      font-size: var(--type-body2-size-mobile);
-      letter-spacing: var(--type-button-track);
-      text-transform: uppercase;
+    .prefooter__button--wide {
+      grid-column: 1 / -1;
     }
   }
 </style>
