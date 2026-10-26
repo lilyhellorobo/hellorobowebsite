@@ -186,7 +186,7 @@ for mobile grid columns. Images: give `<img>` its Figma `width` and `style="--w:
 |---|---|---|
 | `GetInTouch` | hero "nav" 265×64 | fixed top right; dark / light / grey; hidden on mobile (it's in the menu) |
 | `NavPill` | "nav" 10093:2370, 426×80 | fixed bottom centre; optional back button; opens the menu |
-| `SiteMenu` | "1.1 menu d" 10194:165 | blurred backdrop, links (current page black + arrow), Let's talk, photo, Say hello + socials. Close: × / Esc / backdrop click |
+| `SiteMenu` | "1.1 menu d" 10194:165 | blurred backdrop, links (current page black + arrow), Let’s talk, photo (a random one of the 8 studio photos in `src/assets/menu/photos/` — Figma 10240:141 — each time the menu opens, never the same twice in a row), Say hello + socials. Close: × / Esc / backdrop click |
 | `PreFooterCTA` | "block" 1728×949 | variants `conversation` (stamp) / `building` ("Click anywhere"); mobile adds 2 buttons + email bar |
 | `Footer` + `FooterWordmark` | "footer + contacts" 10093:2045 | wordmark is one SVG `<symbol>` reused 39× |
 | `Button` | "button" | variants dark / light, size default / small, icons hex / hex-pin / corners / arrow / none |
