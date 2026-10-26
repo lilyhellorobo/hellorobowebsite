@@ -368,6 +368,22 @@ const services = [
       padding: 0 var(--space-16);
       font-size: var(--type-body2-size-mobile);
     }
+    /* On phones the chips and fields sit on top of the printer photo (beside it on
+       desktop): a dark, blurred backing keeps their white text readable */
+    .contact__chip input:not(:checked) + span {
+      background: rgb(0 0 0 / 0.35);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+    .contact__field {
+      padding: var(--space-12) var(--space-12) 0;
+      margin-inline: calc(-1 * var(--space-12));
+      background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.3));
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      border-radius: var(--radius-ui);
+      max-width: calc(100% - 2 * var(--page-margin) + 2 * var(--space-12));
+    }
     .contact__actions {
       align-self: stretch;
       flex-direction: column;
