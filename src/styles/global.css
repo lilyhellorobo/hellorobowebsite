@@ -93,7 +93,7 @@ button {
 }
 
 /* Mobile/Body2 (12 / 120% / -1%): Body on desktop, 12px on mobile */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .t-body2-mobile {
     font-size: var(--type-body2-size-mobile);
   }
@@ -116,12 +116,12 @@ button {
 }
 
 /* Elements that only exist in one of the Figma layouts */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .only-mobile {
     display: none !important;
   }
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .only-desktop {
     display: none !important;
   }

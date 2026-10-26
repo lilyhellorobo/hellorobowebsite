@@ -6,7 +6,7 @@
  */
 interface Props {
   ratio: string;
-  /** Aspect ratio on mobile (≤ 767px), if the Figma mobile frame differs */
+  /** Aspect ratio on mobile (≤ 1023px), if the Figma mobile frame differs */
   mobileRatio?: string;
   src?: string;
   webm?: string;
@@ -52,7 +52,7 @@ const { ratio, mobileRatio, src, webm, poster, alt = '', autoplay = false, class
     height: 100%;
     object-fit: cover;
   }
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .video-slot {
       aspect-ratio: var(--ratio-mobile);
     }

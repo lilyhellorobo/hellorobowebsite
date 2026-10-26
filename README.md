@@ -15,8 +15,8 @@ The new website for the Hello Robo studio, built with [Astro](https://astro.buil
 | 0. Project setup, tokens, fonts | ✅ done |
 | 1. Shell: Get in touch, nav pill, pre-footer, footer | ✅ done |
 | 2. Static desktop blocks, all pages | ✅ done (matches Figma section heights at 1728 within ~1–5px) |
-| 3a. Laptop + tablet scaling (768–1727) | ✅ done (the 1728 design scales down; text has readable floors) |
-| 3b. Mobile (≤ 767) | ✅ Home from the Figma 390 frame; other pages follow the same rules (see “Needs design”) |
+| 3a. Laptop + landscape tablet scaling (1024–1727) | ✅ done (the 1728 design scales down; text has readable floors) |
+| 3b. Mobile + portrait tablet (≤ 1023) | ✅ Home from the Figma 390 frame; other pages follow the same rules (see “Needs design”) |
 | Site menu (overlay) | ✅ works on every page; placeholder open/close animation |
 | 4. Motion | 🟡 in progress — Home scroll interactions done (see “Scroll interactions”); next: menu reveal, value tabs, contact steps |
 | 5. WebGL scenes, video, CMS | ⏳ slots and content collections are ready |
@@ -171,8 +171,8 @@ The browser renders Alliance the same as Figma (checked: heading widths match wi
 | Range | What happens |
 |---|---|
 | ≥ 1728 | The Figma desktop frame, 1:1 |
-| 768 – 1727 | Same layout scaled by `--px` (e.g. 1440 → 83%, 1024 → 59%); text floors keep it readable. Tablet-only fixes: `@media (min-width: 768px) and (max-width: 1199px)` |
-| ≤ 767 | Mobile layouts (Figma 390 frames), `@media (max-width: 767px)` at the end of each block's `<style>` |
+| 1024 – 1727 | Same layout scaled by `--px` (e.g. 1440 → 83%, 1024 → 59%); text floors keep it readable. Small-laptop fixes: `@media (min-width: 1024px) and (max-width: 1199px)` |
+| ≤ 1023 | Mobile layouts (Figma 390 frames) — phones and portrait tablets (the scaled desktop left pinned full-screen blocks mostly empty on upright tablets), `@media (max-width: 1023px)` at the end of each block's `<style>` |
 
 Writing CSS: desktop sizes as `calc(N * var(--px))` where N is the Figma px value;
 hairlines (1–2px) stay as they are; mobile values are plain px; use `minmax(0, 1fr)`

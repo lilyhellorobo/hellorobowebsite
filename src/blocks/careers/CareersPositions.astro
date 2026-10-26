@@ -98,17 +98,20 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
     color: var(--color-orange);
   }
 
-  /* Tablet: columns size to their words so short labels never wrap */
-  @media (min-width: 768px) and (max-width: 1199px) {
+  /* Small laptops: the labels flow and wrap as whole words ("Contract to hire" no longer
+     runs off the edge) */
+  @media (min-width: 1024px) and (max-width: 1199px) {
     .careers-positions__meta {
-      grid-template-columns: repeat(3, auto);
-      justify-content: start;
+      display: flex;
+      flex-wrap: wrap;
       column-gap: var(--space-40);
+      row-gap: var(--space-6);
+      min-width: 0;
     }
   }
 
   /* ── Mobile: each row stacks title over the meta line ── */
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .careers-positions {
       padding-top: 164px;
       padding-bottom: 164px;
@@ -140,8 +143,10 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
       max-height: 56px;
     }
     .careers-positions__meta {
-      grid-template-columns: auto auto 1fr;
-      gap: var(--space-16);
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: var(--space-16);
+      row-gap: var(--space-6);
       margin-top: 0;
     }
   }
