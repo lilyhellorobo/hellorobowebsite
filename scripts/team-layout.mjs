@@ -3,15 +3,15 @@
  * Run: npm run team:layout   (deterministic: same output every run)
  *
  * The Team page canvas repeats one big tile (PERIOD_W × PERIOD_H) in every direction.
- * - The 13 objects of the Figma frame "team" (10104:170) are pinned exactly where Figma
- *   has them, with Figma's labels, so the page opens on the Figma frame.
- * - The rest of the tile is filled with more objects spaced like Figma: the gap between
- *   neighbours (edge to edge, each object counted as its image + label) is measured on
- *   the Figma frame, and the free objects are pushed apart / pulled together until every
- *   object's nearest neighbours sit at that gap — no clumps, no holes, also across the
- *   tile's edges (the tile wraps).
- * - Object kinds are spread so the same object is never close to itself and every
- *   object appears about equally often.
+ * The tile is built from the Figma frame "team" (10104:170) — the composition that looks
+ * right — so every part of the canvas has Figma's arrangement and spacing:
+ * - The Figma frame wasn't drawn to repeat (objects run off its edges), so its repeat size
+ *   is the smallest at which the seams are as roomy as Figma's own tightest pair.
+ * - 3 × 3 copies of it, staggered A B C / B C A / C A B. The first copy is the Figma frame
+ *   itself (with Figma's labels; the page opens on it); in the others the objects in the
+ *   Figma spots are swapped around (simulated annealing) so the same object is as far
+ *   from itself as possible, every object appears about equally often, and no gap gets
+ *   tighter than Figma's.
  */
 import { writeFileSync } from 'node:fs';
 
@@ -101,14 +101,13 @@ const FIGMA = [
   ['inner_calm_02', 1492, 910, null, 0, 0, 0],
 ];
 
-const PERIOD_W = 3600;
-const PERIOD_H = 2400;
+let PERIOD_W = 0; // set below: the tile size
+let PERIOD_H = 0;
 const LABEL_H = 17; // 14px text
 const LABEL_GAP = 40; // label text top below the object's body (a little more than Figma's 24)
 const LABEL_CHAR = 8.4; // 14px uppercase label: width per character
-const SAME_MIN = 1000; // the same object never closer than this (centre to centre)
 
-// ── tiny seeded random
+// ── tiny seeded random (deterministic output)
 let seed = 20261026;
 const rand = () => {
   seed = (seed + 0x6d2b79f5) | 0;
@@ -147,170 +146,149 @@ const gapOf = (a, b) => {
   return Math.hypot(Math.max(0, gx), Math.max(0, gy)) - (gx < 0 && gy < 0 ? Math.min(-gx, -gy) : 0);
 };
 
-// ── The Figma frame, spread out: SPREAD > 1 moves its objects apart around the frame's
-// centre (sizes unchanged), so everything gets a little more room while keeping Figma's
-// arrangement and proportions. Then measure the spacing: each object's nearest gap.
-const SPREAD = 1.0;
-const CENTRE = { x: 1728 / 2, y: 1117 / 2 };
-const pinned = FIGMA.map(([key, x, y, label, lx, ly, lw]) => {
+// ── The Figma frame is the tile. It wasn't drawn to repeat (objects run off its edges), so
+// find the smallest repeat size at which the seams are as roomy as Figma's own tightest
+// pair. Then three versions of it sit side by side — same Figma positions, different
+// objects in them — so the canvas never shows the same arrangement twice in a row.
+const figmaObjects = FIGMA.map(([key, x, y, label]) => {
   const [w, h] = SIZE[key];
-  const fx = x + w / 2; // Figma image centre
-  const fy = y + h / 2;
-  return { key, x: CENTRE.x + (fx - CENTRE.x) * SPREAD, y: CENTRE.y + (fy - CENTRE.y) * SPREAD, fx, fy, pinned: true, label, lx, ly, lw };
+  return { key, x: x + w / 2, y: y + h / 2, pinned: true, label };
 });
-const figmaGaps = pinned.map((a) => Math.min(...pinned.filter((b) => b !== a).map((b) => gapOf(a, b))));
-const sorted = [...figmaGaps].sort((a, b) => a - b);
-const GAP = sorted[Math.floor(sorted.length / 2)]; // median nearest gap
-console.log('Figma nearest gaps', sorted.map(Math.round).join(' '), '→ target gap', Math.round(GAP));
+const pairGaps = (pts) => pts.map((a) => Math.min(...pts.filter((b) => b !== a).map((b) => gapOf(a, b))));
+PERIOD_W = 100000;
+PERIOD_H = 100000;
+const FIGMA_MIN = Math.min(...pairGaps(figmaObjects));
+console.log('Figma tightest gap', Math.round(FIGMA_MIN));
 
-// ── Relax: every pair closer than the target gap is pushed apart; an object whose
-// nearest gap is too big is pulled a little toward its neighbour (fills holes)
-const dist = (a, b) => Math.hypot(wrapD(a.x - b.x, PERIOD_W), wrapD(a.y - b.y, PERIOD_H));
-function relax(pts, iterations) {
-  for (let it = 0; it < iterations; it++) {
-    const step = 0.5 * (1 - it / iterations) + 0.05;
-    const move = pts.map(() => ({ x: 0, y: 0 }));
-    for (let i = 0; i < pts.length; i++) {
-      let nearest = Infinity;
-      let toward = null;
-      for (let j = 0; j < pts.length; j++) {
-        if (i === j) continue;
-        const g = gapOf(pts[i], pts[j]);
-        const dx = wrapD(pts[i].x - pts[j].x, PERIOD_W);
-        const dy = wrapD(pts[i].y - pts[j].y, PERIOD_H);
-        const d = Math.hypot(dx, dy) || 1;
-        if (g < GAP) {
-          const f = (GAP - g) * step;
-          move[i].x += (dx / d) * f;
-          move[i].y += (dy / d) * f;
-        }
-        if (g < nearest) {
-          nearest = g;
-          toward = { x: -dx / d, y: -dy / d };
-        }
-      }
-      if (nearest > GAP * 1.15 && toward) {
-        const f = (nearest - GAP) * step * 0.5;
-        move[i].x += toward.x * f;
-        move[i].y += toward.y * f;
-      }
+let size = null;
+for (let H = 1117; H <= 1700 && !size; H += 10)
+  for (let W = 1728; W <= 2400; W += 10) {
+    PERIOD_W = W;
+    PERIOD_H = H;
+    if (Math.min(...pairGaps(figmaObjects)) >= FIGMA_MIN - 0.5) {
+      size = { W, H };
+      break;
     }
-    pts.forEach((p, i) => {
-      if (p.pinned) return;
-      p.x = (((p.x + move[i].x) % PERIOD_W) + PERIOD_W) % PERIOD_W;
-      p.y = (((p.y + move[i].y) % PERIOD_H) + PERIOD_H) % PERIOD_H;
-    });
   }
+if (!size) throw new Error('no repeat size found');
+console.log('tile', size.W, '×', size.H);
+
+// Versions B and C: the objects swapped around (a permutation of the 9 kinds), chosen at
+// random among many for: no gap tighter than Figma's, the same object as far from itself
+// as possible across all three versions, and nothing landing on its own spot in the
+// neighbouring version
+const VERSIONS = 3;
+PERIOD_W = size.W * VERSIONS;
+PERIOD_H = size.H * VERSIONS;
+const dist = (a, b) => Math.hypot(wrapD(a.x - b.x, PERIOD_W), wrapD(a.y - b.y, PERIOD_H));
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+// Rows staggered like a Latin square (A B C / B C A / C A B), so a version never sits
+// right above itself either
+const build = (maps) =>
+  Array.from({ length: VERSIONS * VERSIONS }, (_, cell) => {
+    const col = cell % VERSIONS;
+    const row = Math.floor(cell / VERSIONS);
+    const v = (col + row) % VERSIONS;
+    return figmaObjects.map((o) => ({
+      ...o,
+      key: maps[v][o.key],
+      x: o.x + col * size.W,
+      y: o.y + row * size.H,
+      pinned: cell === 0,
+      label: cell === 0 ? o.label : null,
+    }));
+  }).flat();
+// Score: the closest same-object pair (higher is better), with gaps tighter than Figma's
+// tightest pair heavily penalised; then the sum of near same-object pairs breaks ties
+const score = (pts) => {
+  let tightPen = 0;
+  let tight = Infinity;
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      if (Math.abs(wrapD(pts[i].x - pts[j].x, PERIOD_W)) > 700 || Math.abs(wrapD(pts[i].y - pts[j].y, PERIOD_H)) > 600) continue;
+      const g = gapOf(pts[i], pts[j]);
+      tight = Math.min(tight, g);
+      if (g < FIGMA_MIN - 10) tightPen += FIGMA_MIN - 10 - g;
+    }
+  let same = Infinity;
+  let near = 0;
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++)
+      if (pts[i].key === pts[j].key) {
+        const d = dist(pts[i], pts[j]);
+        same = Math.min(same, d);
+        if (d < 1300) near += (1300 - d) ** 2;
+      }
+  // every object about equally often
+  const counts = {};
+  for (const p of pts) counts[p.key] = (counts[p.key] || 0) + 1;
+  const even = pts.length / KEYS.length;
+  const countPen = KEYS.reduce((t, k) => t + Math.max(0, Math.abs((counts[k] || 0) - even) - 1) ** 2, 0);
+  return { tight, same, value: -near / 1e3 - tightPen * 50 - countPen * 40 };
+};
+// Start: every non-Figma copy gets the 9 kinds shuffled over its 13 spots, then swap the
+// kinds of two objects (outside the Figma tile) whenever that improves the score
+const identity = Object.fromEntries(KEYS.map((k) => [k, k]));
+const maps = [identity];
+for (let v = 1; v < VERSIONS; v++) {
+  const perm = shuffle(KEYS);
+  maps.push(Object.fromEntries(KEYS.map((k, i) => [k, perm[i]])));
 }
-const sameMin = (pts) =>
-  Math.min(...pts.flatMap((a, i) => pts.slice(i + 1).filter((b) => b.key === a.key).map((b) => dist(a, b))));
-const nearestGaps = (pts) => pts.map((a) => Math.min(...pts.filter((b) => b !== a).map((b) => gapOf(a, b)))).sort((a, b) => a - b);
-// Biggest hole: the largest empty space (distance from a point to the nearest object
-// footprint), sampled on a grid
-const footDist = (px, py, p) => {
-  const b = box(p);
-  const rx = wrapD(px - p.x, PERIOD_W);
-  const ry = wrapD(py - p.y, PERIOD_H);
-  const dx = Math.max(b.l - rx, rx - b.r);
-  const dy = Math.max(b.t - ry, ry - b.b);
-  return Math.hypot(Math.max(0, dx), Math.max(0, dy));
-};
-const biggestHole = (pts, x0 = 0, y0 = 0, w = PERIOD_W, h = PERIOD_H) => {
-  let worst = 0;
-  for (let y = y0; y < y0 + h; y += 20) for (let x = x0; x < x0 + w; x += 20) worst = Math.max(worst, Math.min(...pts.map((p) => footDist(x, y, p))));
-  return worst;
-};
-
-// ── Generate a tile with N objects: free ones start on a jittered grid away from the
-// Figma objects, then relax, get their kinds (spread out), relax again
-function generate(N) {
-  seed = 20261026 + N;
-  const pts = pinned.map((p) => ({ ...p }));
-  const cols = Math.round(Math.sqrt((N * PERIOD_W) / PERIOD_H));
-  const rows = Math.ceil(N / cols);
-  const cand = [];
-  for (let r = 0; r < rows; r++)
-    for (let c = 0; c < cols; c++)
-      cand.push({ x: ((c + 0.5 + (r % 2) * 0.5) * PERIOD_W) / cols + (rand() - 0.5) * 60, y: ((r + 0.5) * PERIOD_H) / rows + (rand() - 0.5) * 60 });
-  const farFromPinned = (p) => Math.min(...pinned.map((q) => dist(p, q)));
-  cand.sort((a, b) => farFromPinned(b) - farFromPinned(a));
-  const free = cand.slice(0, N - pinned.length).map((p) => ({ ...p, key: KEYS[Math.floor(rand() * KEYS.length)], pinned: false }));
-  pts.push(...free);
-  relax(pts, 600);
-
-  // Kinds: balanced counts first (round robin over a shuffle), then swap kinds between
-  // free objects while it pushes the closest same-object pair further apart
-  const order = free.map((_, i) => i).sort(() => rand() - 0.5);
-  const counts = Object.fromEntries(KEYS.map((k) => [k, pinned.filter((p) => p.key === k).length]));
-  order.forEach((i) => {
-    const k = KEYS.reduce((m, k) => (counts[k] < counts[m] ? k : m), KEYS[0]);
-    free[i].key = k;
-    counts[k]++;
-  });
-  const pairScore = () => {
-    // sum of penalties for same-object pairs closer than SAME_MIN (bigger when closer)
-    let pen = 0;
-    for (let i = 0; i < pts.length; i++)
-      for (let j = i + 1; j < pts.length; j++)
-        if (pts[i].key === pts[j].key) {
-          const d = dist(pts[i], pts[j]);
-          if (d < SAME_MIN * 1.3) pen += (SAME_MIN * 1.3 - d) ** 2;
-        }
-    return pen;
-  };
-  let score = pairScore();
-  for (let it = 0; it < 6000; it++) {
-    const a = free[Math.floor(rand() * free.length)];
-    const b = free[Math.floor(rand() * free.length)];
+const pts = build(maps);
+const free = pts.filter((p) => !p.pinned);
+// (simulated annealing: early on a slightly worse swap is sometimes kept, to get out of
+// dead ends; the best arrangement seen is what's kept)
+let sc = score(pts);
+let bestKeys = pts.map((p) => p.key);
+let bestSc = sc;
+const ITER = 40000;
+for (let it = 0; it < ITER; it++) {
+  // either swap two objects' kinds or give one object another kind
+  const a = free[Math.floor(rand() * free.length)];
+  const b = rand() < 0.5 ? free[Math.floor(rand() * free.length)] : null;
+  const before = [a.key, b && b.key];
+  if (b) {
     if (a === b || a.key === b.key) continue;
     [a.key, b.key] = [b.key, a.key];
-    const s = pairScore();
-    if (s <= score) score = s;
-    else [a.key, b.key] = [b.key, a.key];
+  } else {
+    const k = KEYS[Math.floor(rand() * KEYS.length)];
+    if (k === a.key) continue;
+    a.key = k;
   }
-  relax(pts, 900);
-  return { pts, nn: nearestGaps(pts), same: sameMin(pts) };
+  const next = score(pts);
+  const temp = 400 * (1 - it / ITER);
+  if (next.value >= sc.value || rand() < Math.exp((next.value - sc.value) / Math.max(temp, 1e-3))) {
+    sc = next;
+    if (sc.value > bestSc.value) {
+      bestSc = sc;
+      bestKeys = pts.map((p) => p.key);
+    }
+  } else {
+    a.key = before[0];
+    if (b) b.key = before[1];
+  }
 }
-
-// ── The object count whose relaxed spacing matches Figma best: median nearest gap =
-// Figma's, nothing much closer than Figma's closest pair, no bigger gaps than Figma's
-const FIGMA_HOLE = biggestHole(pinned, CENTRE.x - 764 * SPREAD, CENTRE.y - 458 * SPREAD, 1528 * SPREAD, 917 * SPREAD);
-let best = null;
-for (let N = 24; N <= 52; N += 1) {
-  const r = generate(N);
-  const median = r.nn[r.nn.length >> 1];
-  r.hole = biggestHole(r.pts);
-  const score =
-    Math.abs(median - GAP) +
-    Math.max(0, sorted[0] - 10 - r.nn[0]) * 2 +
-    Math.max(0, r.nn.at(-1) - sorted.at(-1)) +
-    Math.max(0, r.hole - FIGMA_HOLE) +
-    Math.max(0, SAME_MIN - r.same) / 4;
-  console.log(`N ${N}: gaps ${Math.round(r.nn[0])} / ${Math.round(median)} / ${Math.round(r.nn.at(-1))}, hole ${Math.round(r.hole)}, same ${Math.round(r.same)}`);
-  if (!best || score < best.score) best = { ...r, N, score };
-}
-const { pts } = best;
-
-// ── Report
-const s2 = best.nn;
-console.log('objects in tile', best.N);
-console.log('tile nearest gaps: min', Math.round(s2[0]), 'median', Math.round(s2[s2.length >> 1]), 'max', Math.round(s2.at(-1)));
-console.log('figma nearest gaps: min', Math.round(sorted[0]), 'max', Math.round(sorted.at(-1)));
-console.log('same object closest', Math.round(best.same));
-console.log('biggest hole: tile', Math.round(best.hole), '· Figma frame', Math.round(FIGMA_HOLE));
+pts.forEach((p, i) => (p.key = bestKeys[i]));
+sc = bestSc;
+console.log('tightest gap', Math.round(sc.tight), '(Figma', Math.round(FIGMA_MIN) + ')', '· same object closest', Math.round(sc.same));
+console.log('objects', pts.length, 'in', PERIOD_W, '×', PERIOD_H);
 console.log('counts', JSON.stringify(Object.fromEntries(KEYS.map((k) => [k, pts.filter((p) => p.key === k).length]))));
 
 // ── Output: image top-left, label centre / text top relative to the image box
 const out = pts.map((p) => {
   const [w, h] = SIZE[p.key];
-  const x = Math.round(p.x - w / 2);
-  const y = Math.round(p.y - h / 2);
-  const hasFigmaLabel = p.pinned && p.label;
   return {
     key: p.key,
-    label: hasFigmaLabel ? p.label : LABELS[p.key],
-    x,
-    y,
+    label: p.pinned && p.label ? p.label : LABELS[p.key],
+    x: Math.round(p.x - w / 2),
+    y: Math.round(p.y - h / 2),
     labelX: Math.round(labelOf(p).cx),
     labelY: Math.round(labelOf(p).top),
   };
