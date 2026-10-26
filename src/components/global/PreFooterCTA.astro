@@ -130,16 +130,21 @@ const title = 'Tell us what you are building';
 
   /* ── Mobile: Figma 390×694 ─────────────────────────────── */
   @media (max-width: 1023px) {
+    /* Full screen height (Figma's frame is 694 on a 390×844 phone) */
     .prefooter {
       aspect-ratio: auto;
-      height: 694px;
+      height: 100vh;
+      height: 100svh;
+      min-height: 600px;
     }
-    /* Printer photo fitted (not cropped) in a 424×635 box at (39, 97), as in Figma */
+    /* Printer photo fitted (not cropped) in Figma's 424-wide box from 97 down to 38 past
+       the bottom; the box stretches with the screen height */
     .prefooter__printer {
       left: 39px;
       top: 97px;
       width: 424px;
-      height: 635px;
+      max-width: none;
+      height: calc(100% - 97px + 38px);
       object-fit: contain;
     }
     /* Only the title is the link here; the buttons below do the rest */
@@ -170,13 +175,13 @@ const title = 'Tell us what you are building';
     .prefooter__hint {
       display: none;
     }
-    /* Buttons: white, 48 tall, label centred; 8 between the pair, 12 above the email one,
-       20 from the bottom */
+    /* Buttons: white, 48 tall, label centred; 8 between the pair, 12 above the email one.
+       The block fills the screen, so they stand 8 above the fixed menu bar, not under it */
     .prefooter__actions {
       position: absolute;
       left: var(--page-margin);
       right: var(--page-margin);
-      bottom: 20px;
+      bottom: calc(var(--page-margin) + var(--nav-height) + 8px);
       z-index: var(--z-raised);
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
