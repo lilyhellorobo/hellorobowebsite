@@ -17,7 +17,9 @@
  * sits on top until the WebGL step.
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
  * half screen of scrolling widens it to full screen, then the wheel turns.
- * Work page: full screen from the start.
+ * Work page: full screen from the start; quicker follow with magnetic detents (each
+ * project sticks at the front, then the drum moves fast to the next and snaps into
+ * place), and a 40% black layer over the backgrounds (30% on Home).
  * Mobile (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
  * slides that pin and change on scroll, like the Home showcase: the photo crossfades,
  * name / services / VIEW swap, and the bright segment of the line shows the progress.
@@ -174,9 +176,14 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     // Smooth follow: the drum eases toward `target`, time-based so it feels the same at
     // any frame rate. SMOOTH = seconds to cover ~63% of the remaining turn.
     // Home (scroll-driven) is softer than the Work page, where input drives the drum directly
-    const SMOOTH = matchMedia('(prefers-reduced-motion: reduce)').matches
-      ? 0.001
-      : root.hasAttribute('data-infinite') ? 0.28 : 0.45;
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SMOOTH = reduceMotion ? 0.001 : root.hasAttribute('data-infinite') ? 0.16 : 0.45;
+    // Work page: magnetic detents. The drum sticks a little to the project at the front,
+    // then moves quickly to the next one, as if each name were pulled into place.
+    // magnet(x) keeps every whole project where it is and is steepest halfway between
+    // two projects (MAGNET 0 = no pull, toward 1 = stickier).
+    const MAGNET = root.hasAttribute('data-infinite') && !reduceMotion ? 0.65 : 0;
+    const magnet = (x: number) => x - (MAGNET * Math.sin(2 * Math.PI * x)) / (2 * Math.PI);
     let offset = 0;
     let target = 0;
     let running = 0;
@@ -215,7 +222,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
       lastT = t;
       offset += (target - offset) * (1 - Math.exp(-dt / SMOOTH));
       if (Math.abs(target - offset) < 0.0005) offset = target;
-      place(offset);
+      place(magnet(offset));
       if (offset === target) {
         running = 0;
         lastT = 0;
@@ -231,11 +238,11 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
       const nudge = (projects: number) => {
         target += projects;
         window.clearTimeout(idle);
-        // once input stops, settle the nearest project at the front
+        // once input stops, snap the nearest project to the front
         idle = window.setTimeout(() => {
           target = Math.round(target);
           follow();
-        }, 220);
+        }, 120);
         follow();
       };
       root.addEventListener(
@@ -445,6 +452,10 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 0.3);
+  }
+  /* Work page: a darker layer over the project backgrounds (40%) */
+  .project-wheel--infinite .project-wheel__shade {
+    background: rgb(0 0 0 / 0.4);
   }
   .project-wheel :global(.project-wheel__bg-media) {
     width: 100%;
