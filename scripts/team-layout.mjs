@@ -31,7 +31,7 @@ const KEYS = Object.keys(SIZE);
 // Where each object actually is inside its image (1×, measured from the renders: pixels
 // darker than the light shadow). The images have wide, uneven margins — the robot fills
 // 51–157 of its 349 — so spacing by the image boxes left some objects crowded and others
-// far apart. Spacing uses these instead (plus a bit for the shadow to the right).
+// far apart. Spacing uses these instead (plus the shadow to the right, SHADOW_RIGHT).
 const VISIBLE = {
   bite_first_05: [15, 27, 355, 183],
   bright_ideas_01: [26, 6, 224, 222],
@@ -43,7 +43,21 @@ const VISIBLE = {
   seriously_playful: [14, 17, 197, 194],
   tiny_obsession_12: [24, 10, 155, 178],
 };
-const SHADOW = 0.25; // the shadow adds about a quarter of the object's width to the right
+// How far each object's shadow reaches to the right (1×, measured from the renders: the
+// rightmost pixel that isn't white). It varies a lot — the robot's shadow runs 330 of its
+// 349, nearly twice the robot's width — so a fixed allowance left the robot's shadow
+// almost touching its neighbour.
+const SHADOW_RIGHT = {
+  bite_first_05: 372,
+  bright_ideas_01: 278,
+  cat_mode_active: 213,
+  good_chaos_13: 342,
+  hello_robo: 330,
+  inner_calm_02: 300,
+  nuts_about_details_03: 210,
+  seriously_playful: 279,
+  tiny_obsession_12: 286,
+};
 // Each object's own label (as Figma names it on its main copy)
 const LABELS = {
   hello_robo: 'hello_robo.OBJ',
@@ -104,7 +118,7 @@ const box = (p) => {
   const [x0, y0, x1, y1] = VISIBLE[p.key];
   const l = labelOf(p);
   const left = Math.min(x0, l.cx - l.w / 2);
-  const right = Math.max(Math.min(w, x1 + (x1 - x0) * SHADOW), l.cx + l.w / 2);
+  const right = Math.max(x1, SHADOW_RIGHT[p.key], l.cx + l.w / 2);
   return { l: left - w / 2, r: right - w / 2, t: y0 - h / 2, b: Math.max(y1, l.top + LABEL_H) - h / 2 };
 };
 const wrapD = (d, p) => {
@@ -125,7 +139,7 @@ const gapOf = (a, b) => {
 // ── The Figma frame, spread out: SPREAD > 1 moves its objects apart around the frame's
 // centre (sizes unchanged), so everything gets a little more room while keeping Figma's
 // arrangement and proportions. Then measure the spacing: each object's nearest gap.
-const SPREAD = 1.2;
+const SPREAD = 1.4;
 const CENTRE = { x: 1728 / 2, y: 1117 / 2 };
 const pinned = FIGMA.map(([key, x, y, label, lx, ly, lw]) => {
   const [w, h] = SIZE[key];
@@ -251,7 +265,7 @@ function generate(N) {
 // Figma's, nothing much closer than Figma's closest pair, no bigger gaps than Figma's
 const FIGMA_HOLE = biggestHole(pinned, CENTRE.x - 764 * SPREAD, CENTRE.y - 458 * SPREAD, 1528 * SPREAD, 917 * SPREAD);
 let best = null;
-for (let N = 32; N <= 52; N += 1) {
+for (let N = 24; N <= 52; N += 1) {
   const r = generate(N);
   const median = r.nn[r.nn.length >> 1];
   r.hole = biggestHole(r.pts);
