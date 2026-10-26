@@ -16,7 +16,7 @@ const featured = (await getCollection('episodes', (e) => e.data.featured && e.da
 // Poster slots are filled in order; stamps keep their place in the Figma layout
 const stamps: Record<number, { src: string; w: number; h: number }> = {
   2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
-  3: { src: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
+  3: { src: '/images/home/stamp-radio-yes-on-dark.svg', w: 290, h: 111 },
   7: { src: '/images/radio/stamp-departure.png', w: 126, h: 82 },
 };
 const posters = [...featured];
