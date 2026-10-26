@@ -93,10 +93,16 @@ const gapOf = (a, b) => {
   return Math.hypot(Math.max(0, gx), Math.max(0, gy)) - (gx < 0 && gy < 0 ? Math.min(-gx, -gy) : 0);
 };
 
-// ── Measure Figma's spacing: each object's nearest-neighbour gap inside the frame
+// ── The Figma frame, spread out: SPREAD > 1 moves its objects apart around the frame's
+// centre (sizes unchanged), so everything gets a little more room while keeping Figma's
+// arrangement and proportions. Then measure the spacing: each object's nearest gap.
+const SPREAD = 1.15;
+const CENTRE = { x: 1728 / 2, y: 1117 / 2 };
 const pinned = FIGMA.map(([key, x, y, label, lx, ly, lw]) => {
   const [w, h] = SIZE[key];
-  return { key, x: x + w / 2, y: y + h / 2, pinned: true, label, lx, ly, lw };
+  const fx = x + w / 2; // Figma image centre
+  const fy = y + h / 2;
+  return { key, x: CENTRE.x + (fx - CENTRE.x) * SPREAD, y: CENTRE.y + (fy - CENTRE.y) * SPREAD, fx, fy, pinned: true, label, lx, ly, lw };
 });
 const figmaGaps = pinned.map((a) => Math.min(...pinned.filter((b) => b !== a).map((b) => gapOf(a, b))));
 const sorted = [...figmaGaps].sort((a, b) => a - b);
@@ -213,9 +219,9 @@ function generate(N) {
 
 // ── The object count whose relaxed spacing matches Figma best: median nearest gap =
 // Figma's, nothing much closer than Figma's closest pair, no bigger gaps than Figma's
-const FIGMA_HOLE = biggestHole(pinned, 100, 100, 1528, 917);
+const FIGMA_HOLE = biggestHole(pinned, CENTRE.x - 764 * SPREAD, CENTRE.y - 458 * SPREAD, 1528 * SPREAD, 917 * SPREAD);
 let best = null;
-for (let N = 44; N <= 62; N += 1) {
+for (let N = 32; N <= 52; N += 1) {
   const r = generate(N);
   const median = r.nn[r.nn.length >> 1];
   r.hole = biggestHole(r.pts);
@@ -250,8 +256,8 @@ const out = pts.map((p) => {
     label: hasFigmaLabel ? p.label : LABELS[p.key],
     x,
     y,
-    labelX: Math.round(hasFigmaLabel ? p.lx + p.lw / 2 - (p.x - w / 2) : w / 2),
-    labelY: Math.round(hasFigmaLabel ? p.ly + 7 - (p.y - h / 2) : h + LABEL_GAP),
+    labelX: Math.round(hasFigmaLabel ? p.lx + p.lw / 2 - (p.fx - w / 2) : w / 2),
+    labelY: Math.round(hasFigmaLabel ? p.ly + 7 - (p.fy - h / 2) : h + LABEL_GAP),
   };
 });
 writeFileSync(
