@@ -63,13 +63,14 @@ const { sections, name } = Astro.props.project.data;
     aspect-ratio: 16 / 9;
   }
 
-  /* Mobile: 3-up rows become one column; 2-up rows stay side by side */
+  /* Mobile: the same rows as desktop — full width, two side by side, three in a row —
+     with a tighter gap so the small images keep as much width as possible */
   @media (max-width: 1023px) {
-    .project-media.is-after-media {
-      margin-top: var(--gutter);
+    .project-media {
+      gap: 8px;
     }
-    .project-media--3 {
-      grid-template-columns: minmax(0, 1fr);
+    .project-media.is-after-media {
+      margin-top: 8px;
     }
   }
 </style>
