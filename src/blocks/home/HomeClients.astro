@@ -11,8 +11,10 @@
 
 // x, y, w, h in the 1728×1481 frame
 const tiles = [
-  { name: 'NYSE', src: '/images/home/logo-nyse.svg', x: 1286, y: -10 },
-  { name: 'Cisco', src: '/images/home/logo-cisco.svg', x: 1563, y: 168 },
+  // mobileScale: these two fill more of the tile than the rest, so they're drawn smaller
+  // in the cropped phone tiles to match the others
+  { name: 'NYSE', src: '/images/home/logo-nyse.svg', x: 1286, y: -10, mobileScale: 0.6 },
+  { name: 'Cisco', src: '/images/home/logo-cisco.svg', x: 1563, y: 168, mobileScale: 0.65 },
   { name: 'Pubco', src: '/images/home/logo-pubco.svg', x: 1287, y: 357 },
   { name: 'Surf Air', src: '/images/home/logo-surfair.svg', x: 1011, y: 535 },
   { name: 'Palantir', src: '/images/home/logo-palantir.svg', x: 732, y: 724 },
@@ -39,7 +41,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     {tiles.map((t) => (
       <li
         class="home-clients__tile"
-        style={`left:${pct(t.x, 1728)};top:${pct(t.y, 1481)}`}
+        style={`left:${pct(t.x, 1728)};top:${pct(t.y, 1481)}${t.mobileScale ? `;--logo-scale:${t.mobileScale}` : ''}`}
       >
         {t.raster ? (
           <img class="home-clients__logo-raster" src={t.src} alt={t.name} width="165" style="--w: 165" height="22" loading="lazy" />
@@ -186,6 +188,13 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       position: absolute;
       inset: 0;
       object-fit: cover;
+      scale: var(--logo-scale, 1);
+    }
+    /* A shrunk logo leaves the tile's edges bare: a wide outline in the SVGs' own 2% grey
+       fills them right up to the image edge without overlapping it (no visible inner box);
+       the tile clips it */
+    .home-clients__tile[style*='--logo-scale'] img {
+      outline: 200px solid rgb(0 0 0 / 0.02);
     }
     .home-clients__tile:nth-child(n + 5) {
       transform: translateX(calc(var(--tile) / -4 - var(--shift) * 40px));
