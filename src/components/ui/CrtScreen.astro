@@ -1,100 +1,378 @@
 ---
 /**
- * CRT screen overlay — a CSS stand-in for the Figma "CRT" shader until the WebGL step.
- * Put it inside a positioned box (overflow hidden) on top of an image or video. Values
- * follow the shader on the menu photo (Figma 10194:1895): scanlines 38 / size 3, aperture
- * mask 9 / pitch 12, vignette 13, noise 18 / size 1.5, colour aberration 17, flicker,
- * rolling band 0.93. No curvature: the image fills its box to the square corners (the
- * shader's rounded black corners read as a second, rounded frame inside the card).
- * The colour fringing needs the image itself: give it `filter: url(#crt-aberration)`
- * (the filter is defined here once per page).
+ * CRT screen — Figma's "CRT screen" shader effect (library shader 1676366613987244213,
+ * v584), ported from its WGSL source to WebGL so the browser runs the same maths as Figma.
+ * Put it inside a positioned box (overflow hidden) that holds the image: the canvas covers
+ * the box and draws that image through the effect, animated. If the box holds several
+ * images, the one with `.is-current` (else the first) is used.
+ *
+ * Settings default to the values on the menu photo (Figma 10194:1895): curvature 0
+ * (flat glass — no rounded corners), scanlines 38 / size 3, shadow mask 9 / pitch 12,
+ * radial dispersion 17, flicker 62, static 18 / size 1.5, roll speed 0.93, jitter 0,
+ * vignette 13, brightness 0, speed 1.01. Pixel sizes are design pixels (CSS px), as Figma
+ * renders them at 1×.
+ * Animates only while visible; with reduced motion it draws one still frame. Without
+ * WebGL the canvas hides and the plain image shows.
  */
+interface Props {
+  /** Override any Figma property by its name (mask, scanlines, curvature, …) */
+  settings?: Record<string, number | boolean>;
+}
+const figma = {
+  mask: 9,
+  maskType: 2,
+  maskPitch: 12,
+  curvature: 0,
+  clipToCurve: true,
+  scanlines: 38,
+  scanlineSize: 3,
+  aberration: 17,
+  aberrationScheme: 0,
+  flicker: 62,
+  noise: 18,
+  noiseSize: 1.5,
+  rollSpeed: 0.93,
+  jitter: 0,
+  vignette: 13,
+  brightness: 0,
+  speed: 1.01,
+};
+const settings = { ...figma, ...Astro.props.settings };
 ---
-<div class="crt" aria-hidden="true">
-  <span class="crt__mask"></span>
-  <span class="crt__noise"></span>
-  <span class="crt__roll"></span>
-</div>
-<svg class="crt__defs" width="0" height="0" aria-hidden="true" focusable="false">
-  <!-- red shifted left, blue shifted right, recombined: the colour fringes of a CRT -->
-  <filter id="crt-aberration" x="-2%" y="0" width="104%" height="100%" color-interpolation-filters="sRGB">
-    <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r" />
-    <feOffset in="r" dx="-1.5" dy="0" result="r2" />
-    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g" />
-    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b" />
-    <feOffset in="b" dx="1.5" dy="0" result="b2" />
-    <feBlend in="r2" in2="g" mode="screen" result="rg" />
-    <feBlend in="rg" in2="b2" mode="screen" />
-  </filter>
-</svg>
+<canvas class="crt" aria-hidden="true" data-crt={JSON.stringify(settings)}></canvas>
+
+<script>
+  // Fragment shader: Figma's fs_main, line for line (WGSL → GLSL ES 1.0)
+  const FRAG = `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D uTex;
+uniform vec2 uDims;
+uniform vec4 uP0; // curvature, scanline, mask amount, aberration pixels
+uniform vec4 uP1; // reserved, brightness gain, scanlineSize, time
+uniform vec4 uP2; // flicker, noise, rollSpeed, jitter
+uniform vec4 uP3; // reserved, noiseSize, clipToCurve, maskPitch
+uniform vec4 uP4; // maskType, vignette, aberrationScheme, -
+
+const float TAU = 6.28318530718;
+const float PI = 3.14159265359;
+const float PHASE120 = 2.09439510239;
+
+float coverage(vec2 p, vec2 texel) {
+  float fx = smoothstep(0.0, texel.x, p.x) * (1.0 - smoothstep(1.0 - texel.x, 1.0, p.x));
+  float fy = smoothstep(0.0, texel.y, p.y) * (1.0 - smoothstep(1.0 - texel.y, 1.0, p.y));
+  return fx * fy;
+}
+vec4 sampleRaw(vec2 p) {
+  return texture2D(uTex, clamp(p, vec2(0.0), vec2(1.0)));
+}
+float hash21(vec2 p) {
+  vec3 h = fract(vec3(p.x, p.y, p.x) * 0.1031);
+  h = h + dot(h, h.yzx + 33.33);
+  return fract((h.x + h.y) * h.z);
+}
+float hash31(vec3 p) {
+  vec3 h = fract(p * vec3(0.1031, 0.1030, 0.0973));
+  h = h + vec3(dot(h, h.yzx + 33.33));
+  return fract((h.x + h.y) * h.z);
+}
+vec2 barrel(vec2 uv, vec2 aspect, float curvature, vec2 scale) {
+  vec2 c = (uv * 2.0 - 1.0) * aspect;
+  float r2 = dot(c, c);
+  c = c * (1.0 + curvature * 0.35 * r2) * scale;
+  return (c / aspect) * 0.5 + 0.5;
+}
+vec2 aberrationOffset(vec2 screenUv, vec2 aspect, float amount, float scheme, vec2 texel) {
+  vec2 p = screenUv * 2.0 - 1.0;
+  vec2 c = p * aspect;
+  float radius = length(c);
+  vec2 normalizedRadial = c / max(radius, 0.000001);
+  vec2 radialDirection = radius > 0.0001 ? normalizedRadial : vec2(1.0, 0.0);
+  float radialLevel = clamp(radius / sqrt(2.0), 0.0, 1.0);
+  vec2 radialPixels = radialDirection * (amount * (0.72 + 0.48 * radialLevel));
+  vec2 horizontalPixels = vec2(amount * 1.15, 0.0);
+  vec2 convergenceBase = vec2(0.95, -0.55);
+  vec2 convergenceField = vec2(p.x * 0.18, p.y * 0.22);
+  vec2 convergencePixels = (convergenceBase + convergenceField) * amount;
+  vec2 offsetPixels = radialPixels;
+  if (scheme > 0.5 && scheme < 1.5) offsetPixels = horizontalPixels;
+  else if (scheme >= 1.5) offsetPixels = convergencePixels;
+  return offsetPixels * texel;
+}
+vec3 grilleProfile(vec3 theta, float pitch) {
+  float fundamentalAA = smoothstep(2.0, 3.0, pitch);
+  float secondAA = smoothstep(2.0, 3.0, pitch * 0.5);
+  return vec3(0.375) + 0.5 * fundamentalAA * cos(theta) + 0.125 * secondAA * cos(theta * 2.0);
+}
+float softProfile(float theta, float period) {
+  return 0.5 + 0.5 * smoothstep(2.0, 3.0, period) * cos(theta);
+}
+vec3 softProfile3(vec3 theta, float period) {
+  return vec3(0.5) + 0.5 * smoothstep(2.0, 3.0, period) * cos(theta);
+}
+
+void main() {
+  float curvature = uP0.x;
+  float scanAmtRaw = uP0.y;
+  float maskAmt = clamp(uP0.z, 0.0, 1.0);
+  float aberr = uP0.w;
+  float bright = uP1.y;
+  float scanSize = max(uP1.z, 1.0);
+  float t = uP1.w;
+  float flickerAmt = uP2.x;
+  float noiseAmt = uP2.y;
+  float rollSpeed = uP2.z;
+  float jitterAmt = uP2.w;
+  float noiseSize = max(uP3.y, 1.0);
+  bool clipCurve = uP3.z > 0.5;
+  float maskPitch = clamp(uP3.w, 2.0, 12.0);
+  float maskType = uP4.x;
+  float vigAmt = clamp(uP4.y, 0.0, 1.0);
+  float aberrationScheme = uP4.z;
+
+  // Figma renders the effect at the design size: input and output are both uDims
+  vec2 inTexel = 1.0 / max(uDims, vec2(1.0));
+  vec2 outDims = max(uDims, vec2(1.0));
+
+  vec2 aspectRaw = vec2(outDims.x / outDims.y, 1.0);
+  vec2 aspect = aspectRaw / (length(aspectRaw) / sqrt(2.0));
+  vec2 edgeFit = vec2(
+    1.0 / (1.0 + curvature * 0.35 * aspect.x * aspect.x),
+    1.0 / (1.0 + curvature * 0.35 * aspect.y * aspect.y));
+  float edgeAllowancePixels = 0.5;
+  float jitterReserveUv = clamp(jitterAmt, 0.0, 1.0) * 3.9 * inTexel.x;
+  vec2 reserveUv = vec2(jitterReserveUv + edgeAllowancePixels * inTexel.x, edgeAllowancePixels * inTexel.y);
+  vec2 availableSpan = max(vec2(1.0) - 2.0 * reserveUv, vec2(0.05));
+  vec2 clipFit = edgeFit / availableSpan;
+  float cornerFitValue = 1.0 / (1.0 + 0.7 * curvature);
+  vec2 barrelScale = clipCurve ? clipFit : vec2(cornerFitValue);
+
+  float scanAmt = scanAmtRaw * mix(0.6, 1.0, smoothstep(1.0, 2.5, scanSize));
+  float scanNorm = 1.0 / (1.0 - scanAmt * 0.5);
+
+  vec2 warped = barrel(vUv, aspect, curvature, barrelScale);
+
+  float lineId = floor(warped.y * outDims.y / scanSize);
+  float lineNoise = hash21(vec2(lineId, floor(t * 24.0))) - 0.5;
+  float drift = sin(t * 1.7 + warped.y * 9.0) * 0.5;
+  float jitterX = jitterAmt * (lineNoise * 0.9 + drift * 0.4) * inTexel.x * 6.0;
+  warped = vec2(warped.x + jitterX, warped.y);
+
+  float cov = clipCurve ? coverage(warped, inTexel) : 1.0;
+
+  vec2 dir = aberrationOffset(vUv, aspect, aberr, aberrationScheme, inTexel);
+  vec4 sr = sampleRaw(warped + dir);
+  vec4 sg = sampleRaw(warped);
+  vec4 sb = sampleRaw(warped - dir);
+
+  float sharedAlpha = max(sr.a, max(sg.a, sb.a));
+  vec3 separatedRgb = min(vec3(sr.r, sg.g, sb.b), vec3(sharedAlpha));
+  vec4 colorSample = vec4(separatedRgb, sharedAlpha) * cov;
+
+  float py = warped.y * outDims.y + t * 6.0;
+  float scan = (1.0 - scanAmt * 0.5 * (1.0 - cos(TAU * py / scanSize))) * scanNorm;
+  colorSample = vec4(colorSample.rgb * scan, colorSample.a);
+
+  float rollPos = fract(warped.y + t * rollSpeed * 0.12);
+  float band = smoothstep(0.0, 0.06, rollPos) * (1.0 - smoothstep(0.06, 0.22, rollPos));
+  colorSample = vec4(colorSample.rgb * (1.0 + band * 0.35 * step(0.001, rollSpeed)), colorSample.a);
+
+  vec3 col = colorSample.rgb;
+  float alpha = colorSample.a;
+
+  vec2 baseWarp = barrel(vUv, aspect, curvature, barrelScale);
+
+  float px = vUv.x * outDims.x;
+  float pyMask = vUv.y * outDims.y;
+  vec3 profile = vec3(1.0);
+  float profileMean = 1.0;
+  if (maskType < 0.5) {
+    float th = px * (TAU / maskPitch);
+    profile = grilleProfile(vec3(th, th - PHASE120, th + PHASE120), maskPitch);
+    profileMean = 0.375;
+  } else if (maskType < 1.5) {
+    float th = px * (TAU / maskPitch);
+    vec3 hp = grilleProfile(vec3(th, th - PHASE120, th + PHASE120), maskPitch);
+    float slotPeriod = maskPitch * 2.0;
+    float tie = softProfile(pyMask * (TAU / slotPeriod), slotPeriod);
+    float vTrans = 1.0 - 0.75 * tie;
+    profile = hp * vTrans;
+    profileMean = 0.234375;
+  } else {
+    float rowPeriod = maskPitch * 0.8660254;
+    float rowPos = pyMask / rowPeriod;
+    float rowIdx = floor(rowPos);
+    float odd = rowIdx - 2.0 * floor(rowIdx * 0.5);
+    float th = (px + odd * maskPitch * 0.5) * (TAU / maskPitch);
+    vec3 hp = softProfile3(vec3(th, th - PHASE120, th + PHASE120), maskPitch);
+    float vp = softProfile((rowPos - rowIdx) * TAU - PI, rowPeriod);
+    profile = hp * vp;
+    profileMean = 0.25;
+  }
+  float maskFloor = 0.03;
+  float maskSpan = 1.8;
+  vec3 maskRaw = vec3(maskFloor) + maskSpan * profile;
+  vec3 maskGain = maskRaw / (maskFloor + maskSpan * profileMean);
+  col = col * mix(vec3(1.0), maskGain, maskAmt);
+
+  float flick = 1.0 + flickerAmt * (sin(t * 37.0) * 0.5 + sin(t * 11.3) * 0.3) * 0.06;
+  col = col * flick;
+
+  float field = floor(t * 24.0);
+  vec2 gp = floor(baseWarp * outDims / noiseSize);
+  float white = hash31(vec3(gp, field));
+  float hiss = hash21(vec2(floor(baseWarp.y * outDims.y / noiseSize), field * 1.7)) - 0.5;
+  float staticLvl = clamp(white + hiss * 0.35, 0.0, 1.0);
+  float nMix = clamp(noiseAmt, 0.0, 1.0) * 0.55 * alpha;
+  col = mix(col, vec3(staticLvl) * alpha, nMix);
+  col = col * (1.0 + (white - 0.5) * noiseAmt * 0.25);
+
+  vec2 cc = (baseWarp * 2.0 - 1.0) * aspect;
+  float r2 = dot(cc, cc);
+  float vigStrength = 3.0 * vigAmt * vigAmt * (0.35 + 0.65 * vigAmt);
+  float vigSpread = clamp(vigAmt * vigAmt * (0.6 + 0.4 * clamp(curvature, 0.0, 1.0)), 0.0, 1.0);
+  float vigInner = mix(1.4, 0.0, vigSpread);
+  float v = 1.0 - vigStrength * smoothstep(vigInner, 2.0, r2);
+  col = col * max(v, 0.0) * bright;
+
+  float kneeStart = 0.8;
+  float knee = alpha * kneeStart;
+  float kneeRoom = max(alpha - knee, 0.000001);
+  vec3 excess = max(col - vec3(knee), vec3(0.0));
+  vec3 compressed = vec3(knee) + vec3(kneeRoom) * (vec3(1.0) - exp(-excess / vec3(kneeRoom)));
+  col = mix(col, compressed, step(vec3(knee), col));
+
+  gl_FragColor = vec4(clamp(col, vec3(0.0), vec3(alpha)), alpha);
+}`;
+  const VERT = `
+attribute vec2 aPos;
+attribute vec2 aUv;
+varying vec2 vUv;
+void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('canvas[data-crt]')) {
+    const box = canvas.parentElement;
+    const gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true });
+    if (!box || !gl) {
+      canvas.hidden = true;
+      continue;
+    }
+    const p = JSON.parse(canvas.dataset.crt || '{}');
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    };
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      canvas.hidden = true;
+      continue;
+    }
+    gl.useProgram(prog);
+    // Figma's quad: position + uv, uv (0,0) at the top left
+    const quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, 0, 1, 1, -1, 1, 1, -1, 1, 0, 0,
+      -1, 1, 0, 0, 1, -1, 1, 1, 1, 1, 1, 0,
+    ]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    const aUv = gl.getAttribLocation(prog, 'aUv');
+    gl.enableVertexAttribArray(aPos);
+    gl.enableVertexAttribArray(aUv);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 16, 8);
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const U = (n: string) => gl.getUniformLocation(prog, n);
+    const uDims = U('uDims');
+    const uP1 = U('uP1');
+    // The render() uniforms that don't change, packed as Figma packs them
+    gl.uniform4f(U('uP0'), p.curvature / 100, p.scanlines / 100, p.mask / 100, (p.aberration / 100) * 12);
+    gl.uniform4f(U('uP2'), p.flicker / 100, p.noise / 100, p.rollSpeed, p.jitter / 100);
+    gl.uniform4f(U('uP3'), 0, p.noiseSize, p.clipToCurve ? 1 : 0, p.maskPitch);
+    gl.uniform4f(U('uP4'), p.maskType, p.vignette / 100, p.aberrationScheme, 0);
+    const gain = Math.pow(2, p.brightness);
+
+    // The image goes into the texture the way the box shows it (object-fit: cover)
+    const paint = document.createElement('canvas');
+    const ctx = paint.getContext('2d')!;
+    let sourceKey = '';
+    const current = () => box.querySelector<HTMLImageElement>('img.is-current') ?? box.querySelector('img');
+    const upload = () => {
+      const img = current();
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!img || !img.complete || !img.naturalWidth || !w || !h) return false;
+      const key = `${img.currentSrc}|${w}x${h}`;
+      if (key === sourceKey) return true;
+      paint.width = w;
+      paint.height = h;
+      const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+      const dw = img.naturalWidth * s;
+      const dh = img.naturalHeight * s;
+      ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paint);
+      sourceKey = key;
+      return true;
+    };
+    const resize = () => {
+      const r = box.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const w = Math.round(r.width * dpr);
+      const h = Math.round(r.height * dpr);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(uDims, r.width, r.height); // design pixels, as Figma renders at 1×
+    };
+
+    const start = performance.now();
+    const draw = (now: number) => {
+      resize();
+      if (!upload()) {
+        canvas.style.opacity = '0'; // nothing to draw yet: the plain image shows
+        return;
+      }
+      canvas.style.opacity = '';
+      const time = still ? 0 : ((now - start) * 0.001 * p.speed) % 1024;
+      gl.uniform4f(uP1, 0, gain, p.scanlineSize, time);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    };
+    // Animate only while the box is visible (e.g. the menu is open); otherwise check back
+    // a few times a second so a newly shown box starts right away
+    const shown = () =>
+      document.visibilityState === 'visible' && box.offsetWidth > 0 && getComputedStyle(box).visibility === 'visible';
+    const later = () => setTimeout(() => requestAnimationFrame(loop), 250);
+    const loop = (now: number) => {
+      if (!shown()) return later();
+      draw(now);
+      if (still) return later();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+</script>
 
 <style>
-  .crt,
-  .crt > span {
+  .crt {
     position: absolute;
     inset: 0;
-    pointer-events: none;
-  }
-  .crt {
     z-index: 2;
-    /* scanlines (38%, 3px) + vignette */
-    background:
-      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.38) 0 1px, transparent 1px 3px),
-      radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.35) 100%);
-    animation: crt-flicker 0.12s steps(2) infinite;
-  }
-  /* aperture grille: thin R / G / B columns, 12px pitch */
-  .crt__mask {
-    background: repeating-linear-gradient(
-      to right,
-      rgb(255 0 0 / 0.09) 0 4px,
-      rgb(0 255 0 / 0.09) 4px 8px,
-      rgb(0 0 255 / 0.09) 8px 12px
-    );
-    mix-blend-mode: multiply;
-    opacity: 0.5;
-  }
-  .crt__noise {
-    inset: -50%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 240px 240px;
-    opacity: 0.1;
-    animation: crt-noise 0.5s steps(5) infinite;
-  }
-  /* slow bright band rolling down the screen */
-  .crt__roll {
-    background: linear-gradient(to bottom, transparent 0%, rgb(255 255 255 / 0.05) 45%, rgb(255 255 255 / 0.08) 50%, transparent 60%);
-    background-size: 100% 300%;
-    animation: crt-roll 8s linear infinite;
-  }
-  .crt__defs {
-    position: absolute;
-    width: 0;
-    height: 0;
-  }
-  @keyframes crt-flicker {
-    50% {
-      opacity: 0.94;
-    }
-  }
-  @keyframes crt-noise {
-    to {
-      transform: translate(10%, -10%);
-    }
-  }
-  @keyframes crt-roll {
-    from {
-      background-position: 0 100%;
-    }
-    to {
-      background-position: 0 -200%;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .crt,
-    .crt__noise,
-    .crt__roll {
-      animation: none;
-    }
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 </style>
