@@ -20,9 +20,10 @@
  * Work page: full screen from the start; quicker follow with magnetic detents (each
  * project sticks at the front, then the drum moves fast to the next and snaps into
  * place), and a 40% black layer over the backgrounds (30% on Home).
- * Mobile (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
+ * Mobile, Home (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
  * slides that pin and change on scroll, like the Home showcase: the photo crossfades,
  * name / services / VIEW swap, and the bright segment of the line shows the progress.
+ * Mobile, Work page (`infinite`): a flat, lighter wheel instead — WorkWheelMobile.
  * Projects come from the projects collection (CMS), in `order`; the first is in front.
  */
 import { getCollection } from 'astro:content';
@@ -120,6 +121,8 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 </Tag>
 )}
 
+{/* Work page (infinite): phones get WorkWheelMobile instead of these slides */}
+{!infinite && (
 <Tag class="project-cards theme-dark only-mobile" aria-label="Selected work" style={`--count: ${cards.length}`} data-project-slides>
   <div class="project-cards__stage" data-active="0">
     {cards.map((c, i) => (
@@ -153,6 +156,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     </div>
   </div>
 </Tag>
+)}
 
 <script>
   // Turns page scroll into the drum's rotation: one pass through every project while

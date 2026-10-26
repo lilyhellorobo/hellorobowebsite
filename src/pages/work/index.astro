@@ -3,11 +3,14 @@
  * Work — the project scroller is the whole page
  * Figma: "Portfolio page" (10100:11973), 1728×1117 — same block as Home's featured work.
  * `infinite`: the wheel turns endlessly in both directions (no page scroll).
+ * Phones: WorkWheelMobile, a flat, lighter wheel with the same structure (no VIEW button).
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectScroller from '../../blocks/work/ProjectScroller.astro';
+import WorkWheelMobile from '../../blocks/work/WorkWheelMobile.astro';
 ---
 <BaseLayout title={'Work'} prefooter={false} footer={false} headerVariant="light">
   <h1 class="visually-hidden">Work</h1>
   <ProjectScroller infinite />
+  <WorkWheelMobile />
 </BaseLayout>
