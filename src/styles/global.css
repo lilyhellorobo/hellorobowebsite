@@ -49,6 +49,15 @@ img.img-in {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Never scroll sideways: on iPhones anything a little wider than the screen made
+     Safari widen the page, and the fixed menu bar then sat partly off screen. On the
+     root this applies to the viewport, so sticky blocks keep working. */
+  overflow-x: hidden;
+}
+@supports (overflow: clip) {
+  html {
+    overflow-x: clip;
+  }
 }
 body {
   margin: 0;

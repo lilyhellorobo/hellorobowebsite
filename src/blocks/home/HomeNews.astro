@@ -80,6 +80,8 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
   .home-news {
     padding-top: calc(120 * var(--px));
     padding-bottom: calc(166 * var(--px));
+    /* hidden first: iOS before 16 has no `clip` and would widen the page */
+    overflow-x: hidden;
     overflow-x: clip;
   }
   /* Stamp at x 40, title at x 312 (stamp 230 + 42) */
