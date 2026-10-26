@@ -397,3 +397,6 @@ hosting (e.g. the CMS committing to GitHub and the site rebuilding). See Open it
 - Start each task on its own branch: `git checkout -b feature/short-description`.
 - Push the branch and open a Pull Request on GitHub for review.
 - Before starting new work, update: `git checkout main && git pull`.
+
+### Page transitions
+Moving between pages is a crossfade (`@view-transition` in `global.css`, motion tokens): the old page stays until the new one can paint, so there's no blank / half-loaded frame. Get in touch and the menu pill keep their place (`view-transition-name`). Hovering a site link prerenders that page (speculation rules in `BaseLayout`, /admin and /api excluded) so it opens instantly. Images that aren't loaded yet fade in when they arrive (`img-wait` / `img-in`). Chrome / Edge get all of it, Safari 18.2+ the crossfade, other browsers load pages normally; reduced motion turns the fades off.

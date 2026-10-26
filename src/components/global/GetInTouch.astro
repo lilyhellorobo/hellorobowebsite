@@ -19,6 +19,7 @@ const { variant = 'dark', href = '/contact' } = Astro.props;
 
 <style>
   .get-in-touch {
+    view-transition-name: get-in-touch; /* stays put between pages */
     position: fixed;
     top: var(--space-40);
     right: var(--page-margin);
