@@ -3,7 +3,10 @@
  * Robo Radio — All of the episodes
  * Figma: "all episodes" (10105:985), 1730×2694, black
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-985
- * Rows from the episodes collection (listed: true), newest first. The first INITIAL rows
+ * Rows from the episodes collection (listed: true), newest first. As in Figma (e.g. the
+ * Sanketh Yayathi / Alvin Groen rows, 10105:1633) the row title is the guest's name — one
+ * line at H2 — and the line under it is what they do; the CMS title ("Robo Radio 14: …")
+ * is used on the episode page. The first INITIAL rows
  * show; "Load more" reveals STEP more per click and disappears when all are shown.
  * Without JavaScript every row shows and the button stays hidden.
  */
@@ -22,8 +25,8 @@ const STEP = 2;
       {episodes.map((e) => (
         <li class="radio-episodes__row">
           <div class="radio-episodes__text">
-            <h3 class="t-h2">{e.data.title}</h3>
-            <p class="radio-episodes__line t-body">{e.data.guest}, {e.data.guestTitle}</p>
+            <h3 class="t-h2">{e.data.guest}</h3>
+            <p class="radio-episodes__line t-body">{e.data.guestTitle}</p>
             <Button href={`/robo-radio/${e.id}`} variant="light" icon="arrow">Watch</Button>
           </div>
           <div class="radio-episodes__cover">
@@ -88,10 +91,13 @@ const STEP = 2;
     flex-direction: column;
     align-items: flex-start;
   }
+  /* Figma: title, 20, line (457 wide); the Watch button sits on the row's bottom edge
+     (178 below the text in Figma) and never closer than 40 if the text runs long */
   .radio-episodes__line {
-    width: calc(553 * var(--px));
+    width: calc(457 * var(--px));
     max-width: 100%;
     margin-top: var(--space-20);
+    margin-bottom: var(--space-40);
   }
   .radio-episodes__text :global(.button) {
     margin-top: auto;

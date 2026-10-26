@@ -157,9 +157,13 @@ const services = [
 </script>
 
 <style>
+  /* Figma 1728×949; it's the whole page (no menu / footer), so it fills taller windows */
   .contact {
     position: relative;
+    width: 100%;
     aspect-ratio: 1728 / 949;
+    min-height: 100vh;
+    min-height: 100svh;
     background: var(--color-grey-350);
     color: var(--color-white);
     overflow: hidden;

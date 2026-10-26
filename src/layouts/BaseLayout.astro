@@ -19,6 +19,9 @@ interface Props {
   /** Adds the back button to the nav pill */
   back?: string;
   footer?: boolean;
+  /** Get in touch + nav pill / menu; false on full-screen flows like Contact (Figma
+      shows neither there) */
+  chrome?: boolean;
 }
 const {
   title,
@@ -27,6 +30,7 @@ const {
   prefooter = 'conversation',
   back,
   footer = true,
+  chrome = true,
 } = Astro.props;
 const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to your robot' : `${title} — Hello Robo`;
 ---
@@ -40,12 +44,12 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     <link rel="preload" href="/fonts/AllianceNo2-Regular.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
-    <GetInTouch variant={headerVariant} />
+    {chrome && <GetInTouch variant={headerVariant} />}
     <main>
       <slot />
     </main>
     {prefooter && <PreFooterCTA variant={prefooter} />}
     {footer && <Footer />}
-    <NavPill back={back} />
+    {chrome && <NavPill back={back} />}
   </body>
 </html>
