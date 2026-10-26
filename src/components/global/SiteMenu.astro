@@ -9,8 +9,7 @@
  * fade + rise for now; the motion step replaces it.
  * Photo card: one of the 8 studio photos (Figma "Photos", 10240:141), a different one
  * picked at random each time the menu opens (desktop; phones don't show the photo), shown
- * through a CRT screen as in Figma (CrtScreen: scanlines, mask, noise,
- * colour fringes, flicker).
+ * through Figma's CRT screen shader (CrtScreen, a WebGL port of it).
  */
 import { Image } from 'astro:assets';
 import Icon from '../icons/Icon.astro';
@@ -245,13 +244,10 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     height: 100%;
     object-fit: cover;
   }
-  /* The studio photos are stacked; only the current one shows — slightly washed out and
-     with colour fringes, as on Figma's CRT screen */
+  /* The studio photos are stacked; only the current one shows (CrtScreen draws it
+     through Figma's CRT shader on top) */
   .site-menu__photo :global(img:not(.is-current)) {
     visibility: hidden;
-  }
-  .site-menu__photo :global(img) {
-    filter: url(#crt-aberration) brightness(1.15) contrast(0.9) saturate(0.85);
   }
   /* Micrographic 380×224 at (154, -7) on the card */
   .site-menu__micro {
