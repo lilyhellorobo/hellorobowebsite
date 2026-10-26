@@ -14,10 +14,35 @@ import strip from '../../assets/careers/team-strip.png';
   <p class="careers-hero__text t-body">
     We design for robots, yet we show up as humans first — for each other and the community. Because in the end it was always the humans who made the world say yes to your robot.
   </p>
-  <div class="careers-hero__strip">
+  <div class="careers-hero__strip" data-careers-strip>
     <Image src={strip} alt="Hello Robo team at work and at events" widths={[2204, 4408]} sizes="128vw" loading="eager" />
   </div>
 </section>
+
+<script>
+  // Photo strip: slides horizontally with the page scroll, eased so it trails the
+  // scroll softly. 0 at the top of the page → 1 once the hero has scrolled away.
+  const strip = document.querySelector<HTMLElement>('[data-careers-strip]');
+  const hero = strip?.closest<HTMLElement>('section');
+  if (strip && hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let shown = 0;
+    let frame = 0;
+    const target = () => Math.min(1, Math.max(0, -hero.getBoundingClientRect().top / hero.offsetHeight));
+    const tick = () => {
+      const t = target();
+      shown += (t - shown) * 0.12;
+      if (Math.abs(t - shown) < 0.0005) shown = t;
+      strip.style.setProperty('--shift', shown.toFixed(4));
+      frame = shown === t ? 0 : requestAnimationFrame(tick);
+    };
+    const kick = () => {
+      if (!frame) frame = requestAnimationFrame(tick);
+    };
+    window.addEventListener('scroll', kick, { passive: true });
+    window.addEventListener('resize', kick);
+    kick();
+  }
+</script>
 
 <style>
   /* Positions are % of the 1728×1026 frame */
@@ -50,12 +75,18 @@ import strip from '../../assets/careers/team-strip.png';
     bottom: calc((1026 - 746) / 1026 * 100%);
     width: calc(680 * var(--px));
   }
-  /* 8 photos, 2204 wide, starting calc(236 * var(--px)) off the left edge */
+  /* 8 photos, 2204 wide, starting calc(236 * var(--px)) off the left edge. As the page
+     scrolls from the hero to the next block, the strip glides left (--shift 0 → 1) until
+     the photos hidden past the right edge come in: --travel = 240 / 2204 of its width */
   .careers-hero__strip {
     position: absolute;
     left: calc(-236 / 1728 * 100%);
     top: calc(786 / 1026 * 100%);
     width: calc(2204 / 1728 * 100%);
+    --shift: 0;
+    --travel: 10.9%;
+    transform: translate3d(calc(var(--shift) * var(--travel) * -1), 0, 0);
+    will-change: transform;
   }
   .careers-hero__strip :global(img) {
     width: 100%;
@@ -93,6 +124,7 @@ import strip from '../../assets/careers/team-strip.png';
     .careers-hero__strip {
       width: 1102px;
       margin: 64px 0 0 -118px;
+      --travel: 40%; /* phones: most of the strip is off screen, so it travels further */
     }
   }
 </style>
