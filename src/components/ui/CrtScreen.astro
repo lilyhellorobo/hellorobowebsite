@@ -2,15 +2,15 @@
 /**
  * CRT screen overlay — a CSS stand-in for the Figma "CRT" shader until the WebGL step.
  * Put it inside a positioned box (overflow hidden) on top of an image or video. Values
- * follow the shader on the menu photo (Figma 10194:1895): curvature with rounded black
- * corners, scanlines 38 / size 3, aperture mask 9 / pitch 12, vignette 13, noise 18 /
- * size 1.5, colour aberration 17, flicker, rolling band 0.93.
+ * follow the shader on the menu photo (Figma 10194:1895): scanlines 38 / size 3, aperture
+ * mask 9 / pitch 12, vignette 13, noise 18 / size 1.5, colour aberration 17, flicker,
+ * rolling band 0.93. No curvature: the image fills its box to the square corners (the
+ * shader's rounded black corners read as a second, rounded frame inside the card).
  * The colour fringing needs the image itself: give it `filter: url(#crt-aberration)`
  * (the filter is defined here once per page).
  */
 ---
 <div class="crt" aria-hidden="true">
-  <span class="crt__curve"></span>
   <span class="crt__mask"></span>
   <span class="crt__noise"></span>
   <span class="crt__roll"></span>
@@ -42,13 +42,6 @@
       repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.38) 0 1px, transparent 1px 3px),
       radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.35) 100%);
     animation: crt-flicker 0.12s steps(2) infinite;
-  }
-  /* curvature: the screen's edges bow and the corners fall off into black */
-  .crt__curve {
-    border-radius: 7% / 11%;
-    box-shadow:
-      0 0 0 calc(80 * var(--px)) var(--color-black),
-      inset 0 0 calc(40 * var(--px)) calc(6 * var(--px)) rgb(0 0 0 / 0.55);
   }
   /* aperture grille: thin R / G / B columns, 12px pitch */
   .crt__mask {
