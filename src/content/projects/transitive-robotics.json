@@ -36,12 +36,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/media-03.jpg"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/transitive-robotics/media-03.jpg",
         "../../assets/projects/transitive-robotics/media-04.jpg"
       ]
     },
@@ -66,12 +61,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/media-08.jpg"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/transitive-robotics/media-08.jpg",
         "../../assets/projects/transitive-robotics/media-09.jpg"
       ]
     },
@@ -84,18 +74,8 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/media-11.jpg"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
-        "../../assets/projects/transitive-robotics/media-12.jpg"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/transitive-robotics/media-11.jpg",
+        "../../assets/projects/transitive-robotics/media-12.jpg",
         "../../assets/projects/transitive-robotics/media-13.jpg"
       ]
     }
