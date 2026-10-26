@@ -5,6 +5,8 @@
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-577
  * Logo tiles and stamps are scattered on the right; positions are taken
  * from the 1728 frame and expressed as % so they scale with the page.
+ * Mobile: two rows of logo tiles at 1.5× Figma's 123×69, bleeding off both edges; while
+ * the block crosses the screen the rows drift sideways in opposite directions.
  */
 
 // x, y, w, h in the 1728×1481 frame
@@ -33,7 +35,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     </h2>
   </div>
 
-  <ul class="home-clients__wall" aria-label="Clients">
+  <ul class="home-clients__wall" aria-label="Clients" data-clients-wall>
     {tiles.map((t) => (
       <li
         class="home-clients__tile"
@@ -57,6 +59,27 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     ))}
   </ul>
 </section>
+
+<script>
+  // Scroll drift for the mobile logo rows: --shift goes from +1 to -1 as the wall
+  // crosses the screen (the CSS turns it into px and only uses it on phones)
+  const wall = document.querySelector<HTMLElement>('[data-clients-wall]');
+  if (wall && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const r = wall.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (innerHeight - r.top) / (innerHeight + r.height)));
+      wall.style.setProperty('--shift', (1 - 2 * p).toFixed(4));
+    };
+    const request = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    addEventListener('scroll', request, { passive: true });
+    addEventListener('resize', request);
+    update();
+  }
+</script>
 
 <style>
   .home-clients {
@@ -137,23 +160,27 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       max-width: none;
       margin-top: var(--space-24);
     }
+    /* Tiles 1.5× Figma's 123×69 → 185×104; row 2 sits half a tile to the left of row 1 */
     .home-clients__wall {
+      --tile: 185px;
+      --shift: 0;
       position: relative;
       inset: auto;
       display: grid;
-      grid-template-columns: repeat(4, 123px);
-      grid-auto-rows: 69px;
-      gap: 8px 6px;
+      grid-template-columns: repeat(4, var(--tile));
+      grid-auto-rows: 104px;
+      gap: 8px;
       width: max-content;
-      margin: 64px 0 0 -40px;
+      margin: 64px 0 0 calc(50% - 2 * var(--tile) - 12px);
     }
     .home-clients__tile {
       position: relative;
       left: auto !important;
       top: auto !important;
-      width: 123px;
+      width: var(--tile);
       aspect-ratio: auto;
       overflow: hidden;
+      transform: translateX(calc(var(--tile) / 4 + var(--shift) * 40px));
     }
     .home-clients__tile img:not(.home-clients__logo-raster) {
       position: absolute;
@@ -161,7 +188,7 @@ const pct = (v: number, of: number) => `${(v / of) * 100}%`;
       object-fit: cover;
     }
     .home-clients__tile:nth-child(n + 5) {
-      transform: translateX(-64px);
+      transform: translateX(calc(var(--tile) / -4 - var(--shift) * 40px));
     }
     .home-clients__stamp {
       display: none;

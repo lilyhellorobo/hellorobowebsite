@@ -176,7 +176,8 @@ const { back } = Astro.props;
     .nav-pill {
       left: var(--page-margin);
       right: var(--page-margin);
-      bottom: var(--space-20);
+      /* the same 16 as the sides, so the open menu has equal margins all round */
+      bottom: var(--page-margin);
       transform: none;
     }
     .nav-pill__menu,
