@@ -487,12 +487,15 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     border: 0;
     border-top: var(--line-width) solid var(--line-on-dark);
   }
+  /* Globe mark on the same line as the front name: centred on the drum's front row
+     (549 / 1117), nudged up to the middle of the capitals, at any window shape */
   .project-wheel__mark {
     position: absolute;
     left: calc(104 / 1728 * 100%);
-    top: calc(519 / 1117 * 100%);
+    top: calc(549 / 1117 * 100%);
     width: calc(72 / 1728 * 100%);
     height: auto;
+    translate: 0 calc(-50% - 0.06 * var(--type-h2-size));
   }
 
   /* ── The 3D drum ──────────────────────────────────────────────
