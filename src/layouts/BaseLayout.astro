@@ -42,6 +42,19 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="preload" href="/fonts/AllianceNo2-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Hovering a link to another page of the site (~200ms) prepares that page in the
+         background, images included, so it opens instantly. Chrome / Edge; the CMS is
+         left out. -->
+    <script type="speculationrules" is:inline>
+      {
+        "prerender": [
+          {
+            "where": { "and": [{ "href_matches": "/*" }, { "not": { "href_matches": "/admin*" } }, { "not": { "href_matches": "/api/*" } }] },
+            "eagerness": "moderate"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     {chrome && <GetInTouch variant={headerVariant} />}
@@ -51,5 +64,17 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     {prefooter && <PreFooterCTA variant={prefooter} />}
     {footer && <Footer />}
     {chrome && <NavPill back={back} />}
+    <script is:inline>
+      // Fade images in as they arrive instead of popping (styles in global.css)
+      for (const img of document.images) {
+        if (img.complete && img.naturalWidth) continue;
+        img.classList.add('img-wait');
+        img.addEventListener('load', () => {
+          img.classList.replace('img-wait', 'img-in');
+          img.addEventListener('animationend', () => img.classList.remove('img-in'), { once: true });
+        }, { once: true });
+        img.addEventListener('error', () => img.classList.remove('img-wait'), { once: true });
+      }
+    </script>
   </body>
 </html>
