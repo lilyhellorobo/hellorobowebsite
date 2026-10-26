@@ -28,6 +28,22 @@ const SIZE = {
   bright_ideas_01: [293, 229],
 };
 const KEYS = Object.keys(SIZE);
+// Where each object actually is inside its image (1×, measured from the renders: pixels
+// darker than the light shadow). The images have wide, uneven margins — the robot fills
+// 51–157 of its 349 — so spacing by the image boxes left some objects crowded and others
+// far apart. Spacing uses these instead (plus a bit for the shadow to the right).
+const VISIBLE = {
+  bite_first_05: [15, 27, 355, 183],
+  bright_ideas_01: [26, 6, 224, 222],
+  cat_mode_active: [16, 13, 179, 236],
+  good_chaos_13: [36, 7, 282, 216],
+  hello_robo: [51, 4, 157, 254],
+  inner_calm_02: [8, 24, 247, 172],
+  nuts_about_details_03: [15, 6, 181, 168],
+  seriously_playful: [14, 17, 197, 194],
+  tiny_obsession_12: [24, 10, 155, 178],
+};
+const SHADOW = 0.25; // the shadow adds about a quarter of the object's width to the right
 // Each object's own label (as Figma names it on its main copy)
 const LABELS = {
   hello_robo: 'hello_robo.OBJ',
@@ -61,7 +77,8 @@ const FIGMA = [
 const PERIOD_W = 3600;
 const PERIOD_H = 2400;
 const LABEL_H = 17; // 14px text
-const LABEL_GAP = 20; // label text top below the image, Figma's typical gap
+const LABEL_GAP = 24; // label text top below the object, Figma's typical gap
+const LABEL_CHAR = 8.4; // 14px uppercase label: width per character
 const SAME_MIN = 1000; // the same object never closer than this (centre to centre)
 
 // ── tiny seeded random
@@ -73,10 +90,22 @@ const rand = () => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-// An object's footprint: image + label below it, as a box around its image centre
-const box = (key) => {
-  const [w, h] = SIZE[key];
-  return { hw: w / 2, top: h / 2, bottom: h / 2 + LABEL_GAP + LABEL_H };
+// An object's footprint relative to its image centre: the visible object (+ shadow) and
+// its label. Figma objects keep Figma's label; the others get one centred under the object.
+const labelOf = (p) => {
+  const [w, h] = SIZE[p.key];
+  if (p.pinned && p.label) return { cx: p.lx + p.lw / 2 - (p.fx - w / 2), top: p.ly + 7 - (p.fy - h / 2), w: p.lw - 34 };
+  const [x0, , x1, y1] = VISIBLE[p.key];
+  const text = p.pinned ? '' : LABELS[p.key];
+  return { cx: (x0 + x1) / 2, top: y1 + LABEL_GAP, w: (text || LABELS[p.key]).length * LABEL_CHAR };
+};
+const box = (p) => {
+  const [w, h] = SIZE[p.key];
+  const [x0, y0, x1, y1] = VISIBLE[p.key];
+  const l = labelOf(p);
+  const left = Math.min(x0, l.cx - l.w / 2);
+  const right = Math.max(Math.min(w, x1 + (x1 - x0) * SHADOW), l.cx + l.w / 2);
+  return { l: left - w / 2, r: right - w / 2, t: y0 - h / 2, b: Math.max(y1, l.top + LABEL_H) - h / 2 };
 };
 const wrapD = (d, p) => {
   d = ((d % p) + p) % p;
@@ -86,17 +115,17 @@ const wrapD = (d, p) => {
 const gapOf = (a, b) => {
   const dx = wrapD(b.x - a.x, PERIOD_W);
   const dy = wrapD(b.y - a.y, PERIOD_H);
-  const A = box(a.key);
-  const B = box(b.key);
-  const gx = Math.abs(dx) - (A.hw + B.hw);
-  const gy = dy >= 0 ? dy - (A.bottom + B.top) : -dy - (B.bottom + A.top);
+  const A = box(a);
+  const B = box(b);
+  const gx = Math.max(dx + B.l - A.r, A.l - (dx + B.r));
+  const gy = Math.max(dy + B.t - A.b, A.t - (dy + B.b));
   return Math.hypot(Math.max(0, gx), Math.max(0, gy)) - (gx < 0 && gy < 0 ? Math.min(-gx, -gy) : 0);
 };
 
 // ── The Figma frame, spread out: SPREAD > 1 moves its objects apart around the frame's
 // centre (sizes unchanged), so everything gets a little more room while keeping Figma's
 // arrangement and proportions. Then measure the spacing: each object's nearest gap.
-const SPREAD = 1.15;
+const SPREAD = 1.2;
 const CENTRE = { x: 1728 / 2, y: 1117 / 2 };
 const pinned = FIGMA.map(([key, x, y, label, lx, ly, lw]) => {
   const [w, h] = SIZE[key];
@@ -154,10 +183,11 @@ const nearestGaps = (pts) => pts.map((a) => Math.min(...pts.filter((b) => b !== 
 // Biggest hole: the largest empty space (distance from a point to the nearest object
 // footprint), sampled on a grid
 const footDist = (px, py, p) => {
-  const b = box(p.key);
-  const dx = Math.abs(wrapD(px - p.x, PERIOD_W)) - b.hw;
-  const dyRaw = wrapD(py - p.y, PERIOD_H);
-  const dy = dyRaw >= 0 ? dyRaw - b.bottom : -dyRaw - b.top;
+  const b = box(p);
+  const rx = wrapD(px - p.x, PERIOD_W);
+  const ry = wrapD(py - p.y, PERIOD_H);
+  const dx = Math.max(b.l - rx, rx - b.r);
+  const dy = Math.max(b.t - ry, ry - b.b);
   return Math.hypot(Math.max(0, dx), Math.max(0, dy));
 };
 const biggestHole = (pts, x0 = 0, y0 = 0, w = PERIOD_W, h = PERIOD_H) => {
@@ -256,8 +286,8 @@ const out = pts.map((p) => {
     label: hasFigmaLabel ? p.label : LABELS[p.key],
     x,
     y,
-    labelX: Math.round(hasFigmaLabel ? p.lx + p.lw / 2 - (p.fx - w / 2) : w / 2),
-    labelY: Math.round(hasFigmaLabel ? p.ly + 7 - (p.fy - h / 2) : h + LABEL_GAP),
+    labelX: Math.round(labelOf(p).cx),
+    labelY: Math.round(labelOf(p).top),
   };
 });
 writeFileSync(
