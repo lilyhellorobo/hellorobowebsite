@@ -28,13 +28,15 @@
     width: calc(1233 * var(--px));
     max-width: 100%;
   }
-  /* Stamp sits after "to say yes" on the second line (539,175 in the frame) */
+  /* Stamp after "to say yes" exactly where Figma has it (539, 174 in the frame = 499, 135
+     from the title), not flowed after the text: the browser sets the line a little wider
+     or narrower than Figma, which left the stamp 12px from "yes" instead of Figma's 22 */
   .services-hero__stamp {
-    display: inline-block;
-    vertical-align: baseline;
+    position: absolute;
+    left: calc(499 * var(--px));
+    top: calc(135 * var(--px));
     width: calc(252 * var(--px));
     height: auto;
-    margin-left: calc(12 * var(--px));
   }
   .services-hero__intro {
     display: grid;
@@ -51,6 +53,7 @@
       display: none;
     }
     .services-hero__stamp {
+      position: static;
       display: block;
       width: 126px;
       margin: var(--space-24) 0 0;

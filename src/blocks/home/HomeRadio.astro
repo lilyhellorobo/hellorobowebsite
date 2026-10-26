@@ -15,9 +15,10 @@ const episodes = (await getCollection('episodes', (e) => e.data.homepage && e.da
   .slice(0, 4);
 
 // 3×2 grid in reading order; stamps sit in the two empty cells
-const stamps: Record<number, { src: string; w: number; h: number }> = {
-  2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
-  3: { src: '/images/home/stamp-radio-yes.svg', w: 290, h: 111 },
+// x / y: where Figma puts the stamp inside its 541×765 cell (desktop)
+const stamps: Record<number, { src: string; w: number; h: number; x: number; y: number }> = {
+  2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222, x: 77, y: 272 },
+  3: { src: '/images/home/stamp-radio-yes.svg', w: 290, h: 111, x: 116, y: 327 },
 };
 const posters = [...episodes];
 const cells: ({ stamp: (typeof stamps)[number] } | { episode: (typeof episodes)[number] })[] = [];
@@ -58,7 +59,7 @@ for (let i = 0; posters.length; i++) {
             alt=""
             width={c.stamp.w}
             height={c.stamp.h}
-            style={`--w: ${c.stamp.w}; width: calc(${c.stamp.w} / 541 * 100%)`}
+            style={`--w: ${c.stamp.w}; --sx: ${c.stamp.x}; --sy: ${c.stamp.y}; width: calc(${c.stamp.w} / 541 * 100%)`}
             loading="lazy"
           />
         )}
@@ -108,6 +109,13 @@ for (let i = 0; posters.length; i++) {
   }
   .home-radio__stamp {
     height: auto;
+  }
+  /* Desktop: the stamp where Figma has it in its cell (margins in % of the cell width) */
+  @media (min-width: 1024px) {
+    .home-radio__stamp {
+      place-self: start;
+      margin: calc(var(--sy) / 541 * 100%) 0 0 calc(var(--sx) / 541 * 100%);
+    }
   }
 
   /* ── Mobile: Figma 10098:911 — stacked head, full-width button,

@@ -14,9 +14,10 @@ const featured = (await getCollection('episodes', (e) => e.data.featured && e.da
   .slice(0, 6);
 
 // Poster slots are filled in order; stamps keep their place in the Figma layout
-const stamps: Record<number, { src: string; w: number; h: number }> = {
-  2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222 },
-  3: { src: '/images/home/stamp-radio-yes-on-dark.svg', w: 290, h: 111 },
+// x / y: where Figma puts the stamp inside its 541×765 cell (desktop); none = centred
+const stamps: Record<number, { src: string; w: number; h: number; x?: number; y?: number }> = {
+  2: { src: '/images/home/stamp-radio-handmade.svg', w: 404, h: 222, x: 78, y: 272 },
+  3: { src: '/images/home/stamp-radio-yes-on-dark.svg', w: 290, h: 111, x: 117, y: 328 },
   7: { src: '/images/radio/stamp-departure.png', w: 126, h: 82 },
 };
 const posters = [...featured];
@@ -38,7 +39,7 @@ for (let i = 0; posters.length; i++) {
             <Image src={c.episode.data.cover!} alt={`${c.episode.data.title} poster`} widths={[541, 1080]} sizes="(min-width: 1728px) 541px, 31vw" loading="lazy" />
           </a>
         ) : (
-          <img class="radio-collage__stamp" src={c.stamp.src} alt="" width={c.stamp.w} height={c.stamp.h} style={`--w: ${c.stamp.w}; width: calc(${c.stamp.w} / 541 * 100%)`} loading="lazy" />
+          <img class:list={['radio-collage__stamp', { 'radio-collage__stamp--placed': c.stamp.x !== undefined }]} src={c.stamp.src} alt="" width={c.stamp.w} height={c.stamp.h} style={`--w: ${c.stamp.w}; --sx: ${c.stamp.x ?? 0}; --sy: ${c.stamp.y ?? 0}; width: calc(${c.stamp.w} / 541 * 100%)`} loading="lazy" />
         )}
       </li>
     ))}
@@ -84,6 +85,13 @@ for (let i = 0; posters.length; i++) {
   }
   .radio-collage__stamp {
     height: auto;
+  }
+  /* Desktop: the stamp where Figma has it in its cell (margins in % of the cell width) */
+  @media (min-width: 1024px) {
+    .radio-collage__stamp--placed {
+      place-self: start;
+      margin: calc(var(--sy) / 541 * 100%) 0 0 calc(var(--sx) / 541 * 100%);
+    }
   }
 
   /* ── Mobile: two columns ── */
