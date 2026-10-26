@@ -36,12 +36,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/media-02.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-02.avif",
         "../../assets/projects/surf-air-flight-ops/media-03.avif"
       ]
     },
@@ -66,12 +61,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/media-07.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-07.avif",
         "../../assets/projects/surf-air-flight-ops/media-08.avif"
       ]
     },
@@ -84,18 +74,8 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/media-10.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
-        "../../assets/projects/surf-air-flight-ops/media-11.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-10.avif",
+        "../../assets/projects/surf-air-flight-ops/media-11.avif",
         "../../assets/projects/surf-air-flight-ops/media-12.avif"
       ]
     },
@@ -108,12 +88,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/media-14.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/surf-air-flight-ops/media-14.avif",
         "../../assets/projects/surf-air-flight-ops/media-15.avif"
       ]
     },

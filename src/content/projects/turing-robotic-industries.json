@@ -37,12 +37,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/media-03.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/turing-robotic-industries/media-03.avif",
         "../../assets/projects/turing-robotic-industries/media-04.avif"
       ]
     },
@@ -67,12 +62,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/media-08.avif"
-      ]
-    },
-    {
-      "type": "media",
-      "images": [
+        "../../assets/projects/turing-robotic-industries/media-08.avif",
         "../../assets/projects/turing-robotic-industries/media-09.avif"
       ]
     }
