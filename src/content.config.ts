@@ -23,6 +23,9 @@ const projects = defineCollection({
       name: z.string(),
       intro: z.string(),
       services: z.array(z.string()),
+      /** Under NDA: shown in the work wheel / cards with the NDA tag, but no View button,
+          no link and no project page */
+      nda: z.boolean().default(false),
       /** Cover: the Work wheel background (Home + /work); not shown on the project page */
       reveal: media(image),
       /** Page background for the dark sections; text turns black on light colors */
