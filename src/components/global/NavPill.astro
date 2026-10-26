@@ -76,7 +76,6 @@ const { back } = Astro.props;
 
 <style>
   .nav-pill {
-    view-transition-name: nav-pill; /* stays put between pages */
     position: fixed;
     left: 50%;
     bottom: var(--space-40);
@@ -118,11 +117,21 @@ const { back } = Astro.props;
     overflow: hidden;
   }
   .nav-pill__menu {
+    view-transition-name: nav-menu; /* stays put between pages */
     width: var(--nav-width);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 var(--space-20);
+  }
+  /* Desktop: the back button sits just left of the bar, outside it, so the menu stays
+     centred in exactly the same place on pages with and without it (no jump between
+     Careers and a position); it fades in / out on its own between pages */
+  .nav-pill__back {
+    view-transition-name: nav-back;
+    position: absolute;
+    top: 0;
+    right: 100%;
   }
   .nav-pill__label {
     display: inline-flex;
@@ -175,9 +184,21 @@ const { back } = Astro.props;
       flex: 1;
       width: auto;
     }
+    /* Phones: the bar is full width, so the back button shares the row */
+    .nav-pill__back {
+      position: static;
+    }
     .nav-pill :global(.robo-logo) {
       width: 53px;
       height: auto;
     }
+  }
+  /* Between pages the menu keeps its right edge (logo) in place and isn't stretched when
+     its width changes (phones, where the back button takes room) */
+  :global(::view-transition-old(nav-menu)),
+  :global(::view-transition-new(nav-menu)) {
+    height: 100%;
+    object-fit: none;
+    object-position: right center;
   }
 </style>
