@@ -30,7 +30,7 @@
   }
 
   /* ── Mobile: the logo row keeps its size and scrolls sideways ── */
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .radio-guests {
       padding-top: 164px;
       padding-bottom: 64px;
@@ -39,8 +39,10 @@
       overflow-x: auto;
       scrollbar-width: none;
     }
+    /* Mobile/H1, but never wider than the screen: "conversations" is one long word */
     .radio-guests__title {
       margin-top: var(--space-24);
+      font-size: min(var(--type-h1-size-mobile), 15vw);
     }
     .radio-guests__logos {
       width: 822px;

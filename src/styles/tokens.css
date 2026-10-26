@@ -16,7 +16,7 @@
      calc(N * var(--px)), where N is the Figma px value: 1px at 1728 and wider,
      smaller on smaller screens, so the layout scales like the Figma frame.
      Text has a floor (see Typography) so it stays readable on tablets.
-     On mobile (≤ 767px) --px is 1px again and the 390 frames are used as is. */
+     On phones and portrait tablets (≤ 1023px) --px is 1px again and the 390 frames are used as is. */
   --px: min(1px, 100vw / 1728);
 
   /* ── Color: brand (Figma variables) ─────────────────────────── */
@@ -127,10 +127,10 @@
   --z-overlay: 300;
 }
 
-/* ── Mobile (≤ 767px) — Figma 390 frames ────────────────────────
+/* ── Mobile (≤ 1023px: phones + portrait tablets) — Figma 390 frames ────────────────────────
    The 5 text styles switch to their Figma Mobile/* values, so every
-   .t-* class follows automatically. Breakpoint: 767px everywhere. */
-@media (max-width: 767px) {
+   .t-* class follows automatically. Breakpoint: 1023px everywhere (portrait tablets get the phone layout; from 1024 — landscape tablets, laptops — the desktop design scales). */
+@media (max-width: 1023px) {
   :root {
     --px: 1px;
     --type-h1-size: var(--type-h1-size-mobile);

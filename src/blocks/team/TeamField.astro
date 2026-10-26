@@ -355,7 +355,7 @@ const config = JSON.stringify({
     // Where the selected object goes: the middle of the space left of the card
     // (desktop: the middle of the space left of the card; phones: of the space above the
     // bottom sheet — measured on the card that's about to open, it's laid out while hidden)
-    const isPhone = () => innerWidth <= 767;
+    const isPhone = () => innerWidth <= 1023;
     const target = (card?: HTMLElement) => {
       if (!card) return { x: innerWidth / 2, y: innerHeight / 2 };
       if (isPhone()) {
@@ -575,7 +575,7 @@ const config = JSON.stringify({
     // Start: the middle tile centred on screen; /team#<person> opens that card
     measure();
     // a point p of the middle tile is on screen at wrap(pan) + p × unit
-    const start = innerWidth <= 767 ? cfg.startMobile : cfg.start;
+    const start = innerWidth <= 1023 ? cfg.startMobile : cfg.start;
     panX = innerWidth / 2 - start.x * unit;
     panY = innerHeight / 2 - start.y * unit;
     render();
@@ -682,7 +682,7 @@ const config = JSON.stringify({
     left: calc(var(--lx) * var(--px) * var(--s));
     top: calc(var(--ly) * var(--px) * var(--s));
     transform: translateX(-50%);
-    font-size: max(9px, calc(14 * var(--px) * var(--s)));
+    font-size: max(10px, calc(14 * var(--px) * var(--s)));
     line-height: 1.2;
     color: var(--color-black);
     white-space: nowrap;
@@ -822,7 +822,7 @@ const config = JSON.stringify({
   }
 
   /* ── Mobile: the same endless canvas (touch drag); the card is a scrolling sheet ── */
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     .team {
       --s: 0.55;
     }
