@@ -141,7 +141,6 @@ button {
   font-size: var(--type-button-size);
   line-height: var(--type-button-line);
   letter-spacing: var(--type-button-track);
-  text-transform: uppercase;
   font-weight: 400;
 }
 
