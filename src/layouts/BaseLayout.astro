@@ -44,15 +44,23 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     <link rel="preload" href="/fonts/AllianceNo2-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <!-- Hovering a link to another page of the site (~200ms) prepares that page in the
          background, images included, so it opens instantly. Chrome / Edge; the CMS is
-         left out. -->
-    <script type="speculationrules" is:inline>
-      {
-        "prerender": [
-          {
-            "where": { "and": [{ "href_matches": "/*" }, { "not": { "href_matches": "/admin*" } }, { "not": { "href_matches": "/api/*" } }] },
-            "eagerness": "moderate"
-          }
-        ]
+         left out. Desktop only (wide screen + mouse): a page prepared in the background
+         can be laid out for the wrong screen when the browser's phone view emulates a
+         phone (the menu bar and everything else came out bigger after a tap), and phones
+         don't hover anyway — there, pages simply load as usual. -->
+    <script is:inline>
+      if (HTMLScriptElement.supports?.('speculationrules') && matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches) {
+        const rules = document.createElement('script');
+        rules.type = 'speculationrules';
+        rules.textContent = JSON.stringify({
+          prerender: [
+            {
+              where: { and: [{ href_matches: '/*' }, { not: { href_matches: '/admin*' } }, { not: { href_matches: '/api/*' } }] },
+              eagerness: 'moderate',
+            },
+          ],
+        });
+        document.head.append(rules);
       }
     </script>
   </head>
