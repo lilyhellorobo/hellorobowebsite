@@ -53,6 +53,11 @@ html {
      Safari widen the page, and the fixed menu bar then sat partly off screen. On the
      root this applies to the viewport, so sticky blocks keep working. */
   overflow-x: hidden;
+  /* Where the browser draws a classic scrollbar (desktop browsers, Chrome's DevTools
+     "Responsive" mode) the page loses ~15px on pages that scroll and not on those that
+     don't (Work, Team), so the full-width menu bar changed size between pages. Keep the
+     scrollbar's space on every page. Phones use overlay scrollbars: no effect there. */
+  scrollbar-gutter: stable;
 }
 @supports (overflow: clip) {
   html {
