@@ -1,0 +1,292 @@
+---
+/**
+ * Work page — the project wheel on phones (≤ 1023px)
+ * A lighter, flat version of the desktop drum (ProjectScroller, Figma "Portfolio page"
+ * 10100:11973) with the same structure: full screen, the active project's photo behind
+ * a 40% black layer and CRT lines, the globe mark, the project names as a wheel, and the
+ * active project's services under a rule. No VIEW button: tapping the name in front opens
+ * the project (NDA projects show their tag and don't open).
+ *
+ * The wheel is a native scroll-snap list (light on phones, momentum for free): one row
+ * per name; the name at the centre is the active one, the others fade and shrink with
+ * their distance from it, like names going round the drum. The list is repeated LOOPS
+ * times and quietly re-centred on the middle copy when the scrolling stops, so it turns
+ * endlessly in both directions, like the desktop Work wheel.
+ * Projects come from the projects collection (CMS), in `order`.
+ */
+import { getCollection } from 'astro:content';
+import Media from '../../components/ui/Media.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const LOOPS = 5;
+const rows = Array.from({ length: projects.length * LOOPS }, (_, i) => ({ i, project: projects[i % projects.length] }));
+const start = projects.length * Math.floor(LOOPS / 2); // first project of the middle copy
+---
+{projects.length > 0 && (
+<section class="work-wheel theme-dark only-mobile" aria-label="Selected work" data-work-wheel data-count={projects.length} data-start={start}>
+  {projects.map((p, i) => (
+    <div class:list={['work-wheel__bg', { 'is-current': i === 0 }]} data-index={i}>
+      <Media class="work-wheel__media" media={p.data.reveal} widths={[800, 1600]} sizes="275vw" loading={i === 0 ? 'eager' : 'lazy'} />
+    </div>
+  ))}
+  <div class="work-wheel__shade" aria-hidden="true"></div>
+  <div class="work-wheel__lines" aria-hidden="true"></div>
+  <img class="work-wheel__mark" src="/images/home/work-globe.svg" alt="" width="51" height="56" />
+
+  <ol class="work-wheel__names" data-names>
+    {rows.map(({ i, project: p }) => (
+      <li class="work-wheel__row" data-index={i % projects.length} aria-hidden={i === start ? undefined : 'true'}>
+        {p.data.nda ? (
+          <span class="work-wheel__name t-h3">
+            {p.data.name}<img class="work-wheel__nda" src="/images/project/nda.svg" alt=" (under NDA)" width="46" height="32" />
+          </span>
+        ) : (
+          <a class="work-wheel__name t-h3" href={`/work/${p.id}`} tabindex={i === start ? undefined : '-1'}>{p.data.name}</a>
+        )}
+      </li>
+    ))}
+  </ol>
+
+  <div class="work-wheel__info">
+    <hr class="work-wheel__rule" />
+    <div class="work-wheel__stack">
+      {projects.map((p, i) => (
+        <ul class:list={['work-wheel__services', 't-body', 't-body2-mobile', { 'is-current': i === 0 }]} data-index={i} aria-hidden={i > 0 ? 'true' : undefined}>
+          {p.data.services.map((s) => <li>{s}</li>)}
+        </ul>
+      ))}
+    </div>
+  </div>
+</section>
+)}
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-work-wheel]')) {
+    const list = root.querySelector<HTMLElement>('[data-names]');
+    if (!list) continue;
+    const rows = [...list.querySelectorAll<HTMLElement>('.work-wheel__row')];
+    const names = rows.map((r) => r.firstElementChild as HTMLElement);
+    const count = Number(root.dataset.count);
+    const start = Number(root.dataset.start);
+    const layers = [...root.querySelectorAll<HTMLElement>('.work-wheel__bg, .work-wheel__services')];
+    // Opacity by distance from the centre, in rows (as on the desktop drum: the front
+    // name stands out, the others fall away fast)
+    const FADE = [1, 0.25, 0.14, 0.08, 0.05, 0];
+    let rowH = 0;
+    let fit: number[] = [];
+    let active = -1;
+    let frame = 0;
+
+    const info = root.querySelector<HTMLElement>('.work-wheel__info');
+    const measure = () => {
+      if (info) list.style.bottom = `${root.clientHeight - info.offsetTop + 24}px`;
+      rowH = rows[0].offsetHeight;
+      const pad = `${(list.clientHeight - rowH) / 2}px`;
+      list.style.paddingTop = pad;
+      list.style.paddingBottom = pad;
+      // long names are scaled down to fit the width, never cut
+      const room = list.clientWidth;
+      fit = names.map((n) => Math.min(1, room / Math.max(1, n.scrollWidth)));
+    };
+    const render = () => {
+      frame = 0;
+      if (!rowH) return;
+      const pos = list.scrollTop / rowH; // index of the row at the centre
+      rows.forEach((row, i) => {
+        const d = i - pos;
+        const a = Math.abs(d);
+        if (a > FADE.length) {
+          row.style.opacity = '0';
+          return;
+        }
+        const lo = FADE[Math.min(Math.floor(a), FADE.length - 1)];
+        const hi = FADE[Math.min(Math.ceil(a), FADE.length - 1)];
+        row.style.opacity = String(lo + (hi - lo) * (a - Math.floor(a)));
+        // names away from the centre shrink a little and drift toward it, like the drum
+        const s = 1 - Math.min(a, 4) * 0.07;
+        row.style.transform = `translateY(${(-d * rowH * (1 - s)) / 2}px) scale(${s * fit[i]})`;
+      });
+      const now = Math.round(pos);
+      if (now !== active && rows[now]) {
+        if (active >= 0 && rows[active]) {
+          rows[active].setAttribute('aria-hidden', 'true');
+          names[active].setAttribute('tabindex', '-1');
+        }
+        rows[now].removeAttribute('aria-hidden');
+        names[now].removeAttribute('tabindex');
+        active = now;
+        const index = String(now % count);
+        layers.forEach((el) => {
+          const on = el.dataset.index === index;
+          el.classList.toggle('is-current', on);
+          if (el.classList.contains('work-wheel__services')) el.setAttribute('aria-hidden', String(!on));
+        });
+      }
+    };
+    const request = () => {
+      if (!frame) frame = requestAnimationFrame(render);
+    };
+    // When the scrolling settles, jump (invisibly — the copies are identical) back to the
+    // same project in the middle copy, so the wheel never runs out
+    let settle = 0;
+    const recentre = () => {
+      const i = Math.round(list.scrollTop / rowH);
+      const loop = Math.floor(i / count);
+      const middle = Math.floor(start / count);
+      if (loop !== middle) {
+        list.scrollTop += (middle - loop) * count * rowH;
+        render();
+      }
+    };
+    list.addEventListener('scroll', () => {
+      request();
+      clearTimeout(settle);
+      settle = window.setTimeout(recentre, 160);
+    }, { passive: true });
+
+    // A tap on a name that isn't in front brings it to the front instead of opening it
+    list.addEventListener('click', (e) => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.work-wheel__row');
+      if (!row) return;
+      const i = rows.indexOf(row);
+      if (i !== active) {
+        e.preventDefault();
+        list.scrollTo({ top: i * rowH, behavior: 'smooth' });
+      }
+    });
+
+    const setup = () => {
+      if (!list.offsetHeight) return; // desktop: hidden
+      measure();
+      list.scrollTop = (start + Math.max(0, active % count)) * rowH;
+      render();
+    };
+    window.addEventListener('resize', () => {
+      const keep = active < 0 ? 0 : active % count;
+      if (!list.offsetHeight) return;
+      measure();
+      list.scrollTop = (start + keep) * rowH;
+      render();
+    });
+    document.fonts?.ready.then(setup);
+    setup();
+  }
+</script>
+
+<style>
+  .work-wheel {
+    position: relative;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: var(--color-black);
+    color: var(--color-white);
+  }
+  /* Photos crossfade; the same crop as the Home cards */
+  .work-wheel__bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+  }
+  .work-wheel__bg.is-current {
+    opacity: 1;
+  }
+  .work-wheel :global(.work-wheel__media) {
+    position: absolute;
+    left: 50%;
+    top: calc(-146 / 694 * 100%);
+    height: calc(966 / 694 * 100%);
+    width: auto;
+    min-width: 100%;
+    max-width: none;
+    object-fit: cover;
+    transform: translateX(-50%);
+  }
+  /* 40% black, as on the desktop Work wheel */
+  .work-wheel__shade {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.4);
+  }
+  .work-wheel__lines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+  .work-wheel__mark {
+    position: absolute;
+    left: var(--page-margin);
+    top: var(--space-20);
+    width: 51px;
+    height: auto;
+  }
+
+  /* The wheel: fills the space between the mark and the services; the row at its centre
+     is the active project. Padding lets the first and last rows reach the centre. */
+  .work-wheel__names {
+    --row: 48px;
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    top: 96px;
+    bottom: 240px; /* set by the script: up to 24 above the services */
+    margin: 0;
+    padding: 0; /* top / bottom set by the script: half the box minus half a row */
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+  }
+  .work-wheel__names::-webkit-scrollbar {
+    display: none;
+  }
+  .work-wheel__row {
+    height: var(--row);
+    display: flex;
+    align-items: center;
+    scroll-snap-align: center;
+    transform-origin: left center;
+    will-change: transform, opacity;
+  }
+  .work-wheel__name {
+    display: inline-flex;
+    align-items: flex-start;
+    white-space: nowrap;
+  }
+  .work-wheel__nda {
+    width: 30px;
+    height: auto;
+    margin-left: 8px;
+  }
+
+  /* Rule + services of the active project, 24 above the menu bar */
+  .work-wheel__info {
+    position: absolute;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    bottom: calc(var(--page-margin) + var(--nav-height) + var(--space-24));
+  }
+  .work-wheel__rule {
+    margin: 0;
+    border: 0;
+    border-top: var(--line-width) solid var(--line-on-dark);
+  }
+  .work-wheel__stack {
+    display: grid;
+    margin-top: var(--space-24);
+  }
+  .work-wheel__services {
+    grid-area: 1 / 1;
+    display: grid;
+    align-content: start;
+    gap: var(--space-12);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .work-wheel__services.is-current {
+    opacity: 1;
+  }
+</style>
