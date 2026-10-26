@@ -40,18 +40,22 @@
     max-width: 100%;
   }
 
-  /* ── Mobile: Figma 10101:6503 — stamp 193 wide, text 326 wide ── */
+  /* ── Mobile: Figma 10101:6503 — the drawn stamp is 193 wide at (98, 44), text 326 wide at
+     160 (+164 divider). The SVG has room around the drawing (279 of its 342), so the file is
+     237 wide (193 / 279 × 342) and sits 30 from the top, centred on the drawing ── */
   @media (max-width: 1023px) {
     .home-intro {
-      padding: 208px 32px 396px;
+      padding: 194px 32px 396px;
       gap: 0;
     }
     .home-intro__stamp {
-      width: 193px;
+      width: 237px;
+      /* the drawing sits 3.5px left of the file's middle; this centres the drawing */
+      margin-left: 7px;
     }
     .home-intro__text {
       width: 100%;
-      margin-top: 44px;
+      margin-top: 30px;
     }
   }
 </style>

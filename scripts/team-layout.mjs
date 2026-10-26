@@ -28,20 +28,33 @@ const SIZE = {
   bright_ideas_01: [293, 229],
 };
 const KEYS = Object.keys(SIZE);
-// Where each object actually is inside its image (1×, measured from the renders: pixels
-// darker than the light shadow). The images have wide, uneven margins — the robot fills
-// 51–157 of its 349 — so spacing by the image boxes left some objects crowded and others
-// far apart. Spacing uses these instead (plus the shadow to the right, SHADOW_RIGHT).
+// Where each object's body is inside its image (1×), without its shadow: measured from
+// the renders' sharp edges (shadows are soft, so they don't count). The images have wide,
+// uneven margins — the robot fills 50–150 of its 349 — so spacing and labels use these.
 const VISIBLE = {
-  bite_first_05: [15, 27, 355, 183],
-  bright_ideas_01: [26, 6, 224, 222],
-  cat_mode_active: [16, 13, 179, 236],
-  good_chaos_13: [36, 7, 282, 216],
-  hello_robo: [51, 4, 157, 254],
-  inner_calm_02: [8, 24, 247, 172],
-  nuts_about_details_03: [15, 6, 181, 168],
-  seriously_playful: [14, 17, 197, 194],
-  tiny_obsession_12: [24, 10, 155, 178],
+  bite_first_05: [14, 26, 295, 184],
+  bright_ideas_01: [25, 5, 224, 222],
+  cat_mode_active: [15, 12, 157, 236],
+  good_chaos_13: [36, 6, 222, 217],
+  hello_robo: [50, 2, 150, 254],
+  inner_calm_02: [8, 23, 222, 172],
+  nuts_about_details_03: [14, 6, 160, 169],
+  seriously_playful: [17, 16, 158, 194],
+  tiny_obsession_12: [22, 9, 152, 179],
+};
+// Where each label is centred (1×): the object's visual middle, checked by eye — the box
+// middle for most, the body for the cat and the squirrel (not the tail), the star for the
+// keychain (not the ring), the standing hand for the breakdancer
+const LABEL_CX = {
+  bite_first_05: 155,
+  bright_ideas_01: 127,
+  cat_mode_active: 82,
+  good_chaos_13: 128,
+  hello_robo: 100,
+  inner_calm_02: 115,
+  nuts_about_details_03: 89,
+  seriously_playful: 88,
+  tiny_obsession_12: 92,
 };
 // How far each object's shadow reaches to the right (1×, measured from the renders: the
 // rightmost pixel that isn't white). It varies a lot — the robot's shadow runs 330 of its
@@ -91,7 +104,7 @@ const FIGMA = [
 const PERIOD_W = 3600;
 const PERIOD_H = 2400;
 const LABEL_H = 17; // 14px text
-const LABEL_GAP = 24; // label text top below the object, Figma's typical gap
+const LABEL_GAP = 40; // label text top below the object's body (a little more than Figma's 24)
 const LABEL_CHAR = 8.4; // 14px uppercase label: width per character
 const SAME_MIN = 1000; // the same object never closer than this (centre to centre)
 
@@ -105,13 +118,11 @@ const rand = () => {
 };
 
 // An object's footprint relative to its image centre: the visible object (+ shadow) and
-// its label. Figma objects keep Figma's label; the others get one centred under the object.
+// its label, centred under the object's visual middle (Figma objects keep Figma's text).
 const labelOf = (p) => {
-  const [w, h] = SIZE[p.key];
-  if (p.pinned && p.label) return { cx: p.lx + p.lw / 2 - (p.fx - w / 2), top: p.ly + 7 - (p.fy - h / 2), w: p.lw - 34 };
-  const [x0, , x1, y1] = VISIBLE[p.key];
-  const text = p.pinned ? '' : LABELS[p.key];
-  return { cx: (x0 + x1) / 2, top: y1 + LABEL_GAP, w: (text || LABELS[p.key]).length * LABEL_CHAR };
+  const [, , , y1] = VISIBLE[p.key];
+  const text = p.pinned && p.label ? p.label : LABELS[p.key];
+  return { cx: LABEL_CX[p.key], top: y1 + LABEL_GAP, w: text.length * LABEL_CHAR };
 };
 const box = (p) => {
   const [w, h] = SIZE[p.key];

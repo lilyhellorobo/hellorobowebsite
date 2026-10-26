@@ -7,8 +7,8 @@
    "label": "BRIGHT_IDEAS_01.OBJ",
    "x": -431,
    "y": -289,
-   "labelX": 140,
-   "labelY": 240
+   "labelX": 128,
+   "labelY": 257
   },
   {
    "key": "tiny_obsession_12",
@@ -16,55 +16,55 @@
    "x": 629,
    "y": -345,
    "labelX": 92,
-   "labelY": 208
+   "labelY": 219
   },
   {
    "key": "cat_mode_active",
    "label": "CAT_MODE_ACTIVE.OBJ",
    "x": 1731,
    "y": -359,
-   "labelX": 90,
-   "labelY": 258
+   "labelX": 82,
+   "labelY": 276
   },
   {
    "key": "inner_calm_02",
    "label": "INNER_CALM_02.OBJ",
    "x": 101,
    "y": 83,
-   "labelX": 117,
-   "labelY": 206
+   "labelX": 115,
+   "labelY": 212
   },
   {
    "key": "nuts_about_details_03",
    "label": "NUTS_ABOUT_DETAILS_03.OBJ",
    "x": 1278,
    "y": 29,
-   "labelX": 92,
-   "labelY": 207
+   "labelX": 89,
+   "labelY": 209
   },
   {
    "key": "hello_robo",
    "label": "hello_robo.OBJ",
    "x": 759,
    "y": 298,
-   "labelX": 109,
-   "labelY": 289
+   "labelX": 100,
+   "labelY": 294
   },
   {
    "key": "good_chaos_13",
    "label": "GOOD_CHAOS_13.OBJ",
    "x": 1880,
    "y": 291,
-   "labelX": 145,
-   "labelY": 251
+   "labelX": 128,
+   "labelY": 257
   },
   {
    "key": "cat_mode_active",
    "label": "BITE_FIRST_05.OBJ",
    "x": -429,
    "y": 418,
-   "labelX": 90,
-   "labelY": 258
+   "labelX": 82,
+   "labelY": 276
   },
   {
    "key": "seriously_playful",
@@ -72,143 +72,135 @@
    "x": 1456,
    "y": 641,
    "labelX": 88,
-   "labelY": 227
+   "labelY": 234
   },
   {
    "key": "bite_first_05",
    "label": "WILD_IDEA_FINAL.OBJ",
    "x": 118,
    "y": 723,
-   "labelX": 165,
-   "labelY": 215
+   "labelX": 155,
+   "labelY": 224
   },
   {
    "key": "bright_ideas_01",
    "label": "BRIGHT_IDEAS_01.OBJ",
    "x": 938,
    "y": 1042,
-   "labelX": 125,
-   "labelY": 246
+   "labelX": 127,
+   "labelY": 262
   },
   {
    "key": "tiny_obsession_12",
    "label": "TINY_OBSESSION_12.OBJ",
    "x": -356,
    "y": 1094,
-   "labelX": 90,
-   "labelY": 202
+   "labelX": 92,
+   "labelY": 219
   },
   {
    "key": "inner_calm_02",
    "label": "INNER_CALM_02.OBJ",
    "x": 1806,
    "y": 1088,
-   "labelX": 128,
-   "labelY": 196
-  },
-  {
-   "key": "hello_robo",
-   "label": "hello_robo.OBJ",
-   "x": 2691,
-   "y": 863,
-   "labelX": 104,
-   "labelY": 278
-  },
-  {
-   "key": "inner_calm_02",
-   "label": "INNER_CALM_02.OBJ",
-   "x": 2203,
-   "y": 2196,
-   "labelX": 128,
-   "labelY": 196
-  },
-  {
-   "key": "bite_first_05",
-   "label": "WILD_IDEA_FINAL.OBJ",
-   "x": 2415,
-   "y": 1372,
-   "labelX": 185,
-   "labelY": 207
+   "labelX": 115,
+   "labelY": 212
   },
   {
    "key": "seriously_playful",
    "label": "SERIOUSLY_PLAYFUL.OBJ",
-   "x": 2633,
-   "y": 189,
-   "labelX": 106,
-   "labelY": 218
+   "x": 2735,
+   "y": 980,
+   "labelX": 88,
+   "labelY": 234
   },
   {
    "key": "bright_ideas_01",
    "label": "BRIGHT_IDEAS_01.OBJ",
-   "x": 2686,
-   "y": 1835,
-   "labelX": 125,
-   "labelY": 246
-  },
-  {
-   "key": "bite_first_05",
-   "label": "WILD_IDEA_FINAL.OBJ",
-   "x": 1129,
-   "y": 1975,
-   "labelX": 185,
-   "labelY": 207
+   "x": 2700,
+   "y": 36,
+   "labelX": 127,
+   "labelY": 262
   },
   {
    "key": "nuts_about_details_03",
    "label": "NUTS_ABOUT_DETAILS_03.OBJ",
-   "x": 3217,
-   "y": 1596,
-   "labelX": 98,
-   "labelY": 192
-  },
-  {
-   "key": "good_chaos_13",
-   "label": "GOOD_CHAOS_13.OBJ",
-   "x": 627,
-   "y": 1539,
-   "labelX": 159,
-   "labelY": 240
+   "x": 2611,
+   "y": 1458,
+   "labelX": 89,
+   "labelY": 209
   },
   {
    "key": "tiny_obsession_12",
    "label": "TINY_OBSESSION_12.OBJ",
-   "x": 1903,
-   "y": 1593,
-   "labelX": 90,
-   "labelY": 202
-  },
-  {
-   "key": "nuts_about_details_03",
-   "label": "NUTS_ABOUT_DETAILS_03.OBJ",
-   "x": 2302,
-   "y": 769,
-   "labelX": 98,
-   "labelY": 192
+   "x": 2233,
+   "y": 2098,
+   "labelX": 92,
+   "labelY": 219
   },
   {
    "key": "cat_mode_active",
    "label": "CAT_MODE_ACTIVE.OBJ",
-   "x": 137,
-   "y": 1692,
-   "labelX": 98,
-   "labelY": 260
+   "x": 2759,
+   "y": 1906,
+   "labelX": 82,
+   "labelY": 276
+  },
+  {
+   "key": "inner_calm_02",
+   "label": "INNER_CALM_02.OBJ",
+   "x": 722,
+   "y": 1574,
+   "labelX": 115,
+   "labelY": 212
+  },
+  {
+   "key": "nuts_about_details_03",
+   "label": "NUTS_ABOUT_DETAILS_03.OBJ",
+   "x": 279,
+   "y": 1195,
+   "labelX": 89,
+   "labelY": 209
   },
   {
    "key": "hello_robo",
    "label": "hello_robo.OBJ",
-   "x": 1333,
-   "y": 1475,
-   "labelX": 104,
-   "labelY": 278
+   "x": 3163,
+   "y": 1561,
+   "labelX": 100,
+   "labelY": 294
+  },
+  {
+   "key": "hello_robo",
+   "label": "hello_robo.OBJ",
+   "x": 2032,
+   "y": 1548,
+   "labelX": 100,
+   "labelY": 294
+  },
+  {
+   "key": "bite_first_05",
+   "label": "WILD_IDEA_FINAL.OBJ",
+   "x": 2441,
+   "y": 522,
+   "labelX": 155,
+   "labelY": 224
   },
   {
    "key": "seriously_playful",
    "label": "SERIOUSLY_PLAYFUL.OBJ",
-   "x": 157,
-   "y": 1208,
-   "labelX": 106,
-   "labelY": 218
+   "x": 126,
+   "y": 1766,
+   "labelX": 88,
+   "labelY": 234
+  },
+  {
+   "key": "good_chaos_13",
+   "label": "GOOD_CHAOS_13.OBJ",
+   "x": 1240,
+   "y": 1540,
+   "labelX": 128,
+   "labelY": 257
   }
  ]
 }
