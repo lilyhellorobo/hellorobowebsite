@@ -98,6 +98,8 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
     margin-top: calc(104 * var(--px));
     padding-inline: var(--page-margin);
     overflow-x: auto;
+    /* sideways only, never up and down */
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
     scroll-padding-inline: var(--page-margin);
@@ -155,7 +157,7 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
   @media (max-width: 1023px) {
     .home-news {
       padding-top: 188px;
-      padding-bottom: 187px;
+      padding-bottom: 175px;
     }
     .home-news__head {
       flex-direction: column;
@@ -165,14 +167,18 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
       width: 120px;
       height: auto;
     }
+    /* room for the View links' tap area (12 below the text), which would otherwise
+       stick out and let the row scroll up and down; taken off the section's 187 */
     .home-news__row {
       margin-top: 64px;
+      padding-bottom: 12px;
     }
+    /* 15% over Figma's 276 / 184, which read too small on a phone */
     .home-news__card--wide {
-      width: 276px;
+      width: 318px;
     }
     .home-news__card--narrow {
-      width: 184px;
+      width: 212px;
     }
     .home-news__card--wide .home-news__media {
       aspect-ratio: 276 / 312;
