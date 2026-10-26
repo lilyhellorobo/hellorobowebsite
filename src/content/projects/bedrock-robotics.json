@@ -1,5 +1,6 @@
 {
   "name": "Bedrock Robotics",
+  "nda": true,
   "intro": "Operating and fleet management software design for Bedrock Robotics, an autonomous construction technology company founded by former Waymo engineers.",
   "services": [
     "Operating Software Design",

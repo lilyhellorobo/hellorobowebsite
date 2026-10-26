@@ -7,7 +7,8 @@ import ProjectNext from '../../blocks/project/ProjectNext.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects');
+  // projects under NDA have no page (they show in the work wheel with the NDA tag only)
+  const projects = await getCollection('projects', (p) => !p.data.nda);
   return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
 }
 const { project } = Astro.props as { project: CollectionEntry<'projects'> };

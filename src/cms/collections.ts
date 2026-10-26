@@ -191,6 +191,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
     assetsPerEntry: true,
     fields: [
       { kind: 'text', key: 'name', label: 'Name', required: true },
+      { kind: 'boolean', key: 'nda', label: 'Under NDA', default: false, hint: 'Shows the NDA tag in the work wheel; no View button and no project page' },
       { kind: 'textarea', key: 'intro', label: 'Intro', required: true },
       { kind: 'strings', key: 'services', label: 'Services', item: 'service' },
       {
