@@ -45,6 +45,7 @@ import biteFirst from '../../assets/team/objects/bite_first_05.png';
 import helloRobo from '../../assets/team/objects/hello_robo.png';
 import innerCalm from '../../assets/team/objects/inner_calm_02.png';
 import layout from './team-layout.json';
+import CrtScreen from '../../components/ui/CrtScreen.astro';
 
 const people = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
 
@@ -150,7 +151,10 @@ const config = JSON.stringify({
         <h2 class="t-h2">{p.data.name}</h2>
       </header>
       <figure class="team-card__photo">
-        <Image src={p.data.photo} alt={p.data.name} widths={[369, 738]} sizes="369px" loading="lazy" />
+        <span class="team-card__screen">
+          <Image src={p.data.photo} alt={p.data.name} widths={[369, 738]} sizes="369px" loading="lazy" />
+          <CrtScreen />
+        </span>
         <figcaption class="t-body">{p.data.role}</figcaption>
       </figure>
       <blockquote class="team-card__quote t-body">
@@ -778,8 +782,11 @@ const config = JSON.stringify({
     align-items: flex-start;
     min-height: 0;
   }
-  /* Fills the free height, keeps 369:499, never larger than Figma */
-  .team-card__photo :global(img) {
+  /* Fills the free height, keeps 369:499, never larger than Figma. The photo plays
+     through the CRT shader (CrtScreen), which covers this box */
+  .team-card__screen {
+    position: relative;
+    overflow: hidden;
     flex: 0 1 auto;
     min-height: calc(160 * var(--px));
     height: 100%;
@@ -787,6 +794,11 @@ const config = JSON.stringify({
     width: auto;
     max-width: calc(369 * var(--px));
     aspect-ratio: 369 / 499;
+  }
+  .team-card__photo :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
   }
   .team-card__photo figcaption {
@@ -893,7 +905,8 @@ const config = JSON.stringify({
       grid-row: 1 / 3;
       display: block;
     }
-    .team-card__photo :global(img) {
+    .team-card__screen {
+      display: block;
       flex: none;
       width: 104px;
       height: auto;
