@@ -124,16 +124,12 @@ import { mainNav, studio } from '../../data/site';
       align-self: start;
       margin-top: var(--space-16);
     }
-    /* Wordmark: the desktop graphic at half size (824 wide), centred and cropped */
-    /* the legal row ends above the menu bar (64 + 20 from the bottom), not behind it */
+    /* Wordmark: the whole desktop graphic, scaled down to fit between the margins —
+       nothing cropped, the same composition as on desktop */
+    /* the legal row ends above the menu bar (64 + 16 from the bottom), not behind it */
     .footer__bottom {
-      padding-top: 140px;
-      padding-bottom: calc(var(--nav-height) + 20px + 40px);
-    }
-    .footer__bottom :global(.footer-wordmark) {
-      width: calc(824 / 358 * 100%);
-      max-width: none;
-      margin-left: calc((358 - 824) / 2 / 358 * 100%);
+      padding-top: 104px;
+      padding-bottom: calc(var(--nav-height) + var(--page-margin) + 40px);
     }
     .footer__legal {
       margin-top: 64px;
