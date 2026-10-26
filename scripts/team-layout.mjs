@@ -150,7 +150,7 @@ const gapOf = (a, b) => {
 // ── The Figma frame, spread out: SPREAD > 1 moves its objects apart around the frame's
 // centre (sizes unchanged), so everything gets a little more room while keeping Figma's
 // arrangement and proportions. Then measure the spacing: each object's nearest gap.
-const SPREAD = 1.4;
+const SPREAD = 1.0;
 const CENTRE = { x: 1728 / 2, y: 1117 / 2 };
 const pinned = FIGMA.map(([key, x, y, label, lx, ly, lw]) => {
   const [w, h] = SIZE[key];
