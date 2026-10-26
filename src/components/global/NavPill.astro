@@ -138,7 +138,8 @@ const { back } = Astro.props;
     align-items: center;
     gap: var(--space-12);
   }
-  .nav-pill__dots {
+  /* :global — the class lands on the Icon component's svg, outside this scope */
+  .nav-pill :global(.nav-pill__dots) {
     color: var(--color-grey-400);
   }
 
@@ -192,6 +193,10 @@ const { back } = Astro.props;
     .nav-pill :global(.robo-logo) {
       width: 53px;
       height: auto;
+    }
+    /* Figma: MENU at 16 (the Button style's 18 is the desktop size) */
+    .nav-pill__label .t-button {
+      font-size: 16px;
     }
   }
   /* Between pages the menu keeps its right edge (logo) in place and isn't stretched when
