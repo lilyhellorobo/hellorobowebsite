@@ -1,64 +1,178 @@
 ---
 /**
- * Robo Radio — Clips ("Conversations in the field / Humanoids")
- * Figma: "3 clips" (10105:432), 1730×977
- * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-432
+ * Robo Radio — Clips ("Conversations in the field"), one topic after another
+ * Figma: "3 clips" Humanoids (10105:432) → "Clips" Future of robotics (10105:1577), 1730×977
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10105-1577
+ *
+ * Desktop: the block pins to the screen; one screen of scrolling per topic, the same
+ * motion as the Services scroller (style reference: telhaclarke.com.au/studio):
+ * - Progress line on top: the black segment grows from Figma's 830 (first topic) to
+ *   1461 (second) of 1648 as you scroll.
+ * - Left: label, title (word by word), stamp and text slide up out of a mask and the
+ *   next topic's slide up in.
+ * - Right: the next topic's clips slide in from the bottom over the previous ones.
  * Clips are videos in the design (with a hover and a poster state); stills for now.
- * TODO (CMS): clips per topic.
+ * Mobile: the topics stacked, no pin.
+ * Motion: tokens in tokens.css (--ease-out, --duration-*, --stagger).
+ * TODO (CMS): topics + clips.
  */
 import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import Divider from '../../components/ui/Divider.astro';
 import clip1 from '../../assets/radio/clip-1.png';
 import clip2 from '../../assets/radio/clip-2.png';
 
-const clips = [
-  { image: clip1, caption: 'Jason Kline about humanoid design' },
-  { image: clip2, caption: 'Jason Kline about humanoid design' },
+interface Topic {
+  title: string;
+  /** Stamp under the title (Figma has one on Humanoids only) */
+  stamp?: { src: string; w: number; h: number };
+  text: string;
+  clips: { image: ImageMetadata; caption: string }[];
+  /** Progress line length at this topic, Figma px of 1648 */
+  line: number;
+}
+const topics: Topic[] = [
+  {
+    title: 'Humanoids',
+    stamp: { src: '/images/radio/stamp-clips.svg', w: 585, h: 148 },
+    text: 'Robo Radio brings together the people shaping robotics for thoughtful conversations about design, technology and the human lives around them.',
+    clips: [
+      { image: clip1, caption: 'Jason Kline about humanoid design' },
+      { image: clip2, caption: 'Jason Kline about humanoid design' },
+    ],
+    line: 830,
+  },
+  {
+    title: 'Future of robotics',
+    text: 'Robo Radio brings together the people shaping robotics for thoughtful conversations about design, technology and the human lives around them.',
+    clips: [
+      { image: clip1, caption: 'Jason Kline about humanoid design' },
+      { image: clip2, caption: 'Jason Kline about humanoid design' },
+    ],
+    line: 1461,
+  },
 ];
+const first = topics[0].line / 1648;
+const last = topics[topics.length - 1].line / 1648;
 ---
-<section class="radio-clips container">
-  <Divider accent class="radio-clips__rule" />
-  <div class="radio-clips__grid">
-    <div class="radio-clips__text">
-      <p class="t-body">Conversations in the field</p>
-      <h2 class="radio-clips__title t-h1">Humanoids</h2>
-      <img class="radio-clips__stamp" src="/images/radio/stamp-clips.svg" alt="" width="585" style="--w: 585" height="148" loading="lazy" />
-      <p class="radio-clips__desc t-body">Robo Radio brings together the people shaping robotics for thoughtful conversations about design, technology and the human lives around them.</p>
+<section class="radio-clips" style={`--count: ${topics.length}; --line-from: ${first}; --line-to: ${last}`} data-clips>
+  <div class="radio-clips__stage container" data-active="0">
+    <Divider accent class="radio-clips__rule" />
+    <div class="radio-clips__grid">
+      {topics.map((t, i) => {
+        const words = t.title.split(' ');
+        return (
+          <div class="radio-clips__slide" data-index={i} data-state={i === 0 ? 'current' : 'next'} aria-hidden={i > 0 ? 'true' : undefined}>
+            <div class="radio-clips__text">
+              <p class="t-body"><span class="mask"><span style="--d: 0">Conversations in the field</span></span></p>
+              <h2 class="radio-clips__title t-h1">
+                {words.map((w, wi) => (
+                  <><span class="mask"><span style={`--d: ${wi + 1}`}>{w}</span></span>{wi < words.length - 1 && ' '}</>
+                ))}
+              </h2>
+              {t.stamp && (
+                <img class="radio-clips__stamp" src={t.stamp.src} alt="" width={t.stamp.w} style={`--w: ${t.stamp.w}`} height={t.stamp.h} loading="lazy" />
+              )}
+              <p class="radio-clips__desc t-body"><span class="mask"><span style={`--d: ${words.length + 1}`}>{t.text}</span></span></p>
+            </div>
+            <div class="radio-clips__clips" style={`z-index: ${i + 1}`}>
+              {t.clips.map((c) => (
+                <figure class="radio-clips__clip">
+                  <div class="radio-clips__media">
+                    <Image src={c.image} alt="" widths={[403, 806]} sizes="(min-width: 1728px) 403px, 24vw" loading="lazy" />
+                  </div>
+                  <figcaption class="t-body">{c.caption}</figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
-    {clips.map((c) => (
-      <figure class="radio-clips__clip">
-        <div class="radio-clips__media">
-          <Image src={c.image} alt="" widths={[403, 806]} sizes="(min-width: 1728px) 403px, 24vw" loading="lazy" />
-        </div>
-        <figcaption class="t-body">{c.caption}</figcaption>
-      </figure>
-    ))}
   </div>
 </section>
 
+<script>
+  // Pinned topics: progress 0→1 across the block picks the topic and grows the line.
+  // Each slide gets data-state: "past" (scrolled by), "current", or "next".
+  for (const root of document.querySelectorAll<HTMLElement>('[data-clips]')) {
+    const stage = root.querySelector<HTMLElement>('.radio-clips__stage');
+    const slides = [...root.querySelectorAll<HTMLElement>('.radio-clips__slide')];
+    if (!stage || !slides.length) continue;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (getComputedStyle(stage).position !== 'sticky') return; // mobile: stacked, no pin
+      const rect = root.getBoundingClientRect();
+      const travel = rect.height - stage.offsetHeight;
+      const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+      const active = Math.min(slides.length - 1, Math.floor(progress * slides.length));
+      stage.style.setProperty('--progress', String(progress));
+      if (stage.dataset.active === String(active)) return;
+      stage.dataset.active = String(active);
+      slides.forEach((slide, i) => {
+        slide.dataset.state = i < active ? 'past' : i === active ? 'current' : 'next';
+        slide.setAttribute('aria-hidden', String(i !== active));
+      });
+    };
+    const request = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request);
+    update();
+  }
+</script>
+
 <style>
+  /* One screen of scroll per topic; the stage stays pinned while they pass */
   .radio-clips {
-    padding-top: var(--space-40);
-    padding-bottom: calc(140 * var(--px));
+    position: relative;
+    height: calc(var(--count) * 100vh);
     background: var(--color-white);
     color: var(--color-black);
   }
-  .radio-clips :global(.radio-clips__rule.divider--accent)::before {
-    width: calc(830 / 1648 * 100%);
+  .radio-clips__stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    padding-top: var(--space-40);
+    --progress: 0;
   }
+
+  /* Progress line: Figma's 830 / 1648 on the first topic → 1461 / 1648 on the last */
+  .radio-clips :global(.radio-clips__rule.divider--accent)::before {
+    width: calc((var(--line-from) + var(--progress) * (var(--line-to) - var(--line-from))) * 100%);
+    transition: width var(--duration-normal) var(--ease-out);
+  }
+
+  /* All slides share the same text cell and clips cell */
   .radio-clips__grid {
     display: grid;
-    grid-template-columns: 1fr calc(403 * var(--px)) calc(403 * var(--px));
-    gap: var(--gutter);
+    grid-template-columns: 1fr calc(818 * var(--px));
+    grid-template-areas: 'text clips';
+    column-gap: var(--gutter);
     margin-top: var(--space-40);
   }
+  .radio-clips__slide {
+    display: contents;
+  }
   .radio-clips__text {
+    grid-area: text;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    min-height: 0;
+  }
+  .radio-clips__slide[data-state='current'] .radio-clips__text {
+    z-index: 1;
   }
   .radio-clips__title {
     margin-top: calc(20 * var(--px));
+    width: calc(700 * var(--px));
+    max-width: 100%;
   }
   .radio-clips__stamp {
     margin-top: calc(10 * var(--px));
@@ -69,13 +183,22 @@ const clips = [
     max-width: 100%;
     margin-top: auto;
   }
+  .radio-clips__clips {
+    grid-area: clips;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: calc(12 * var(--px));
+    background: var(--color-white);
+  }
   .radio-clips__clip {
     display: grid;
     gap: calc(15 * var(--px));
+    align-content: start;
   }
   .radio-clips__media {
     aspect-ratio: 403 / 718;
     overflow: hidden;
+    background: var(--color-grey-100);
   }
   .radio-clips__media :global(img) {
     width: 100%;
@@ -83,18 +206,104 @@ const clips = [
     object-fit: cover;
   }
 
-  /* ── Mobile: text on top, the two clips side by side ── */
+  /* ── Text reveal: each word / line sits in a mask and slides up through it ── */
+  .mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    /* room for descenders under the tight H1 line height */
+    padding-bottom: 0.12em;
+    margin-bottom: -0.12em;
+  }
+  .mask > span {
+    display: inline-block;
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
+    transition-delay: calc(var(--d, 0) * var(--stagger));
+  }
+  .radio-clips__slide[data-state='next'] .mask > span {
+    --y: 110%;
+  }
+  .radio-clips__slide[data-state='past'] .mask > span {
+    --y: -110%;
+    transition-delay: 0s;
+  }
+  /* Incoming words wait a beat so the outgoing ones clear first */
+  .radio-clips__slide[data-state='current'] .mask > span {
+    transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
+  }
+  .radio-clips__stamp {
+    opacity: 0;
+    transform: translateY(calc(16 * var(--px)));
+    transition:
+      opacity var(--duration-normal) var(--ease-out),
+      transform var(--duration-smooth) var(--ease-out);
+  }
+  .radio-clips__slide[data-state='current'] .radio-clips__stamp {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.3s;
+  }
+
+  /* ── Clips: the next topic's clips slide in from the bottom over the previous ── */
+  .radio-clips__clips {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path var(--duration-slow) var(--ease-out);
+  }
+  .radio-clips__slide:is([data-state='current'], [data-state='past']) .radio-clips__clips {
+    clip-path: inset(0 0 0 0);
+  }
+  .radio-clips__clips :global(img) {
+    transform: translateY(12%) scale(1.08);
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+  .radio-clips__slide:is([data-state='current'], [data-state='past']) .radio-clips__clips :global(img) {
+    transform: none;
+  }
+  /* The first topic is simply there */
+  .radio-clips__slide[data-index='0'] .radio-clips__clips {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mask > span,
+    .radio-clips__stamp,
+    .radio-clips__clips,
+    .radio-clips__clips :global(img) {
+      transition-duration: 0.01s !important;
+      transition-delay: 0s !important;
+    }
+  }
+
+  /* ── Mobile: the topics stacked, no pin; text on top, the two clips side by side ── */
   @media (max-width: 1023px) {
     .radio-clips {
+      height: auto;
+    }
+    .radio-clips__stage {
+      position: static;
+      height: auto;
+      overflow: visible;
       padding-bottom: 164px;
     }
     .radio-clips__grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      row-gap: 64px;
+      display: block;
       margin-top: var(--space-24);
     }
-    .radio-clips__text {
-      grid-column: 1 / -1;
+    .radio-clips__slide {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 64px;
+    }
+    .radio-clips__slide + .radio-clips__slide {
+      margin-top: 164px;
+    }
+    .radio-clips__text,
+    .radio-clips__clips {
+      grid-area: auto;
+    }
+    .radio-clips__title {
+      width: auto;
     }
     .radio-clips__stamp {
       width: 293px;
@@ -103,11 +312,24 @@ const clips = [
     .radio-clips__desc {
       margin-top: 64px;
     }
+    .radio-clips__clips {
+      column-gap: var(--gutter);
+    }
     .radio-clips__clip {
       gap: var(--space-12);
     }
     .radio-clips__clip figcaption {
       font-size: var(--type-body2-size-mobile);
+    }
+    /* Everything visible, no reveal states */
+    .radio-clips__slide .mask > span,
+    .radio-clips__slide .radio-clips__stamp,
+    .radio-clips__slide .radio-clips__clips,
+    .radio-clips__slide .radio-clips__clips :global(img) {
+      --y: 0;
+      opacity: 1;
+      transform: none;
+      clip-path: none;
     }
   }
 </style>
