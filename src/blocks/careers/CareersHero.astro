@@ -6,6 +6,7 @@
  */
 import { Image } from 'astro:assets';
 import strip from '../../assets/careers/team-strip.png';
+import CrtScreen from '../../components/ui/CrtScreen.astro';
 ---
 <section class="careers-hero theme-dark">
   <h1 class="careers-hero__title t-h1 container">Careers</h1>
@@ -16,6 +17,7 @@ import strip from '../../assets/careers/team-strip.png';
   </p>
   <div class="careers-hero__strip" data-careers-strip>
     <Image src={strip} alt="Hello Robo team at work and at events" widths={[2204, 4408]} sizes="128vw" loading="eager" />
+    <CrtScreen />
   </div>
 </section>
 
@@ -87,8 +89,10 @@ import strip from '../../assets/careers/team-strip.png';
     --travel: 10.9%;
     transform: translate3d(calc(var(--shift) * var(--travel) * -1), 0, 0);
     will-change: transform;
+    overflow: hidden; /* the CRT shader (CrtScreen) covers the strip */
   }
   .careers-hero__strip :global(img) {
+    display: block;
     width: 100%;
     height: auto;
     max-width: none;
@@ -122,6 +126,7 @@ import strip from '../../assets/careers/team-strip.png';
       margin: 64px var(--page-margin) 0;
     }
     .careers-hero__strip {
+      position: relative;
       width: 1102px;
       margin: 64px 0 0 -118px;
       --travel: 40%; /* phones: most of the strip is off screen, so it travels further */
