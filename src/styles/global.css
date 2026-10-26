@@ -4,8 +4,8 @@
 /* ── Page transitions ─────────────────────────────────────────────
    Moving between pages of the site (links, back / forward, reload): the browser keeps
    the old page on screen until the new one is ready to paint, then crossfades — no
-   blank / half-loaded frame. The Get in touch button and the menu pill have their own
-   names so they stay in place instead of fading. (Chrome / Edge / Safari 18.2+; other
+   blank / half-loaded frame. The Get in touch button, the menu bar and the back button
+   have their own names (NavPill / GetInTouch) so they stay in place instead of fading. (Chrome / Edge / Safari 18.2+; other
    browsers just load the page.) */
 @view-transition {
   navigation: auto;
