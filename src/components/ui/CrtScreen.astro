@@ -1,0 +1,107 @@
+---
+/**
+ * CRT screen overlay — a CSS stand-in for the Figma "CRT" shader until the WebGL step.
+ * Put it inside a positioned box (overflow hidden) on top of an image or video. Values
+ * follow the shader on the menu photo (Figma 10194:1895): curvature with rounded black
+ * corners, scanlines 38 / size 3, aperture mask 9 / pitch 12, vignette 13, noise 18 /
+ * size 1.5, colour aberration 17, flicker, rolling band 0.93.
+ * The colour fringing needs the image itself: give it `filter: url(#crt-aberration)`
+ * (the filter is defined here once per page).
+ */
+---
+<div class="crt" aria-hidden="true">
+  <span class="crt__curve"></span>
+  <span class="crt__mask"></span>
+  <span class="crt__noise"></span>
+  <span class="crt__roll"></span>
+</div>
+<svg class="crt__defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <!-- red shifted left, blue shifted right, recombined: the colour fringes of a CRT -->
+  <filter id="crt-aberration" x="-2%" y="0" width="104%" height="100%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r" />
+    <feOffset in="r" dx="-1.5" dy="0" result="r2" />
+    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g" />
+    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b" />
+    <feOffset in="b" dx="1.5" dy="0" result="b2" />
+    <feBlend in="r2" in2="g" mode="screen" result="rg" />
+    <feBlend in="rg" in2="b2" mode="screen" />
+  </filter>
+</svg>
+
+<style>
+  .crt,
+  .crt > span {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .crt {
+    z-index: 2;
+    /* scanlines (38%, 3px) + vignette */
+    background:
+      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.38) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.35) 100%);
+    animation: crt-flicker 0.12s steps(2) infinite;
+  }
+  /* curvature: the screen's edges bow and the corners fall off into black */
+  .crt__curve {
+    border-radius: 7% / 11%;
+    box-shadow:
+      0 0 0 calc(80 * var(--px)) var(--color-black),
+      inset 0 0 calc(40 * var(--px)) calc(6 * var(--px)) rgb(0 0 0 / 0.55);
+  }
+  /* aperture grille: thin R / G / B columns, 12px pitch */
+  .crt__mask {
+    background: repeating-linear-gradient(
+      to right,
+      rgb(255 0 0 / 0.09) 0 4px,
+      rgb(0 255 0 / 0.09) 4px 8px,
+      rgb(0 0 255 / 0.09) 8px 12px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.5;
+  }
+  .crt__noise {
+    inset: -50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+    opacity: 0.1;
+    animation: crt-noise 0.5s steps(5) infinite;
+  }
+  /* slow bright band rolling down the screen */
+  .crt__roll {
+    background: linear-gradient(to bottom, transparent 0%, rgb(255 255 255 / 0.05) 45%, rgb(255 255 255 / 0.08) 50%, transparent 60%);
+    background-size: 100% 300%;
+    animation: crt-roll 8s linear infinite;
+  }
+  .crt__defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  @keyframes crt-flicker {
+    50% {
+      opacity: 0.94;
+    }
+  }
+  @keyframes crt-noise {
+    to {
+      transform: translate(10%, -10%);
+    }
+  }
+  @keyframes crt-roll {
+    from {
+      background-position: 0 100%;
+    }
+    to {
+      background-position: 0 -200%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .crt,
+    .crt__noise,
+    .crt__roll {
+      animation: none;
+    }
+  }
+</style>
