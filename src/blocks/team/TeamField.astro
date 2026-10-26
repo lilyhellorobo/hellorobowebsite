@@ -675,12 +675,10 @@ const config = JSON.stringify({
     pointer-events: none;
     transition: transform var(--duration-slow) var(--ease-out);
   }
-  /* Label exactly where Figma has it: centred on its frame, 14 px, uppercase, 6% tracking
-     (the former Button style at the canvas's label size — kept for these file-name labels
-     now that buttons are in sentence case) */
+  /* Label exactly where Figma has it: centred on its frame, 14 px, in lowercase like a file
+     name (not Figma's caps), -2% tracking (the Button style at the canvas's label size) */
   .team-obj__label {
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    text-transform: lowercase;
     position: absolute;
     left: calc(var(--lx) * var(--px) * var(--s));
     top: calc(var(--ly) * var(--px) * var(--s));
