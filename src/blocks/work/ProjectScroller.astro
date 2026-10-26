@@ -538,8 +538,8 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     width: calc(46 * var(--unit));
     height: auto;
     margin-left: calc(11 * var(--unit));
-    vertical-align: top;
-    margin-top: calc(-4 * var(--unit));
+    /* centred on the capitals (≈ 0.36em above the baseline), in line with the name */
+    vertical-align: calc(0.36em - 16 * var(--unit));
   }
   .project-wheel__name:not(.is-front) {
     pointer-events: none;
