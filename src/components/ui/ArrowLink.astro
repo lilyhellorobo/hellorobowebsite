@@ -23,4 +23,11 @@ const { href, class: className } = Astro.props;
     gap: var(--space-6);
     color: var(--color-orange);
   }
+  /* Phones: a 44px-tall tap area around the link, without moving it */
+  @media (max-width: 1023px) {
+    .arrow-link {
+      padding-block: 12px;
+      margin-block: -12px;
+    }
+  }
 </style>

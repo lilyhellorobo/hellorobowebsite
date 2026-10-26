@@ -121,9 +121,10 @@ import { mainNav, studio } from '../../data/site';
       margin-top: var(--space-16);
     }
     /* Wordmark: the desktop graphic at half size (824 wide), centred and cropped */
+    /* the legal row ends above the menu bar (64 + 20 from the bottom), not behind it */
     .footer__bottom {
       padding-top: 140px;
-      padding-bottom: 64px;
+      padding-bottom: calc(var(--nav-height) + 20px + 40px);
     }
     .footer__bottom :global(.footer-wordmark) {
       width: calc(824 / 358 * 100%);

@@ -312,6 +312,11 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
       grid-template-columns: repeat(3, minmax(0, 1fr));
       margin-top: var(--space-24);
     }
+    /* a 44px-tall tap area; the numbers and the line stay where they are */
+    .careers-values__tab button {
+      padding-top: 15px;
+      margin-top: -15px;
+    }
     .careers-values :global(.careers-values__media) {
       height: 100%;
       aspect-ratio: auto;
