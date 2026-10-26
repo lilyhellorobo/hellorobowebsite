@@ -29,7 +29,8 @@ const theme = bg
   <div class="project-page" style={theme}>
     <ProjectHero project={project} />
     <ProjectSections project={project} />
-    <ProjectTestimonial project={project} />
+    {/* only when the CMS has a testimonial or credits — otherwise it'd be an empty block */}
+    {(project.data.testimonial || project.data.credits.length > 0) && <ProjectTestimonial project={project} />}
     <ProjectNext project={project} />
   </div>
 </BaseLayout>

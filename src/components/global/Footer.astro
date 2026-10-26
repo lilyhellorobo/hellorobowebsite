@@ -58,7 +58,9 @@ import { mainNav, studio } from '../../data/site';
   /* Figma "footer" frame (1441 high): wordmark at 89, legal row at 1276, 115 below */
   .footer__bottom {
     padding-top: calc(89 * var(--px));
-    padding-bottom: calc(115 * var(--px));
+    /* Figma's 115, but at least enough that the legal row (logo in the middle) ends
+       above the menu bar (40 from the bottom) instead of behind it */
+    padding-bottom: max(calc(115 * var(--px)), calc(var(--space-40) + var(--nav-height) + var(--space-24)));
   }
   .footer__legal {
     margin-top: calc(167 * var(--px));

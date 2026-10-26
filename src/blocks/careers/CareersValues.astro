@@ -256,7 +256,9 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
   .careers-values :global(.careers-values__media) {
     width: 100%;
     aspect-ratio: 816 / 973;
-    max-height: calc(100vh - 2 * calc(67 * var(--px)));
+    /* down to the menu bar's top (40 + bar + a gap), so the tabs on its bottom edge never
+       sit behind the bar */
+    max-height: calc(100vh - calc(67 * var(--px)) - var(--space-40) - var(--nav-height) - var(--space-24));
     background: var(--color-grey-100);
   }
   .careers-values :global(.careers-values__media img) {
