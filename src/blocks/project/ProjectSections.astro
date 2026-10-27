@@ -4,7 +4,7 @@
  * Figma: media rows "Frame 2147232899" (10100:12637, gap 48) and text rows
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-12637
  * Media row = 1, 2 or 3 images, videos (uploaded or hosted) or YouTube players side by
- * side (gap 12), radius 4.
+ * side (gap 12), radius 4. Phones: one column, every image full width.
  */
 import Media from '../../components/ui/Media.astro';
 import type { CollectionEntry } from 'astro:content';
@@ -29,7 +29,7 @@ const { sections, name } = Astro.props.project.data;
             media={img}
             alt={`${name} — project visual`}
             widths={s.images.length === 1 ? [1648, 3310] : [818, 1636]}
-            sizes={s.images.length === 1 ? '(min-width: 1728px) 1648px, 95vw' : '(min-width: 1728px) 818px, 48vw'}
+            sizes={s.images.length === 1 ? '(min-width: 1728px) 1648px, 95vw' : '(max-width: 1023px) 100vw, (min-width: 1728px) 818px, 48vw'}
             loading="lazy"
           />
         ))}
@@ -63,10 +63,12 @@ const { sections, name } = Astro.props.project.data;
     aspect-ratio: 16 / 9;
   }
 
-  /* Mobile: the same rows as desktop — full width, two side by side, three in a row —
-     with a tighter gap so the small images keep as much width as possible */
+  /* Mobile: one column — every image full width, one under the other */
   @media (max-width: 1023px) {
-    .project-media {
+    .project-media,
+    .project-media--2,
+    .project-media--3 {
+      grid-template-columns: minmax(0, 1fr);
       gap: 8px;
     }
     .project-media.is-after-media {
