@@ -5,8 +5,10 @@
  * Two copy variants appear in the designs:
  *   "conversation" — "Start conversation if you are ready to make world say yes" + stamp
  *   "building"     — "Tell us what you are building" + "[Click anywhere to start]"
+ * Clicking it opens the contact flow right here in the block (no trip to /contact).
  */
 import WebGLSlot from '../ui/WebGLSlot.astro';
+import ContactFlow from '../../blocks/contact/ContactFlow.astro';
 import { studio } from '../../data/site';
 
 interface Props {
@@ -28,7 +30,7 @@ const title = 'Tell us what you are building';
     />
   </WebGLSlot>
 
-  <a class="prefooter__link" href="/contact">
+  <a class="prefooter__link" href="/contact" data-contact-open="start">
     {variant === 'building' ? (
       <h2 class="prefooter__title t-h2">{title}</h2>
     ) : (
@@ -39,8 +41,8 @@ const title = 'Tell us what you are building';
   <!-- Mobile layout (Figma 10129:31418): stamp under the title; at the bottom two buttons
        side by side and "Copy our email" full width under them -->
   <div class="prefooter__actions only-mobile">
-    <a class="prefooter__button t-button" href="/contact#name">Start a project</a>
-    <a class="prefooter__button t-button" href="/contact#message">Drop a word</a>
+    <a class="prefooter__button t-button" href="/contact#name" data-contact-open="name">Start a project</a>
+    <a class="prefooter__button t-button" href="/contact#message" data-contact-open="message">Drop a word</a>
     <button class="prefooter__button prefooter__button--wide t-button" type="button" data-copy-email={studio.email}>
       <span data-copy-label>Copy our email</span>
     </button>
@@ -58,9 +60,24 @@ const title = 'Tell us what you are building';
   ) : (
     <p class="prefooter__hint t-body">[Click anywhere to start]</p>
   )}
+
+  <ContactFlow embedded />
 </section>
 
 <script>
+  // The block's links open the contact flow in place, at the step they name
+  for (const block of document.querySelectorAll<HTMLElement>('.prefooter')) {
+    const flow = block.querySelector<HTMLElement>('[data-contact]');
+    if (!flow) continue;
+    block.querySelectorAll<HTMLAnchorElement>('[data-contact-open]').forEach((link) =>
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        flow.inert = false;
+        flow.dispatchEvent(new CustomEvent('contact:show', { detail: link.dataset.contactOpen }));
+      }),
+    );
+  }
+
   // "Copy our email": puts the address on the clipboard and says so for a moment
   for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-copy-email]')) {
     const label = btn.querySelector<HTMLElement>('[data-copy-label]');
