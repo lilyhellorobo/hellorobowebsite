@@ -4,43 +4,41 @@
  * Figma: "Frame 2147232972" (10100:13197), 1728×992, white
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-13197
  */
-import { Image } from 'astro:assets';
+import Media from '../../components/ui/Media.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Button from '../../components/ui/Button.astro';
 
 interface Props {
   project: CollectionEntry<'projects'>;
 }
-const { next } = Astro.props.project.data;
-// the next project is under NDA: no View button (it has no page), the NDA tag instead
-const ndaIds = new Set((await getCollection('projects', (p) => p.data.nda)).map((p) => `/work/${p.id}`));
-const nextIsNda = !!next && ndaIds.has(next.href.replace(/\/$/, ''));
+const { project } = Astro.props;
+// Only projects with a page: the one chosen in the CMS, unless it's under NDA (or none is
+// set) — then the next viewable project in the Work order
+const viewable = (await getCollection('projects', (p) => !p.data.nda)).sort((a, b) => a.data.order - b.data.order);
+const chosen = project.data.next;
+const chosenOk = !!chosen && viewable.some((p) => `/work/${p.id}` === chosen.href.replace(/\/$/, ''));
+let next = chosenOk ? chosen : undefined;
+if (!next) {
+  const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+  const at = all.findIndex((p) => p.id === project.id);
+  const following = [...all.slice(at + 1), ...all.slice(0, at)].find((p) => !p.data.nda);
+  if (following) next = { name: following.data.name, href: `/work/${following.id}`, image: following.data.reveal };
+}
 ---
 {next && (
   <section class="project-next container">
     <div class="project-next__text">
       <p class="project-next__label t-h3" lang="ja">次のプロジェクト</p>
       <h2 class="project-next__title t-h1">{next.name}</h2>
-      {nextIsNda ? (
-        <img class="project-next__nda" src="/images/project/nda.svg" alt="Under NDA" width="46" height="32" />
-      ) : (
-        <Button href={next.href} icon="hex">View project</Button>
-      )}
+      <Button href={next.href} icon="hex">View project</Button>
     </div>
     <div class="project-next__media">
-      <Image src={next.image} alt="" widths={[818, 1636]} sizes="(min-width: 1728px) 818px, 48vw" loading="lazy" />
+      <Media media={next.image} alt="" widths={[818, 1636]} sizes="(min-width: 1728px) 818px, 48vw" loading="lazy" />
     </div>
   </section>
 )}
 
 <style>
-  /* white tag on the white section: drawn black */
-  .project-next__nda {
-    width: calc(69 * var(--px));
-    height: auto;
-    margin-top: auto;
-    filter: invert(1);
-  }
   .project-next {
     display: grid;
     grid-template-columns: 1fr 1fr;
