@@ -114,7 +114,7 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
     }
     .careers-hero__stamp--hello {
       width: 166px;
-      margin: 164px var(--page-margin) 0;
+      margin: 64px var(--page-margin) 0;
     }
     .careers-hero__stamp--nature {
       width: 206px;
@@ -125,11 +125,13 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
       width: auto;
       margin: 64px var(--page-margin) 0;
     }
+    /* the strip at its full size (174 tall) so the photos read on a phone; most of it is
+       off screen, so it travels further as the page scrolls */
     .careers-hero__strip {
       position: relative;
-      width: 1102px;
-      margin: 64px 0 0 -118px;
-      --travel: 40%; /* phones: most of the strip is off screen, so it travels further */
+      width: 2204px;
+      margin: 64px 0 0 -120px;
+      --travel: 40%;
     }
   }
 </style>
