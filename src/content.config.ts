@@ -68,8 +68,8 @@ const team = defineCollection({
       role: z.string(),
       quote: z.string(),
       photo: image(),
-      /** The 3D object on the Team field that opens this card */
-      object: z.string().describe('Object id on the Team field, e.g. hello_robo'),
+      /** The object on the Team field that opens this card ('' = none) */
+      object: z.string().default('').describe('Object id on the Team field, e.g. inner_calm_02'),
       /** 3D model of their object for the WebGL team gallery: a .glb in public/models/team/ */
       model: z.string().optional(),
       order: z.number().default(0),

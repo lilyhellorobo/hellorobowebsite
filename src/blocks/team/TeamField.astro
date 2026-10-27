@@ -17,8 +17,9 @@
  *   it and toward the corners, with a lens distortion toward the screen edges.
  * - Click: the canvas glides so the object lands in the middle of the left half (beside
  *   the card), the rest stays out of focus, and the card fades in on the right. The robot
- *   (hello_robo) opens the studio card — Hello Robo, no photo (Figma 10104:398); every
- *   other object, for now, a random team member (not the same twice in a row).
+ *   (hello_robo) and the star (tiny_obsession_12) open the studio card — Hello Robo, no
+ *   photo (Figma 10104:398); every other object its person's card (CMS: the person's
+ *   "Object on the Team field").
  * - Phones: the same canvas at 55% (touch drag with glide). Pressing an object previews
  *   the focus blur (there's no hover); a tap selects it. The card is vertical, 90% of the
  *   screen's height, with the photo large across it; tap × or the canvas to close.
@@ -61,10 +62,12 @@ const OBJECTS: Record<string, ImageMetadata> = {
   nuts_about_details_03: nuts,
   cat_mode_active: catMode,
 };
-const personByObject = new Map(people.map((p) => [p.data.object, p]));
-// The robot stands for the whole studio: it opens the Hello Robo card (CMS: Team → Studio
-// card, src/content/studio/hello-robo.json), not a person's
+// Each object opens its person's card (CMS: Team → "Object on the Team field")
+const personByObject = new Map(people.filter((p) => p.data.object).map((p) => [p.data.object, p]));
+// The robot and the star stand for the whole studio: they open the Hello Robo card (CMS:
+// Team → Studio card, src/content/studio/hello-robo.json), not a person's
 const STUDIO_OBJECT = 'hello_robo';
+const STUDIO_OBJECTS = new Set([STUDIO_OBJECT, 'tiny_obsession_12']);
 const STUDIO_ID = 'hello-robo';
 const studio = (await getEntry('studio', STUDIO_ID))!.data;
 
@@ -114,8 +117,8 @@ const config = JSON.stringify({
               type="button"
               class="team-obj"
               data-object={it.key}
-              data-person={owner?.id}
-              data-card={it.key === STUDIO_OBJECT ? STUDIO_ID : undefined}
+              data-person={STUDIO_OBJECTS.has(it.key) ? undefined : owner?.id}
+              data-card={STUDIO_OBJECTS.has(it.key) ? STUDIO_ID : undefined}
               data-model={owner?.data.model}
               data-x={(tx + 1) * PERIOD_W + it.cx}
               data-y={(ty + 1) * PERIOD_H + it.cy}
@@ -400,10 +403,10 @@ const config = JSON.stringify({
       objs.forEach((el, j) => el.classList.toggle('is-selected', j === i));
       setFocus(i);
       vx = vy = 0;
-      // The robot opens the studio card; any other object, for now, a random person
-      // (never the same twice in a row), unless one is given
+      // The robot and the star open the studio card, every other object its person's;
+      // an object nobody has (none at the moment) a random person, not the same twice
       const pool = cfg.people.filter((p) => p !== lastPerson);
-      const id = person || objs[i].dataset.card || pool[Math.floor(Math.random() * pool.length)];
+      const id = person || objs[i].dataset.card || objs[i].dataset.person || pool[Math.floor(Math.random() * pool.length)];
       const s = screenOf(i);
       const t = target(cards.get(id));
       panAnim = { x0: panX, y0: panY, x1: panX + (t.x - s.x), y1: panY + (t.y - s.y), t0: performance.now(), dur: reduce ? 0 : 1100 };
@@ -536,7 +539,7 @@ const config = JSON.stringify({
     });
 
     // Screen-reader / keyboard list: open a card on its own object (centre tile) — the
-    // robot for the studio; a person's object, or any other one if theirs is the robot
+    // robot for the studio; a person's own object, or any free one if they have none
     const objectOf = (id: string) => {
       const centre = objs.filter((o) => o.tabIndex !== -1);
       const own = id === cfg.studio
