@@ -6,7 +6,7 @@
  * The TV is a static poster (the screen, its CRT look and the robot). Play puts the
  * episode's YouTube video on the screen with Figma's CRT shader over it (CrtScreen in
  * overlay mode, the screen's Figma settings: scanlines 59 / 3, shadow mask 9 / 12, static
- * 18, vignette 24, flicker 62, roll 0.93).
+ * 18, vignette 24, flicker 62, roll 0.93; flat glass, so no masked corners).
  * Controls (Figma "player nav", 504×80): previous · play / pause · next, the progress
  * line (seekable), and a sound button at the end (episodes play muted until it's on). They play the episodes that have a video, newest first: the hero starts
  * with the newest, an episode page with its own; previous / next move along that list in
@@ -40,7 +40,8 @@ const poster = variant === 'hero' ? hero : episode;
 const h = variant === 'hero' ? 983 : 872;
 // Player bar: hero (105, 843) · episode (110, 759) — Figma's controls frame + its 5px inset
 const bar = variant === 'hero' ? { x: 105, y: 843 } : { x: 110, y: 759 };
-const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 10, jitter: 3 };
+// The screen's Figma settings, flat glass (curvature 0) so the video keeps square corners
+const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter: 3 };
 ---
 <section
   class:list={['radio-tv', `radio-tv--${variant}`]}
@@ -218,7 +219,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 10, jitte
         const p = new YT.Player(mount, {
           host: 'https://www.youtube-nocookie.com',
           videoId: list[index].id,
-          playerVars: { autoplay: 1, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, iv_load_policy: 3, cc_load_policy: 0, disablekb: 1, fs: 0 },
+          playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, iv_load_policy: 3, cc_load_policy: 0, disablekb: 1, fs: 0 },
           events: {
             onReady: () => {
               player = p;
