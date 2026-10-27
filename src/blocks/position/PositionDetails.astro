@@ -52,7 +52,7 @@ const steps = data.applySteps.map((s, i) => ({ n: String(i + 1).padStart(2, '0')
   {data.howWeWork.length > 0 && (
     <div class="position-details__row">
       <h2 class="position-details__label t-h3">How we work</h2>
-      <p class="t-h3">{data.howWeWork.map((p, i) => <>{i > 0 && <br />}{p}</>)}</p>
+      <p class="t-h3">{data.howWeWork.join(' ')}</p>
     </div>
   )}
 
