@@ -167,9 +167,10 @@ const { items } = Astro.props;
     display: inline-block;
     overflow: hidden;
     vertical-align: top;
-    /* room for descenders under the tight H1 line height */
-    padding-bottom: 0.12em;
-    margin-bottom: -0.12em;
+    /* room on every side so no letter is clipped: the tight H1 line height (0.95) puts
+       the tops of b / d / h / T and the descenders outside the line box */
+    padding: 0.1em 0.06em 0.14em;
+    margin: -0.1em -0.06em -0.14em;
   }
   .mask > span {
     display: inline-block;
@@ -177,11 +178,12 @@ const { items } = Astro.props;
     transition: transform var(--duration-smooth) var(--ease-out);
     transition-delay: calc(var(--d, 0) * var(--stagger));
   }
+  /* far enough that no part of a waiting word shows in the mask's extra room */
   .services-scroller__slide[data-state='next'] .mask > span {
-    --y: 110%;
+    --y: 135%;
   }
   .services-scroller__slide[data-state='past'] .mask > span {
-    --y: -110%;
+    --y: -135%;
     transition-delay: 0s;
   }
   /* Incoming words wait a beat so the outgoing ones clear first */
@@ -246,68 +248,54 @@ const { items } = Astro.props;
     }
   }
 
-  /* ── Mobile: the three services stacked, no pin (as the single blocks were) ── */
+  /* ── Mobile: pinned like desktop, one screen per service. The label, the title with the
+     stamp on its right, the services under it, and the image filling the rest of the
+     screen above the menu bar; the same reveal (words through masks, stamp fade, the next
+     image sliding up over the previous) ── */
   @media (max-width: 1023px) {
     .services-scroller {
-      height: auto;
+      height: calc(var(--count) * 100vh);
+      height: calc(var(--count) * 100svh);
     }
     .services-scroller__stage {
-      position: static;
-      height: auto;
-      overflow: visible;
-      padding-top: 164px;
-    }
-    .services-scroller :global(.services-scroller__rule) {
-      display: none;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100svh;
+      padding-top: var(--page-margin);
+      /* 16 above the menu bar (16 from the bottom, 64 tall) */
+      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 16px);
     }
     .services-scroller__grid {
-      display: block;
-      height: auto;
-      margin-top: 0;
-    }
-    .services-scroller__slide {
-      display: grid;
+      flex: 1;
+      min-height: 0;
       grid-template-columns: minmax(0, 1fr);
-      gap: 64px;
-    }
-    .services-scroller__slide + .services-scroller__slide {
-      margin-top: 164px;
-    }
-    /* Undo the desktop's shared cells */
-    .services-scroller__text,
-    .services-scroller__media {
-      grid-area: auto;
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas: 'text' 'media';
+      row-gap: var(--space-24);
+      margin-top: var(--space-20);
     }
     .services-scroller__title {
       width: auto;
+      margin-top: var(--space-12);
     }
+    /* Stamp on the right of the title's first line (the label is 37 tall, + 12) */
     .services-scroller__stamp {
-      position: static;
+      left: auto !important;
+      right: 0;
+      top: 49px !important;
       width: auto;
-      max-height: 72px;
-      margin-top: var(--space-24);
+      height: 64px;
     }
+    /* services in two columns at Body2 (12), so the image gets the height to be vertical */
     .services-scroller__list {
-      gap: var(--space-16);
-      margin-top: 64px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-12) var(--gutter);
+      margin-top: var(--space-24);
+      font-size: var(--type-body2-size-mobile);
     }
     .services-scroller__media {
-      width: calc(100% + 2 * var(--page-margin));
-      aspect-ratio: 818 / 872;
-      height: auto;
-      max-height: none;
-      max-width: none;
-      margin-inline: calc(-1 * var(--page-margin));
-    }
-    /* Everything visible, no reveal states */
-    .services-scroller__slide .mask > span,
-    .services-scroller__slide .services-scroller__stamp,
-    .services-scroller__slide .services-scroller__media,
-    .services-scroller__slide .services-scroller__media :global(img) {
-      --y: 0;
-      opacity: 1;
-      transform: none;
-      clip-path: none;
+      height: 100%;
     }
   }
 </style>

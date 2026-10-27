@@ -3,7 +3,8 @@
  * Services — Building toward yes
  * Figma: "Frame 2147232853" (10103:1223), 1728×1035, black
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10103-1223
- * The logo row is one SVG; the Bedrock logo only exists as a PNG in Figma and sits on top of it.
+ * The logo row is one SVG (six 264×355 tiles, 12 apart); the Bedrock logo only exists as a PNG
+ * in Figma and sits on top of it. Phones: the six tiles as a 2-column grid.
  */
 ---
 <section class="services-building theme-dark">
@@ -13,12 +14,22 @@
       We work with teams building new ways to move, work and live — from robotics and autonomy to the technology around them. Together, we turn complex ideas into brands, products and stories people can understand, trust and say yes to.
     </p>
   </div>
-  <div class="services-building__logos container">
+  <div class="services-building__logos container only-desktop">
     <div class="services-building__row">
       <img src="/images/services/logos-building.svg" alt="Palantir, Bedrock, Surf Air, Weekly Robotics" width="1644" style="--w: 1644" height="355" loading="lazy" />
       <img class="services-building__bedrock" src="/images/services/logo-bedrock-white.png" alt="" width="165" style="--w: 165" height="22" loading="lazy" />
     </div>
   </div>
+  <!-- Phones: the six 264×355 tiles of the row as a 2-column grid (each cell shows its part
+       of the same image) -->
+  <ul class="services-building__grid container only-mobile" aria-label="Palantir, Bedrock, Surf Air, Weekly Robotics">
+    {[0, 1, 2, 3, 4, 5].map((i) => (
+      <li class="services-building__cell" style={`--i: ${i}`} aria-hidden="true">
+        <img src="/images/services/logos-building.svg" alt="" width="1644" height="355" loading="lazy" />
+        {i === 2 && <img class="services-building__cell-bedrock" src="/images/services/logo-bedrock-white.png" alt="" width="165" height="22" loading="lazy" />}
+      </li>
+    ))}
+  </ul>
 </section>
 
 <style>
@@ -58,11 +69,11 @@
     height: auto;
   }
 
-  /* ── Mobile: stacked head; the logo row keeps its size and scrolls sideways ── */
+  /* ── Mobile: stacked head, straight after the block above (no white gap); the logo
+     tiles in two columns ── */
   @media (max-width: 1023px) {
     .services-building {
-      margin-top: 164px;
-      padding-top: 64px;
+      padding-top: 164px;
       padding-bottom: 64px;
     }
     .services-building__head {
@@ -71,15 +82,33 @@
     .services-building__text {
       margin-top: var(--space-24);
     }
-    .services-building__logos {
+    .services-building__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
       margin-top: 64px;
-      padding: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
     }
-    .services-building__row {
-      width: 822px;
-      margin-inline: var(--page-margin);
+    .services-building__cell {
+      position: relative;
+      aspect-ratio: 264 / 355;
+      overflow: hidden;
+    }
+    /* the whole row, scaled so one tile fills the cell, shifted to tile --i (276 apart) */
+    .services-building__cell img:first-child {
+      position: absolute;
+      top: 0;
+      left: calc(var(--i) * -276 / 264 * 100%);
+      width: calc(1644 / 264 * 100%);
+      max-width: none;
+      height: 100%;
+    }
+    /* Bedrock PNG at (49, 166) in its tile */
+    .services-building__cell-bedrock {
+      position: absolute;
+      left: calc(49 / 264 * 100%);
+      top: calc(166 / 355 * 100%);
+      width: calc(165 / 264 * 100%);
+      height: auto;
     }
   }
 </style>
