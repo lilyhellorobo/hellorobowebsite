@@ -36,7 +36,7 @@ const rows = [
   words(6, 10),
   words(7, 8),
 ];
-const ROW_GAP = 10;
+const ROW_GAP = 20;
 const heightOf = (it: Item) =>
   it.w / (it.kind === 'word' ? WORD : it.kind === 'design' ? slots.design.w / slots.design.h : slots.badge.w / slots.badge.h);
 let y = 0;
