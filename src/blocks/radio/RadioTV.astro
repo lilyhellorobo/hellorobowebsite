@@ -53,6 +53,9 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   data-playlist={JSON.stringify(playlist)}
   data-index={first}
 >
+  <!-- The page title: shown on phones (as on Careers); on desktop the TV fills the hero
+       and the title is for screen readers only -->
+  {variant === 'hero' && <h1 class="radio-tv__heading t-h1 container">Robo Radio</h1>}
   <!-- The TV (poster + screen); on desktop the player bar sits on it, on phones under it -->
   <div class="radio-tv__stage" style={`aspect-ratio: 1730 / ${h}`}>
   <WebGLSlot name="radio-tv" class="radio-tv__scene">
@@ -529,9 +532,42 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     outline-offset: 2px;
   }
 
+  .radio-tv__heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   /* ── Mobile: the whole TV at the screen's width (no crop), the player bar under it on
      the black, without its own black box ── */
   @media (max-width: 1023px) {
+    /* Hero: one screen tall — "Robo Radio" at the top (Careers' title placement), the TV
+       and its bar at the bottom, 24 above the menu pill; at least 64 between title and TV */
+    .radio-tv--hero {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 24px - var(--space-20));
+      color: var(--color-white);
+    }
+    .radio-tv__heading {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip-path: none;
+      white-space: normal;
+      width: 100%;
+      padding-top: var(--space-20);
+      margin-bottom: 64px;
+    }
+    .radio-tv--hero .radio-tv__stage {
+      margin-top: auto;
+    }
     .radio-tv__bar {
       --u: calc((100vw - 2 * var(--page-margin)) / 504);
       position: relative;
