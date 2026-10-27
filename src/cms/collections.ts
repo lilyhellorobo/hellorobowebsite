@@ -125,7 +125,8 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         kind: 'select',
         key: 'object',
         label: 'Object on the Team field',
-        options: TEAM_OBJECTS.map((id) => ({ value: id, label: `${id.toUpperCase()}.OBJ` })),
+        hint: 'The robot and the star open the Hello Robo card',
+        options: [{ value: '', label: 'None' }, ...TEAM_OBJECTS.map((id) => ({ value: id, label: `${id.toUpperCase()}.OBJ` }))],
       },
       {
         kind: 'model',
