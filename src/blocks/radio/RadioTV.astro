@@ -544,14 +544,13 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   /* ── Mobile: the whole TV at the screen's width (no crop), the player bar under it on
      the black, without its own black box ── */
   @media (max-width: 1023px) {
-    /* Hero: one screen tall — "Robo Radio" at the top (Careers' title placement), the TV
-       and its bar at the bottom, 24 above the menu pill; at least 64 between title and TV */
+    /* Hero: half a screen tall — "Robo Radio" at the top (Careers' title placement), the
+       TV and its bar at the bottom; the free space (at least 32) between title and TV */
     .radio-tv--hero {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      min-height: 100svh;
-      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 24px - var(--space-20));
+      min-height: 50vh;
+      min-height: 50svh;
       color: var(--color-white);
     }
     .radio-tv__heading {
@@ -563,7 +562,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       white-space: normal;
       width: 100%;
       padding-top: var(--space-20);
-      margin-bottom: 64px;
+      margin-bottom: 32px;
     }
     .radio-tv--hero .radio-tv__stage {
       margin-top: auto;
