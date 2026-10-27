@@ -98,11 +98,38 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
     max-width: none;
   }
 
-  /* ── Mobile: everything in flow — title, stamps, text, then the photo strip at half size ── */
+  /* ── Mobile: everything in flow — title, stamps, text, then the photo strip ── */
   @media (max-width: 1023px) {
+    /* One screen tall: the title at the top, the rest stacked at the bottom — the free
+       space (at least 96) between the title and the stickers */
     .careers-hero {
       aspect-ratio: auto;
-      padding-bottom: 64px;
+      min-height: 100vh;
+      min-height: 100svh;
+      /* the strip ends 24 above the fixed menu pill */
+      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 24px);
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr);
+      grid-template-rows: auto minmax(96px, 1fr) auto auto auto;
+      align-items: center;
+    }
+    .careers-hero__title,
+    .careers-hero__text,
+    .careers-hero__strip {
+      grid-column: 1 / -1;
+    }
+    .careers-hero__title {
+      grid-row: 1;
+    }
+    .careers-hero__stamp {
+      grid-row: 3;
+    }
+    .careers-hero__text {
+      grid-row: 4;
+    }
+    .careers-hero__strip {
+      grid-row: 5;
+      justify-self: start;
     }
     .careers-hero__title {
       padding-top: var(--space-20);
@@ -112,28 +139,26 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
     .careers-hero__strip {
       position: static;
     }
-    /* The two stickers side by side, centred on each other */
-    .careers-hero__stamp {
-      display: inline-block;
-      vertical-align: middle;
-    }
+    /* The two stickers side by side, centred on each other, just above the text */
     .careers-hero__stamp--hello {
       width: 136px;
-      margin: 64px 0 0 var(--page-margin);
+      margin-left: var(--page-margin);
     }
     .careers-hero__stamp--nature {
       width: 190px;
-      margin: 64px 0 0 var(--space-16);
+      margin-left: var(--space-16);
     }
     .careers-hero__text {
       bottom: auto;
       width: auto;
-      margin: 64px var(--page-margin) 0;
+      margin: var(--space-24) var(--page-margin) 0;
     }
     /* the strip at 2/3 size (116 tall); most of it is off screen, so it travels further as
        the page scrolls */
     .careers-hero__strip {
       position: relative;
+      top: auto;
+      left: auto;
       width: 1470px;
       margin: 64px 0 0 -120px;
       --travel: 40%;
