@@ -12,7 +12,7 @@
  *   next topic's slide up in.
  * - Right: the next topic's clips slide in from the bottom over the previous ones.
  * Clips are videos in the design (with a hover and a poster state); stills for now.
- * Mobile: pinned the same way, one screen per topic (text on top, the clips below).
+ * Mobile: pinned the same way, one screen per topic (text on top, one clip full width below).
  * Motion: tokens in tokens.css (--ease-out, --duration-*, --stagger).
  * TODO (CMS): topics + clips.
  */
@@ -313,10 +313,13 @@ const last = topics[topics.length - 1].line / 1648;
       margin-top: var(--space-16);
       font-size: var(--type-body2-size-mobile);
     }
-    /* the two clips share the height left; each keeps its portrait shape */
+    /* one clip per topic, full width, filling the height left (vertical) */
     .radio-clips__clips {
-      column-gap: var(--gutter);
+      grid-template-columns: minmax(0, 1fr);
       min-height: 0;
+    }
+    .radio-clips__clip + .radio-clips__clip {
+      display: none;
     }
     .radio-clips__clip {
       grid-template-rows: minmax(0, 1fr) auto;

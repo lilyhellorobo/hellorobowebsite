@@ -14,7 +14,8 @@ const slots = {
 };
 
 // Phones: the same idea with fewer per row — one big word, then 2, word · DESIGN stamp ·
-// word (as desktop row 3), 4, the badge + 4, 6, 7 — each row smaller, gaps shrinking too.
+// word (as desktop row 3), 4, the badge + 4, 6, 7 — each row smaller, the same gap
+// between all rows.
 // Laid out on a 358-wide box (the 390 screen minus its margins); the SVG scales to fit.
 const W = 358;
 const WORD = 766.997 / 142.033; // width / height of ハローロボ
@@ -34,7 +35,7 @@ const rows = [
   words(6, 10),
   words(7, 8),
 ];
-const rowGaps = [36, 22, 18, 15, 13, 11];
+const ROW_GAP = 10;
 const heightOf = (it: Item) =>
   it.w / (it.kind === 'word' ? WORD : it.kind === 'design' ? slots.design.w / slots.design.h : slots.badge.w / slots.badge.h);
 let y = 0;
@@ -47,7 +48,7 @@ const placed = rows.flatMap((row, r) => {
     x += it.w + row.gap;
     return at;
   });
-  y += h + (rowGaps[r] ?? 0);
+  y += h + (r < rows.length - 1 ? ROW_GAP : 0);
   return out;
 });
 const H = y;
