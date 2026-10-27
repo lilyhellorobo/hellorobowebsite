@@ -62,6 +62,13 @@ const { sections, name } = Astro.props.project.data;
   .project-media :global(iframe) {
     aspect-ratio: 16 / 9;
   }
+  /* Side-by-side images share one height (the tallest one's); the others fill their cell,
+     cropped at the edges — so a row never ends in a ragged bottom */
+  .project-media--2 :global(:is(img, video)),
+  .project-media--3 :global(:is(img, video)) {
+    height: 100%;
+    object-fit: cover;
+  }
 
   /* Mobile: one column — every image full width, one under the other */
   @media (max-width: 1023px) {
@@ -73,6 +80,10 @@ const { sections, name } = Astro.props.project.data;
     }
     .project-media.is-after-media {
       margin-top: 8px;
+    }
+    .project-media--2 :global(:is(img, video)),
+    .project-media--3 :global(:is(img, video)) {
+      height: auto;
     }
   }
 </style>
