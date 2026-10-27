@@ -48,12 +48,13 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
 ---
 <section
   class:list={['radio-tv', `radio-tv--${variant}`]}
-  style={`aspect-ratio: 1730 / ${h}`}
   aria-label="Robo Radio player"
   data-tv
   data-playlist={JSON.stringify(playlist)}
   data-index={first}
 >
+  <!-- The TV (poster + screen); on desktop the player bar sits on it, on phones under it -->
+  <div class="radio-tv__stage" style={`aspect-ratio: 1730 / ${h}`}>
   <WebGLSlot name="radio-tv" class="radio-tv__scene">
     <Image src={poster} alt="" widths={[1730, 3460]} sizes="100vw" loading={variant === 'hero' ? 'eager' : 'lazy'} />
   </WebGLSlot>
@@ -66,6 +67,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   </div>
   <!-- The next screen in the row, sliding in on previous / next -->
   <div class="radio-tv__ghost" aria-hidden="true" data-ghost></div>
+  </div>
 
   {playlist.length > 0 && (
     <div class="radio-tv__bar" style={`left:${(bar.x / 1730) * 100}%;top:${(bar.y / h) * 100}%`} role="group" aria-label="Player">
@@ -314,6 +316,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     background: var(--color-black);
     overflow: hidden;
   }
+  .radio-tv__stage {
+    position: relative;
+    overflow: hidden;
+  }
   .radio-tv :global(.radio-tv__scene) {
     position: absolute;
     inset: 0;
@@ -502,16 +508,16 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     outline-offset: 2px;
   }
 
-  /* ── Mobile: a 4:5 crop of the poster; the player bar across the bottom ── */
+  /* ── Mobile: the whole TV at the screen's width (no crop), the player bar under it on
+     the black, without its own black box ── */
   @media (max-width: 1023px) {
-    .radio-tv {
-      aspect-ratio: 4 / 5 !important;
-    }
     .radio-tv__bar {
       --u: calc((100vw - 2 * var(--page-margin)) / 504);
-      left: var(--page-margin) !important;
+      position: relative;
+      left: auto !important;
       top: auto !important;
-      bottom: var(--space-24);
+      margin: var(--space-12) var(--page-margin) var(--space-20);
+      background: none;
     }
     /* The small buttons get a 44px tap area */
     .radio-tv__btn::after {
@@ -522,12 +528,6 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       width: max(100%, 44px);
       height: max(100%, 44px);
       transform: translate(-50%, -50%);
-    }
-    /* The 4:5 crop shows the middle of the screen edge to edge */
-    .radio-tv__ghost,
-    .radio-tv__screen {
-      left: 0;
-      width: 100%;
     }
   }
 </style>

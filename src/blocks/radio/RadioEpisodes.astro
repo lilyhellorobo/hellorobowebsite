@@ -122,11 +122,18 @@ const STEP = 2;
   /* ── Mobile: cover on top of each row, then title, line and button ── */
   @media (max-width: 1023px) {
     .radio-episodes {
-      padding-top: 164px;
+      padding-top: 0;
     }
     .radio-episodes__row {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-24);
+      /* 48 above and below the rule between episodes */
+      padding-block: 48px;
+    }
+    /* no rule straight under the invite block */
+    .radio-episodes__row:first-child {
+      border-top: 0;
+      padding-top: var(--space-24);
     }
     .radio-episodes__cover {
       grid-column: auto;
@@ -139,8 +146,9 @@ const STEP = 2;
       align-self: stretch;
       margin-top: var(--space-24);
     }
+    /* Load more 32 under the last Watch (the row's own 48 bottom is taken back) */
     .radio-episodes__more {
-      margin-top: 64px;
+      margin-top: -16px;
     }
     .radio-episodes__more :global(.button) {
       flex: 1;

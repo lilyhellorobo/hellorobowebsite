@@ -45,10 +45,12 @@ import Button from '../../components/ui/Button.astro';
   /* ── Mobile ── */
   @media (max-width: 1023px) {
     .radio-invite {
-      padding-block: 164px;
+      padding-block: 164px 96px;
     }
+    /* Mobile/H2 at a tighter line height (1.16 felt loose on four lines) */
     .radio-invite__title {
       margin-top: var(--space-24);
+      line-height: 1;
     }
     .radio-invite__text {
       margin-top: var(--space-24);

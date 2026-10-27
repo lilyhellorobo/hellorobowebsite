@@ -9,7 +9,15 @@
   <div class="container">
     <p class="t-body">Guests</p>
     <h2 class="radio-guests__title t-h1">Where good conversations begin</h2>
-    <img class="radio-guests__logos" src="/images/radio/logos-guests.svg" alt="Humanoid, robot.com, Boston Dynamics, VolvoxLabs" width="1644" style="--w: 1644" height="374" loading="lazy" />
+    <img class="radio-guests__logos only-desktop" src="/images/radio/logos-guests.svg" alt="Humanoid, robot.com, Boston Dynamics, VolvoxLabs" width="1644" style="--w: 1644" height="374" loading="lazy" />
+    <!-- Phones: the six 264-wide tiles of the row as a 2-column grid -->
+    <ul class="radio-guests__grid only-mobile" aria-label="Humanoid, robot.com, Boston Dynamics, VolvoxLabs">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <li class="radio-guests__cell" style={`--i: ${i}`} aria-hidden="true">
+          <img src="/images/radio/logos-guests.svg" alt="" width="1644" height="374" loading="lazy" />
+        </li>
+      ))}
+    </ul>
   </div>
 </section>
 
@@ -29,25 +37,36 @@
     margin-top: calc(180 * var(--px));
   }
 
-  /* ── Mobile: the logo row keeps its size and scrolls sideways ── */
+  /* ── Mobile: the logo tiles in two columns (as on Services) ── */
   @media (max-width: 1023px) {
     .radio-guests {
       padding-top: 164px;
       padding-bottom: 64px;
-    }
-    .radio-guests .container {
-      overflow-x: auto;
-      scrollbar-width: none;
     }
     /* Mobile/H1, but never wider than the screen: "conversations" is one long word */
     .radio-guests__title {
       margin-top: var(--space-24);
       font-size: min(var(--type-h1-size-mobile), 15vw);
     }
-    .radio-guests__logos {
-      width: 822px;
-      max-width: none;
+    .radio-guests__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
       margin-top: 64px;
+    }
+    .radio-guests__cell {
+      position: relative;
+      aspect-ratio: 264 / 374;
+      overflow: hidden;
+    }
+    /* the whole row, scaled so one tile fills the cell, shifted to tile --i (276 apart) */
+    .radio-guests__cell img {
+      position: absolute;
+      top: 0;
+      left: calc(var(--i) * -276 / 264 * 100%);
+      width: calc(1644 / 264 * 100%);
+      max-width: none;
+      height: 100%;
     }
   }
 </style>
