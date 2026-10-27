@@ -3,13 +3,23 @@
  * Contact — "Start a project" / "Drop a quick word" flow
  * Figma: "Contact" column (10093:10195 … 10093:10721), each screen 1728×949
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-10195
- * Every state is its own screen, linked with #anchors (CSS :target). Send posts the
- * answers to /api/contact (saved for the CMS "Contact form responses"), then shows #done.
+ * Every state is its own screen (data-step); links like href="#name" switch screens.
+ * On /contact the step is kept in the URL hash; `embedded` (the pre-footer block on every
+ * page) switches in place without touching the URL, so the page doesn't move.
+ * Send posts the answers to /api/contact (saved for the CMS "Contact form responses"),
+ * then shows "done".
  * TODO (logic step): copy email → "copied", receipt with real data.
  */
 import Button from '../../components/ui/Button.astro';
 import Divider from '../../components/ui/Divider.astro';
 import Receipt from './Receipt.astro';
+
+interface Props {
+  /** Inside the pre-footer block: hidden until opened, steps don't change the URL */
+  embedded?: boolean;
+}
+const { embedded = false } = Astro.props;
+const Title = embedded ? 'h2' : 'h1';
 
 const steps = [
   { id: 'name', title: 'Who’s on the other side?', field: 'Your name', type: 'text', back: '#', next: '#email' },
@@ -22,7 +32,7 @@ const services = [
   { label: 'Video production', selected: false },
 ];
 ---
-<section class="contact" aria-label="Contact">
+<section class:list={['contact', embedded && 'contact--embedded']} aria-label="Contact" data-contact={embedded ? 'embedded' : 'page'} inert={embedded}>
   <!-- Shared background: grey ground, printer photo (multiply), HUMAN_CORE stamp -->
   <div class="contact__bg" aria-hidden="true">
     <img class="contact__printer" src="/images/shell/prefooter-printer.png" alt="" width="994" style="--w: 994" height="949" />
@@ -30,8 +40,8 @@ const services = [
   </div>
 
   <!-- Start -->
-  <div class="contact__screen contact__screen--start">
-    <h1 class="contact__title t-h2">Okay, we’re listening. So, what’s on your mind?</h1>
+  <div class="contact__screen contact__screen--start" data-step="start" data-active>
+    <Title class="contact__title t-h2">Okay, we’re listening. So, what’s on your mind?</Title>
     <div class="contact__actions">
       <Button href="#name" variant="light" icon="none" style="min-width: calc(266 * var(--px))">Start a project</Button>
       <Button href="#message" variant="light" icon="none" style="min-width: calc(307 * var(--px))">Drop a quick word</Button>
@@ -41,7 +51,7 @@ const services = [
 
   <!-- Name / Email / Company -->
   {steps.map((s) => (
-    <form class="contact__screen" id={s.id} action="#" onsubmit="return false">
+    <form class="contact__screen" data-step={s.id} action="#" onsubmit="return false">
       <h2 class="contact__title t-h2">{s.title}</h2>
       <label class="contact__field">
         <span class="visually-hidden">{s.field}</span>
@@ -57,7 +67,7 @@ const services = [
   ))}
 
   <!-- Mission -->
-  <form class="contact__screen" id="mission" action="#" onsubmit="return false">
+  <form class="contact__screen" data-step="mission" action="#" onsubmit="return false">
     <h2 class="contact__title t-h2">What’s the mission?</h2>
     <p class="contact__hint t-body">Select what you need. Pick as many as you like.</p>
     <fieldset class="contact__chips">
@@ -79,7 +89,7 @@ const services = [
   </form>
 
   <!-- Quick word -->
-  <form class="contact__screen" id="message" action="#" onsubmit="return false">
+  <form class="contact__screen" data-step="message" action="#" onsubmit="return false">
     <h2 class="contact__title t-h2">We’re all ears. Well, sort of. Drop your message below</h2>
     <label class="contact__field contact__field--message">
       <span class="visually-hidden">Your message</span>
@@ -95,7 +105,7 @@ const services = [
   </form>
 
   <!-- Done -->
-  <div class="contact__screen contact__screen--done" id="done">
+  <div class="contact__screen contact__screen--done" data-step="done">
     <div class="contact__done-text">
       <h2 class="t-h2">Signal received. Connection established.</h2>
       <p class="t-body">Your message is in good hands. Human hands, actually. We'll be in touch.</p>
@@ -106,54 +116,110 @@ const services = [
 
 <script>
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const value = (id: string) => document.querySelector<HTMLInputElement>(`#contact-${id}`)?.value.trim() ?? '';
 
-  /** Shows `text` under the field of screen `id` and opens that screen */
-  function fail(id: string, text: string) {
-    document.querySelectorAll<HTMLElement>('.contact [data-error]').forEach((el) => (el.textContent = ''));
-    const screen = document.getElementById(id)!;
-    screen.querySelector<HTMLElement>('[data-error]')!.textContent = text;
-    if (location.hash !== `#${id}`) location.hash = id;
-    screen.querySelector<HTMLElement>('input:not([type=checkbox]):not(.contact__trap), textarea')?.focus();
-  }
+  for (const root of document.querySelectorAll<HTMLElement>('[data-contact]')) {
+    const embedded = root.dataset.contact === 'embedded';
+    const screens = [...root.querySelectorAll<HTMLElement>('[data-step]')];
+    const value = (id: string) => root.querySelector<HTMLInputElement>(`#contact-${id}`)?.value.trim() ?? '';
+    const clearErrors = () => root.querySelectorAll<HTMLElement>('[data-error]').forEach((el) => (el.textContent = ''));
 
-  document.querySelectorAll<HTMLAnchorElement>('.contact [data-send]').forEach((button) => {
-    button.addEventListener('click', async (e) => {
+    /** Shows screen `step` ("start" for an empty / unknown one) and puts the cursor in its field */
+    function show(step: string, focus = true) {
+      const target = screens.find((s) => s.dataset.step === step) ?? screens[0];
+      for (const s of screens) s.toggleAttribute('data-active', s === target);
+      if (focus) target.querySelector<HTMLElement>('input:not([type=checkbox]):not(.contact__trap), textarea')?.focus({ preventScroll: true });
+    }
+
+    /** Goes to `step`: on /contact through the URL hash (so Back works), in a block in place */
+    function go(step: string) {
+      if (embedded) return show(step);
+      const hash = step === 'start' ? '' : `#${step}`;
+      if (location.hash === hash || (!hash && !location.hash)) show(step);
+      else location.hash = hash;
+    }
+
+    if (embedded) {
+      root.addEventListener('contact:show', (e) => show((e as CustomEvent<string>).detail));
+    } else {
+      show(location.hash.slice(1), false);
+      addEventListener('hashchange', () => show(location.hash.slice(1)));
+    }
+
+    // Back / Next / Start a project …: href="#step" switches screens
+    root.addEventListener('click', (e) => {
+      const link = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]:not([data-send])');
+      if (!link) return;
       e.preventDefault();
-      if (button.ariaBusy === 'true') return;
-      const type = button.dataset.send as 'project' | 'message';
-      const form = button.closest('form')!;
-      let body: Record<string, unknown>;
-      if (type === 'project') {
-        if (!value('name')) return fail('name', 'Please tell us your name');
-        if (!EMAIL_RE.test(value('email'))) return fail('email', 'That email doesn’t look right');
-        const services = [...document.querySelectorAll<HTMLInputElement>('#mission input[name=services]:checked')].map((i) => i.value);
-        body = { type, name: value('name'), email: value('email'), company: value('company'), services };
-      } else {
-        if (!value('message')) return fail('message', 'Write a few words first');
-        body = { type, message: value('message') };
-      }
-      body.page = location.pathname;
-      body.website = form.querySelector<HTMLInputElement>('.contact__trap')?.value;
-
-      button.ariaBusy = 'true';
-      try {
-        const res = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
-        document.querySelectorAll<HTMLFormElement>('.contact form').forEach((f) => f.reset());
-        document.querySelectorAll<HTMLElement>('.contact [data-error]').forEach((el) => (el.textContent = ''));
-        location.hash = 'done';
-      } catch (err) {
-        fail(form.id, `Couldn’t send: ${(err as Error).message}. Please try again or email info@hellorobo.co`);
-      } finally {
-        button.ariaBusy = 'false';
-      }
+      go(link.hash.slice(1) || 'start');
     });
-  });
+
+    // Enter in a field = Next
+    root.addEventListener('submit', (e) => {
+      e.preventDefault();
+      (e.target as HTMLElement).querySelector<HTMLAnchorElement>('.contact__actions a:last-child')?.click();
+    });
+
+    /** Shows `text` under the field of screen `step` and opens that screen */
+    function fail(step: string, text: string) {
+      clearErrors();
+      const screen = screens.find((s) => s.dataset.step === step)!;
+      screen.querySelector<HTMLElement>('[data-error]')!.textContent = text;
+      go(step);
+    }
+
+    // Copy our email
+    root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+      const label = btn.querySelector<HTMLElement>('.button__label');
+      const text = label?.textContent;
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy!);
+          if (label) label.textContent = 'Email copied';
+          setTimeout(() => label && (label.textContent = text!), 2000);
+        } catch {
+          location.href = `mailto:${btn.dataset.copy}`;
+        }
+      });
+    });
+
+    root.querySelectorAll<HTMLAnchorElement>('[data-send]').forEach((button) => {
+      button.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (button.ariaBusy === 'true') return;
+        const type = button.dataset.send as 'project' | 'message';
+        const form = button.closest('form')!;
+        let body: Record<string, unknown>;
+        if (type === 'project') {
+          if (!value('name')) return fail('name', 'Please tell us your name');
+          if (!EMAIL_RE.test(value('email'))) return fail('email', 'That email doesn’t look right');
+          const services = [...root.querySelectorAll<HTMLInputElement>('input[name=services]:checked')].map((i) => i.value);
+          body = { type, name: value('name'), email: value('email'), company: value('company'), services };
+        } else {
+          if (!value('message')) return fail('message', 'Write a few words first');
+          body = { type, message: value('message') };
+        }
+        body.page = location.pathname;
+        body.website = form.querySelector<HTMLInputElement>('.contact__trap')?.value;
+
+        button.ariaBusy = 'true';
+        try {
+          const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
+          root.querySelectorAll<HTMLFormElement>('form').forEach((f) => f.reset());
+          clearErrors();
+          go('done');
+        } catch (err) {
+          fail(form.dataset.step!, `Couldn’t send: ${(err as Error).message}. Please try again or email info@hellorobo.co`);
+        } finally {
+          button.ariaBusy = 'false';
+        }
+      });
+    });
+  }
 </script>
 
 <style>
@@ -190,7 +256,7 @@ const services = [
     height: auto;
   }
 
-  /* One screen at a time: start by default, otherwise the :target */
+  /* One screen at a time: the one marked data-active (start until another is picked) */
   .contact__screen {
     position: absolute;
     inset: 0;
@@ -199,13 +265,7 @@ const services = [
     align-items: flex-start;
     padding: var(--space-40) var(--page-margin) var(--space-60);
   }
-  .contact__screen--start {
-    display: flex;
-  }
-  .contact:has(.contact__screen:target) .contact__screen--start {
-    display: none;
-  }
-  .contact__screen:target {
+  .contact__screen[data-active] {
     display: flex;
   }
 
@@ -414,5 +474,31 @@ const services = [
       align-self: center;
     }
   }
-</style>
 
+  /* In the pre-footer block: lies over the block's own cover, fades in when opened */
+  .contact.contact--embedded {
+    position: absolute;
+    inset: 0;
+    z-index: calc(var(--z-raised) + 1);
+    aspect-ratio: auto;
+    height: auto;
+    min-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--duration-smooth) var(--ease-out),
+      visibility 0s linear var(--duration-smooth);
+  }
+  .contact.contact--embedded:not([inert]) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--duration-smooth) var(--ease-out);
+  }
+  /* Pages have the fixed menu pill at the bottom on phones: the buttons stand 8 above it,
+     like the block's own buttons */
+  @media (max-width: 1023px) {
+    .contact--embedded .contact__screen {
+      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 8px);
+    }
+  }
+</style>
