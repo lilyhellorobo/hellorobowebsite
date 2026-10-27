@@ -7,11 +7,20 @@
     "Video Production"
   ],
   "reveal": "../../assets/projects/surf-air-flight-ops/reveal.png",
+  "background": "#FFFFFF",
   "micrographics": {
-    "left": "/images/project/badge-25.svg",
-    "right": "/images/project/stamp-project-hero.svg"
+    "left": "/images/menu/menu-micrographic.svg",
+    "right": "/images/services/stamp-branding.svg"
   },
   "sections": [
+    {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/SURFOS_REEL_2.mp4"
+        }
+      ]
+    },
     {
       "type": "facts",
       "label": "What Made People Say Yes",
@@ -100,10 +109,5 @@
     }
   ],
   "credits": [],
-  "next": {
-    "name": "Bedrock Robotics",
-    "href": "/work/bedrock-robotics",
-    "image": "../../assets/projects/bedrock-robotics/reveal.png"
-  },
   "order": 1
 }
