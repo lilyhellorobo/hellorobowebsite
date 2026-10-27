@@ -14,9 +14,10 @@
  * Animates only while visible; with reduced motion it draws one still frame. Without
  * WebGL the canvas hides and the plain image shows.
  * `overlay`: for content the page can't read (a YouTube player) — the effect runs on a
- * plain white signal and the canvas multiplies over whatever is underneath: scanlines,
- * mask, flicker, roll band, static and vignette. Curvature and colour fringing need the
- * picture's own pixels, so they don't apply there.
+ * plain white signal and the canvas lays the result over whatever is underneath as black
+ * of varying transparency (no blend mode: Chrome draws mix-blend-mode over a video frame
+ * with black patches): scanlines, mask, flicker, roll band, static and vignette darken it.
+ * Curvature and colour fringing need the picture's own pixels, so they don't apply there.
  */
 interface Props {
   /** Override any Figma property by its name (mask, scanlines, curvature, …) */
@@ -249,6 +250,12 @@ void main() {
   vec3 compressed = vec3(knee) + vec3(kneeRoom) * (vec3(1.0) - exp(-excess / vec3(kneeRoom)));
   col = mix(col, compressed, step(vec3(knee), col));
 
+  if (uP4.w > 0.5) {
+    // overlay: how much the CRT darkens a white signal here → that much black on top
+    float f = clamp(dot(col, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0 - f);
+    return;
+  }
   gl_FragColor = vec4(clamp(col, vec3(0.0), vec3(alpha)), alpha);
 }`;
   const VERT = `
@@ -387,8 +394,5 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     width: 100%;
     height: 100%;
     pointer-events: none;
-  }
-  .crt--overlay {
-    mix-blend-mode: multiply;
   }
 </style>
