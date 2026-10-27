@@ -3,17 +3,52 @@
  * Position — Hero
  * Figma: "Frame 2147232976" (10102:146), 1728×881
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10102-146
- * TODO (CMS): illustration per position; all positions use the Content Creator one for now.
+ * Each position gets its own pair from the micrographics pack (Figma "micrographics",
+ * 10093:2523): a composition in the black panel and a sticker above the title. The picks
+ * are shuffled once and handed out in Careers order, so neighbours never match.
+ * - Composition: at its Figma size (1×) in the 818×803 panel, centred — like the globe
+ *   in Figma's Content Creator page.
+ * - Sticker: in Figma's 174×100 spot, at its own proportions, scaled to the same area so
+ *   every sticker weighs about the same.
  */
 interface Props {
   title: string;
+  /** the position's place in the Careers list (0 = first) */
+  index: number;
 }
-const { title } = Astro.props;
+const { title, index } = Astro.props;
+
+const M = '/images/careers/micro/';
+// [file, width, height] at 1× (the PNGs are 2×)
+const ARTS = [
+  [`${M}art-globe.png`, 497, 293],
+  [`${M}art-human-core.png`, 548, 236],
+  [`${M}art-cross.png`, 561, 561],
+  [`${M}art-yes.png`, 592, 261],
+  [`${M}art-planet.png`, 221, 268],
+  [`${M}art-hp.png`, 457, 457],
+  [`${M}art-cyrillic.png`, 772, 442],
+] as const;
+const STICKERS = [
+  ['/images/careers/stamp-position.svg', 174, 100],
+  [`${M}sticker-28.png`, 287, 170],
+  [`${M}sticker-departure.png`, 301, 211],
+  [`${M}sticker-30.png`, 308, 178],
+  [`${M}sticker-27.png`, 208, 200],
+  [`${M}sticker-25.png`, 304, 176],
+] as const;
+const [artSrc, artW, artH] = ARTS[index % ARTS.length];
+const [stickerSrc, sw, sh] = STICKERS[index % STICKERS.length];
+const AREA = 174 * 100;
+const stickerW = Math.round(Math.sqrt((AREA * sw) / sh));
+const stickerH = Math.round((stickerW * sh) / sw);
 ---
 <section class="position-hero container">
-  <img class="position-hero__art" src="/images/careers/position-illustration.svg" alt="" width="818" style="--w: 818" height="803" />
+  <div class="position-hero__art">
+    <img src={artSrc} alt="" width={artW} height={artH} style={`--aw: ${artW}`} />
+  </div>
   <div class="position-hero__side">
-    <img src="/images/careers/stamp-position.svg" alt="" width="174" style="--w: 174" height="100" />
+    <img class="position-hero__sticker" src={stickerSrc} alt="" width={stickerW} height={stickerH} style={`--w: ${stickerW}`} />
     <h1 class="position-hero__title t-h1">{title}</h1>
   </div>
 </section>
@@ -27,7 +62,13 @@ const { title } = Astro.props;
     padding-bottom: calc(38 * var(--px));
   }
   .position-hero__art {
-    width: 100%;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 818 / 803;
+    background: var(--color-black);
+  }
+  .position-hero__art img {
+    width: calc(var(--aw) / 818 * 100%);
     height: auto;
   }
   .position-hero__side {
@@ -53,7 +94,7 @@ const { title } = Astro.props;
       gap: var(--space-24);
     }
     .position-hero__side img {
-      width: 116px;
+      width: calc(var(--w) * 116 / 174 * 1px);
       height: auto;
     }
   }

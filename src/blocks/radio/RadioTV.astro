@@ -146,6 +146,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     let sound = false; // muted until the visitor turns the sound on
     let asked = false; // a pause the visitor asked for (vs one the browser / YouTube made)
     let seeking = false;
+    let pendingSeek: number | null = null; // a spot picked on the line before the video had started
     let frame = 0;
 
     const setPlaying = (on: boolean) => {
@@ -250,6 +251,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
             onStateChange: (e: { data: number }) => {
               if (e.data === YT.PlayerState.PLAYING) {
                 noCaptions();
+                if (pendingSeek !== null && p.getDuration()) {
+                  p.seekTo(pendingSeek * p.getDuration(), true);
+                  pendingSeek = null;
+                }
                 root.classList.remove('needs-tap');
                 setPlaying(true);
               }
@@ -269,6 +274,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       if (sliding) return; // one slide at a time
       index = (index + step + list.length) % list.length;
       seek.value = '0';
+      pendingSeek = null;
       showProgress();
       if (playing) {
         asked = true;
@@ -299,13 +305,28 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     });
     root.querySelector('[data-prev]')!.addEventListener('click', () => go(-1));
     root.querySelector('[data-next]')!.addEventListener('click', () => go(1));
+    // Dragging along the line moves the picture with it (YouTube's quick, nearby seek, at
+    // most ~6 times a second); letting go seeks exactly and plays from there. Before the
+    // video has started, the line starts it at the spot picked.
+    let lastPreview = 0;
     seek.addEventListener('input', () => {
       seeking = true;
       showProgress();
+      const now = performance.now();
+      if (player && player.getDuration() && now - lastPreview > 150) {
+        lastPreview = now;
+        player.seekTo((Number(seek.value) / 1000) * player.getDuration(), false);
+      }
     });
-    seek.addEventListener('change', () => {
+    seek.addEventListener('change', async () => {
       seeking = false;
-      if (player) player.seekTo((Number(seek.value) / 1000) * player.getDuration(), true);
+      const at = Number(seek.value) / 1000;
+      if (!player) {
+        pendingSeek = at;
+        return void start();
+      }
+      player.seekTo(at * player.getDuration(), true);
+      if (!playing) player.playVideo();
     });
   }
 </script>

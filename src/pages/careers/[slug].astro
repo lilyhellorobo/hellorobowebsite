@@ -6,11 +6,14 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 
 export async function getStaticPaths() {
   const positions = await getCollection('positions');
-  return positions.map((position) => ({ params: { slug: position.id }, props: { position } }));
+  // index = place in the Careers list, which picks the hero's micrographics
+  return positions
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((position, index) => ({ params: { slug: position.id }, props: { position, index } }));
 }
-const { position } = Astro.props as { position: CollectionEntry<'positions'> };
+const { position, index } = Astro.props as { position: CollectionEntry<'positions'>; index: number };
 ---
 <BaseLayout title={position.data.title} prefooter="building" back="/careers" headerVariant="grey">
-  <PositionHero title={position.data.title} />
+  <PositionHero title={position.data.title} index={index} />
   <PositionDetails position={position} />
 </BaseLayout>

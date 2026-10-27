@@ -63,10 +63,18 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
     gap: calc(100 * var(--px));
     margin-top: calc(130 * var(--px));
   }
-  /* Full-bleed rule above each row, then calc(100 * var(--px)) to the title */
+  /* Rule above each row, inset to the page margins, then calc(100 * var(--px)) to the title */
   .careers-positions__row {
-    border-top: var(--line-width) solid var(--line-on-dark);
+    position: relative;
     padding-top: calc(100 * var(--px));
+  }
+  .careers-positions__row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    border-top: var(--line-width) solid var(--line-on-dark);
   }
   .careers-positions__link {
     display: grid;
