@@ -7,10 +7,11 @@
  * episode's YouTube video on the screen with Figma's CRT shader over it (CrtScreen in
  * overlay mode, the screen's Figma settings: scanlines 59 / 3, shadow mask 9 / 12, static
  * 18, vignette 24, flicker 62, roll 0.93; flat glass, so no masked corners).
- * Controls (Figma "player nav", 504×80, without its previous / next for now): play /
- * pause, the progress line (seekable) and a sound button at the end (the video plays
- * muted until it's on). One video: the hero plays the newest episode that has one, an
- * episode page its own.
+ * Controls (Figma "player nav", 504×80): previous · play / pause · next, the progress
+ * line (seekable) and a sound button at the end (the video plays muted until it's on).
+ * They play the episodes that have a video, newest first: the hero starts with the
+ * newest, an episode page with its own; previous / next load the next one straight into
+ * the same screen (no transition), and the next one starts when an episode ends.
  * The YouTube player (privacy-enhanced, youtube-nocookie) loads only on the first play. Its
  * own overlays (title, logo) sit at the frame's edges, so the frame is a little bigger
  * than the screen and they fall outside it; captions are switched off; the screen takes no
@@ -83,9 +84,15 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
 
   {playlist.length > 0 && (
     <div class="radio-tv__bar" style={`left:${(bar.x / 1730) * 100}%;top:${(bar.y / h) * 100}%`} role="group" aria-label="Player">
+      <button type="button" class="radio-tv__btn radio-tv__btn--prev" aria-label="Previous episode" data-prev>
+        <svg viewBox="0 24 32 32" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="m12.75 40.97 11.53 6.96 1.97-1.13V32.83l-1.89-1.15-11.61 6.9zm-.5-9.42h-5.5v16.5h5.5z" /></svg>
+      </button>
       <button type="button" class="radio-tv__btn radio-tv__btn--play" aria-label="Play" data-play>
         <svg class="radio-tv__icon-play" viewBox="46.4 9.8 60 60" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M85.38 41.55 70.4 50.34l-2.74-1.53V31.23l2.63-1.56 15.08 8.72z" /></svg>
         <svg class="radio-tv__icon-pause" viewBox="46.4 9.8 60 60" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M68.4 31.25h5v17.5h-5zm11 0h5v17.5h-5z" /></svg>
+      </button>
+      <button type="button" class="radio-tv__btn radio-tv__btn--next" aria-label="Next episode" data-next>
+        <svg viewBox="124 24 32 32" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M141.05 40.97l-11.53 6.96-1.97-1.13V32.83l1.89-1.15 11.61 6.9zm.5-9.42h5.5v16.5h-5.5z" /></svg>
       </button>
       <input class="radio-tv__seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Position in the episode" data-seek />
       <button type="button" class="radio-tv__btn radio-tv__btn--sound" aria-label="Sound on" aria-pressed="false" data-sound>
@@ -139,7 +146,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   for (const root of document.querySelectorAll<HTMLElement>('[data-tv]')) {
     const list: Item[] = JSON.parse(root.dataset.playlist || '[]');
     if (!list.length) continue;
-    const index = Number(root.dataset.index) || 0;
+    let index = Number(root.dataset.index) || 0;
     const mount = root.querySelector<HTMLElement>('[data-video]')!;
     const screen = root.querySelector<HTMLElement>('[data-screen]')!;
     const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
@@ -235,16 +242,23 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
                 asked = false;
                 setPlaying(false);
               }
-              else if (e.data === YT.PlayerState.ENDED) {
-                setPlaying(false);
-                seek.value = '0';
-                showProgress();
-              }
+              else if (e.data === YT.PlayerState.ENDED) go(1);
             },
           },
         });
       });
     };
+    // Previous / next: the other episode loads straight into the same screen
+    const go = async (step: number) => {
+      index = (index + step + list.length) % list.length;
+      seek.value = '0';
+      pendingSeek = null;
+      showProgress();
+      const p = await start();
+      p.loadVideoById(list[index].id);
+      announce();
+    };
+
     playBtn.addEventListener('click', async () => {
       if (!player) return void start();
       if (playing) {
@@ -252,6 +266,8 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
         player.pauseVideo();
       } else player.playVideo();
     });
+    root.querySelector('[data-prev]')!.addEventListener('click', () => go(-1));
+    root.querySelector('[data-next]')!.addEventListener('click', () => go(1));
     soundBtn.addEventListener('click', () => {
       sound = !sound;
       root.classList.toggle('is-sound', sound);
@@ -395,11 +411,22 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     width: 100%;
     height: 100%;
   }
-  /* play 60 at the start, the line from 76 to 20 before the sound button */
+  /* prev 32 · 14.4 · play 60 · 14.4 · next 32, starting at 1.6 */
+  .radio-tv__btn--prev,
+  .radio-tv__btn--next {
+    width: calc(32 * var(--u));
+    height: calc(32 * var(--u));
+  }
+  .radio-tv__btn--prev {
+    left: calc(1.6 * var(--u));
+  }
   .radio-tv__btn--play {
-    left: 0;
+    left: calc(48 * var(--u));
     width: calc(60 * var(--u));
     height: calc(60 * var(--u));
+  }
+  .radio-tv__btn--next {
+    left: calc(122.4 * var(--u));
   }
   /* Sound at the end of the bar */
   .radio-tv__btn--sound {
@@ -428,9 +455,9 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   /* Progress: Figma's line (166 at 172, white 20%) with the 1×9 playhead; seekable */
   .radio-tv__seek {
     position: absolute;
-    left: calc(76 * var(--u));
+    left: calc(169 * var(--u));
     top: 50%;
-    width: calc(356 * var(--u));
+    width: calc(169 * var(--u));
     height: calc(24 * var(--u));
     margin: 0;
     transform: translateY(-50%);
