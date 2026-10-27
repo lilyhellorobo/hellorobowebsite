@@ -25,6 +25,7 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
 import CrtScreen from '../../components/ui/CrtScreen.astro';
 import hero from '../../assets/radio/tv-hero.png';
 import episode from '../../assets/radio/tv-episode.png';
+import robot from '../../assets/radio/tv-robot.png';
 
 interface Props {
   variant?: 'hero' | 'episode';
@@ -38,6 +39,10 @@ const playlist = (await getCollection('episodes', (e) => !!e.data.youtube))
 const first = Math.max(0, start ? playlist.findIndex((p) => p.id === start) : 0);
 const poster = variant === 'hero' ? hero : episode;
 const h = variant === 'hero' ? 983 : 872;
+// Figma's screen (1522×744) and the robot in front of it (442×405): hero / episode
+const screenTop = variant === 'hero' ? 102 : 15;
+const robotTop = variant === 'hero' ? 655 : 528;
+const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 // Player bar: hero (105, 843) · episode (110, 759) — Figma's controls frame + its 5px inset
 const bar = variant === 'hero' ? { x: 105, y: 843 } : { x: 110, y: 759 };
 // The screen's Figma settings, flat glass (curvature 0) so the video keeps square corners
@@ -58,13 +63,22 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   <WebGLSlot name="radio-tv" class="radio-tv__scene">
     <Image src={poster} alt="" widths={[1730, 3460]} sizes="100vw" loading={variant === 'hero' ? 'eager' : 'lazy'} />
   </WebGLSlot>
-  <div class="radio-tv__screen" data-screen>
+  <div class="radio-tv__screen" data-screen style={`left:${pct(103, 1730)};top:${pct(screenTop, h)};width:${pct(1522, 1730)};height:${pct(744, h)}`}>
     <div class="radio-tv__frame" data-frame><div class="radio-tv__video" data-video></div></div>
     <!-- The TV's own dark screen whenever the video isn't playing: YouTube's paused screen
          (title, logo, "More videos") never shows -->
     <div class="radio-tv__standby" aria-hidden="true"></div>
     <CrtScreen overlay settings={crt} />
   </div>
+  <!-- The robot stands in front of the screen, so the video plays behind it -->
+  <Image class="radio-tv__robot" src={robot} alt="" widths={[442, 884]} sizes="26vw" loading={variant === 'hero' ? 'eager' : 'lazy'} style={`left:${pct(678, 1730)};top:${pct(robotTop, h)};width:${pct(442, 1730)}`} />
+  <!-- The screen's shape: its edges bow out a little (Figma's CRT curvature 10), measured
+       from the poster -->
+  <svg class="radio-tv__clip" width="0" height="0" aria-hidden="true" focusable="false">
+    <clipPath id={`radio-tv-screen-${variant}`} clipPathUnits="objectBoundingBox">
+      <path d="M.0059 .0269Q.5 -.0215 .9941 .0269Q1.0033 .5 .9941 .9704Q.5 1.0216 .0059 .9704Q-.0045 .5 .0059 .0269Z" />
+    </clipPath>
+  </svg>
   </div>
 
   {playlist.length > 0 && (
@@ -293,12 +307,9 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   }
   /* The CRT screen inside the poster: 6.25–93.5% across, 2–86.3% down. Black until the
      first play, so the poster shows through; the video and the CRT layer fade in then */
+  /* Figma's screen rectangle (placed inline), clipped to the poster's curved screen */
   .radio-tv__screen {
     position: absolute;
-    left: 6.25%;
-    top: 2%;
-    width: 87.25%;
-    height: 84.3%;
     overflow: hidden;
     opacity: 0;
     pointer-events: none;
@@ -307,6 +318,21 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   }
   .radio-tv.is-on .radio-tv__screen {
     opacity: 1;
+  }
+  .radio-tv--hero .radio-tv__screen {
+    clip-path: url(#radio-tv-screen-hero);
+  }
+  .radio-tv--episode .radio-tv__screen {
+    clip-path: url(#radio-tv-screen-episode);
+  }
+  .radio-tv__clip {
+    position: absolute;
+  }
+  .radio-tv :global(.radio-tv__robot) {
+    position: absolute;
+    z-index: 2;
+    height: auto;
+    pointer-events: none;
   }
   .radio-tv__frame {
     position: absolute;
