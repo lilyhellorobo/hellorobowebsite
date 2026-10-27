@@ -17,7 +17,10 @@
  * The YouTube player (privacy-enhanced, youtube-nocookie) loads only on the first play. Its
  * own overlays (title, logo) sit at the frame's edges, so the frame is a little bigger
  * than the screen and they fall outside it; captions are switched off; the screen takes no
- * pointer input, so YouTube's hover overlays never show.
+ * pointer input, so YouTube's hover overlays never show; while the video isn't playing
+ * the TV's own dark screen covers it. Some phone browsers only start a video tapped
+ * directly: if it hasn't started 2s after Play, the screen steps aside for YouTube's own
+ * play button, and after that tap the controls work as usual.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
@@ -55,7 +58,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     <Image src={poster} alt="" widths={[1730, 3460]} sizes="100vw" loading={variant === 'hero' ? 'eager' : 'lazy'} />
   </WebGLSlot>
   <div class="radio-tv__screen" data-screen>
-    <div class="radio-tv__video" data-video></div>
+    <div class="radio-tv__frame" data-frame><div class="radio-tv__video" data-video></div></div>
+    <!-- The TV's own dark screen whenever the video isn't playing: YouTube's paused screen
+         (title, logo, "More videos") never shows -->
+    <div class="radio-tv__standby" aria-hidden="true"></div>
     <CrtScreen overlay settings={crt} />
   </div>
   <!-- The next screen in the row, sliding in on previous / next -->
@@ -136,6 +142,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     let player: YTPlayer | null = null;
     let playing = false;
     let sound = false; // muted until the visitor turns the sound on
+    let asked = false; // a pause the visitor asked for (vs one the browser / YouTube made)
     let seeking = false;
     let frame = 0;
 
@@ -159,17 +166,24 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     const showProgress = () => seek.style.setProperty('--p', String(Number(seek.value) / 1000));
     const announce = () => (title.textContent = `Now playing: ${list[index].title}`);
 
-    // The YouTube frame covers the screen at 16:9 and is 15% bigger, so YouTube's title
-    // (top) and logo (bottom right) fall outside the screen
+    // The picture: on a wide screen (desktop) it covers the screen; on a tall one (phones)
+    // the whole 16:9 video shows across the width, centred, the dark screen above and below.
+    // Inside that box the YouTube frame is 15% bigger and clipped, so YouTube's title (top)
+    // and logo (bottom right) fall outside it
+    const box = root.querySelector<HTMLElement>('[data-frame]')!;
     const OVERSCAN = 1.15;
     const fit = () => {
       const frameEl = player?.getIframe();
       if (!frameEl) return;
       const w = screen.offsetWidth;
       const h = screen.offsetHeight;
-      const vw = Math.max(w, (h * 16) / 9) * OVERSCAN;
+      const tall = w / h < 1.2;
+      const bw = w;
+      const bh = tall ? Math.min(h, (w * 9) / 16) : h;
+      Object.assign(box.style, { width: `${bw}px`, height: `${bh}px`, left: '0px', top: `${(h - bh) / 2}px` });
+      const vw = Math.max(bw, (bh * 16) / 9) * OVERSCAN;
       const vh = (vw * 9) / 16;
-      Object.assign(frameEl.style, { width: `${vw}px`, height: `${vh}px`, left: `${(w - vw) / 2}px`, top: `${(h - vh) / 2}px` });
+      Object.assign(frameEl.style, { width: `${vw}px`, height: `${vh}px`, left: `${(bw - vw) / 2}px`, top: `${(bh - vh) / 2}px` });
     };
     addEventListener('resize', fit);
     const noCaptions = () => {
@@ -224,6 +238,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
             onReady: () => {
               player = p;
               fit();
+              setTimeout(() => !playing && root.classList.add('needs-tap'), 2000);
               if (sound) p.unMute();
               else p.mute();
               p.playVideo();
@@ -233,9 +248,15 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
             onStateChange: (e: { data: number }) => {
               if (e.data === YT.PlayerState.PLAYING) {
                 noCaptions();
+                root.classList.remove('needs-tap');
                 setPlaying(true);
               }
-              else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
+              else if (e.data === YT.PlayerState.PAUSED) {
+                // paused without being asked: this browser wants the video tapped
+                if (!asked) root.classList.add('needs-tap');
+                asked = false;
+                setPlaying(false);
+              }
               else if (e.data === YT.PlayerState.ENDED) go(1);
             },
           },
@@ -247,7 +268,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       index = (index + step + list.length) % list.length;
       seek.value = '0';
       showProgress();
-      player?.pauseVideo();
+      if (playing) {
+        asked = true;
+        player?.pauseVideo();
+      }
       sliding = slide(step);
       await sliding;
       sliding = null;
@@ -258,8 +282,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
 
     playBtn.addEventListener('click', async () => {
       if (!player) return void start();
-      if (playing) player.pauseVideo();
-      else player.playVideo();
+      if (playing) {
+        asked = true;
+        player.pauseVideo();
+      } else player.playVideo();
     });
     soundBtn.addEventListener('click', () => {
       sound = !sound;
@@ -313,6 +339,27 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   }
   .radio-tv.is-on .radio-tv__screen {
     opacity: 1;
+  }
+  .radio-tv__frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .radio-tv__standby {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.45) 0 1px, transparent 1px 3px),
+      #121212;
+    transition: opacity var(--duration-normal) var(--ease-out);
+  }
+  .radio-tv.is-playing .radio-tv__standby,
+  .radio-tv.needs-tap .radio-tv__standby {
+    opacity: 0;
+  }
+  /* a phone that wants the video tapped: YouTube's play button can be reached */
+  .radio-tv.needs-tap .radio-tv__screen {
+    pointer-events: auto;
   }
   .radio-tv__video,
   .radio-tv__screen :global(iframe) {
