@@ -12,6 +12,8 @@
  *   Figma spots are swapped around (simulated annealing) so the same object is as far
  *   from itself as possible, every object appears about equally often, and no gap gets
  *   tighter than Figma's.
+ * - Then the spacing is evened out (objects pushed apart like marbles settling) so no part
+ *   of the canvas is crowded or empty, and the objects are re-picked for the new spots.
  */
 import { writeFileSync } from 'node:fs';
 
@@ -178,6 +180,9 @@ console.log('tile', size.W, '×', size.H);
 // as possible across all three versions, and nothing landing on its own spot in the
 // neighbouring version
 const VERSIONS = 3;
+const GAP_PUSH = 1; // relax target: this × the honeycomb spacing
+const SAME_FAR = 1700; // same object pairs closer than this are penalised
+const SAME_MIN = 1000; // … and closer than this, much more
 PERIOD_W = size.W * VERSIONS;
 PERIOD_H = size.H * VERSIONS;
 const dist = (a, b) => Math.hypot(wrapD(a.x - b.x, PERIOD_W), wrapD(a.y - b.y, PERIOD_H));
@@ -224,7 +229,8 @@ const score = (pts) => {
       if (pts[i].key === pts[j].key) {
         const d = dist(pts[i], pts[j]);
         same = Math.min(same, d);
-        if (d < 1300) near += (1300 - d) ** 2;
+        if (d < SAME_FAR) near += (SAME_FAR - d) ** 2;
+        if (d < SAME_MIN) near += (SAME_MIN - d) ** 2 * 20; // and never really close
       }
   // every object about equally often
   const counts = {};
@@ -243,40 +249,111 @@ for (let v = 1; v < VERSIONS; v++) {
 }
 const pts = build(maps);
 const free = pts.filter((p) => !p.pinned);
-// (simulated annealing: early on a slightly worse swap is sometimes kept, to get out of
-// dead ends; the best arrangement seen is what's kept)
-let sc = score(pts);
-let bestKeys = pts.map((p) => p.key);
-let bestSc = sc;
-const ITER = 40000;
-for (let it = 0; it < ITER; it++) {
-  // either swap two objects' kinds or give one object another kind
-  const a = free[Math.floor(rand() * free.length)];
-  const b = rand() < 0.5 ? free[Math.floor(rand() * free.length)] : null;
-  const before = [a.key, b && b.key];
-  if (b) {
-    if (a === b || a.key === b.key) continue;
-    [a.key, b.key] = [b.key, a.key];
-  } else {
-    const k = KEYS[Math.floor(rand() * KEYS.length)];
-    if (k === a.key) continue;
-    a.key = k;
-  }
-  const next = score(pts);
-  const temp = 400 * (1 - it / ITER);
-  if (next.value >= sc.value || rand() < Math.exp((next.value - sc.value) / Math.max(temp, 1e-3))) {
-    sc = next;
-    if (sc.value > bestSc.value) {
-      bestSc = sc;
-      bestKeys = pts.map((p) => p.key);
+// Figma's own spots for the first copy: the relaxing below may nudge them, but springs
+// keep them close, so the page still opens on Figma's composition
+for (const p of pts) [p.x0, p.y0] = [p.x, p.y];
+
+const annealKinds = (ITER) => {
+  // (simulated annealing: early on a slightly worse swap is sometimes kept, to get out of
+  // dead ends; the best arrangement seen is what's kept)
+  let sc = score(pts);
+  let bestKeys = pts.map((p) => p.key);
+  let bestSc = sc;
+  for (let it = 0; it < ITER; it++) {
+    // either swap two objects' kinds or give one object another kind
+    const a = free[Math.floor(rand() * free.length)];
+    const b = rand() < 0.5 ? free[Math.floor(rand() * free.length)] : null;
+    const before = [a.key, b && b.key];
+    if (b) {
+      if (a === b || a.key === b.key) continue;
+      [a.key, b.key] = [b.key, a.key];
+    } else {
+      const k = KEYS[Math.floor(rand() * KEYS.length)];
+      if (k === a.key) continue;
+      a.key = k;
     }
-  } else {
-    a.key = before[0];
-    if (b) b.key = before[1];
+    const next = score(pts);
+    const temp = 400 * (1 - it / ITER);
+    if (next.value >= sc.value || rand() < Math.exp((next.value - sc.value) / Math.max(temp, 1e-3))) {
+      sc = next;
+      if (sc.value > bestSc.value) {
+        bestSc = sc;
+        bestKeys = pts.map((p) => p.key);
+      }
+    } else {
+      a.key = before[0];
+      if (b) b.key = before[1];
+    }
   }
+  pts.forEach((p, i) => (p.key = bestKeys[i]));
+  return bestSc;
+};
+
+// ── Even out the spacing. The tiled Figma spots leave some objects close together and
+// some holes (Figma's frame was drawn as one screen, not to repeat), so the objects are
+// spread like marbles settling in a tray: each one is pushed away from every neighbour
+// whose visual centre (the object's body with its label) is nearer than SPACING, the
+// spacing an even honeycomb of this many objects would have — so everything presses on
+// everything and it settles evenly. Footprints (body, shadow, label) closer than Figma's
+// tightest pair are pushed apart harder. Figma's copy is held near its spots by springs.
+const centreOf = (p) => {
+  const [w, h] = SIZE[p.key];
+  const [x0, y0, x1] = VISIBLE[p.key];
+  const l = labelOf(p);
+  return [p.x - w / 2 + (x0 + x1) / 2, p.y - h / 2 + (y0 + l.top + LABEL_H) / 2];
+};
+const nearestGaps = () => pts.map((a) => Math.min(...pts.filter((b) => b !== a).map((b) => gapOf(a, b))));
+const relax = (ROUNDS, SPACING) => {
+  for (let r = 0; r < ROUNDS; r++) {
+    const f = pts.map(() => [0, 0]);
+    const c = pts.map(centreOf);
+    for (let i = 0; i < pts.length; i++)
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = wrapD(c[j][0] - c[i][0], PERIOD_W);
+        const dy = wrapD(c[j][1] - c[i][1], PERIOD_H);
+        if (Math.abs(dx) > SPACING * 1.5 || Math.abs(dy) > SPACING * 1.5) continue;
+        const d = Math.hypot(dx, dy) || 1;
+        let push = Math.max(0, SPACING - d) / 2;
+        const g = gapOf(pts[i], pts[j]);
+        if (g < FIGMA_MIN) push += (FIGMA_MIN - g) * 2;
+        if (!push) continue;
+        f[i][0] -= (dx / d) * push;
+        f[i][1] -= (dy / d) * push;
+        f[j][0] += (dx / d) * push;
+        f[j][1] += (dy / d) * push;
+      }
+    const rate = 0.25 * (1 - r / ROUNDS) + 0.02;
+    pts.forEach((p, i) => {
+      if (p.pinned) {
+        f[i][0] += (p.x0 - p.x) * 1.5;
+        f[i][1] += (p.y0 - p.y) * 1.5;
+      }
+      const m = Math.hypot(...f[i]);
+      const k = m > 60 ? 60 / m : 1; // small steps
+      p.x += f[i][0] * k * rate;
+      p.y += f[i][1] * k * rate;
+    });
+  }
+};
+
+const stats = (tag) => {
+  const g = nearestGaps().sort((a, b) => a - b);
+  const q = (t) => Math.round(g[Math.floor(t * (g.length - 1))]);
+  console.log(tag, 'nearest gap min/10%/50%/90%/max', q(0), q(0.1), q(0.5), q(0.9), q(1));
+};
+
+stats('tiled');
+let sc = annealKinds(40000);
+// honeycomb spacing for this many objects in the tile
+const TARGET = Math.sqrt((2 * PERIOD_W * PERIOD_H) / (Math.sqrt(3) * pts.length)) * GAP_PUSH;
+// relax, then re-pick the kinds for the new spots (the footprints depend on the kind);
+// ending on the kinds so the same object is never left next to itself
+for (let pass = 0; pass < 4; pass++) {
+  relax(400, TARGET);
+  sc = annealKinds(30000);
 }
-pts.forEach((p, i) => (p.key = bestKeys[i]));
-sc = bestSc;
+stats('relaxed');
+
 console.log('tightest gap', Math.round(sc.tight), '(Figma', Math.round(FIGMA_MIN) + ')', '· same object closest', Math.round(sc.same));
 console.log('objects', pts.length, 'in', PERIOD_W, '×', PERIOD_H);
 console.log('counts', JSON.stringify(Object.fromEntries(KEYS.map((k) => [k, pts.filter((p) => p.key === k).length]))));
