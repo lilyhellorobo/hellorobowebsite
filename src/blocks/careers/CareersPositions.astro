@@ -145,17 +145,30 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-24);
     }
-    .careers-positions__title img {
-      width: auto;
-      max-width: 33%;
-      max-height: 56px;
+    /* Sticker above the title, at the left margin */
+    .careers-positions__title {
+      flex-direction: column;
+      gap: var(--space-16);
     }
+    .careers-positions__title img {
+      order: -1;
+      width: auto;
+      max-width: 50%;
+      max-height: 40px;
+    }
+    /* Remote · US-friendly time zones · Contract */
     .careers-positions__meta {
       display: flex;
       flex-wrap: wrap;
-      column-gap: var(--space-16);
+      column-gap: 0;
       row-gap: var(--space-6);
       margin-top: 0;
+    }
+    /* the dot rides at the end of the label before it, so a wrapped line never starts
+       with one */
+    .careers-positions__meta span:not(:last-child)::after {
+      content: '·';
+      margin-inline: var(--space-6);
     }
   }
 </style>
