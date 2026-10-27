@@ -198,7 +198,6 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     transition: color 0.2s ease;
   }
   .site-menu__link.is-active,
-  .site-menu__link:hover,
   .site-menu__link:focus-visible {
     color: var(--color-black);
   }
@@ -209,9 +208,22 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     transition: opacity 0.2s ease;
   }
   .site-menu__link.is-active .site-menu__arrow,
-  .site-menu__link:hover .site-menu__arrow,
   .site-menu__link:focus-visible .site-menu__arrow {
     opacity: 1;
+  }
+  /* Hover only with a real pointer: phones keep a "hover" where the finger last touched,
+     so a link that opens under that spot (e.g. Team, after swiping the Work wheel) looked
+     selected like the current page */
+  @media (hover: hover) and (pointer: fine) {
+    .site-menu__link:hover {
+      color: var(--color-black);
+    }
+    .site-menu__link:hover .site-menu__arrow {
+      opacity: 1;
+    }
+    .site-menu__socials a:hover {
+      color: var(--color-orange);
+    }
   }
 
   /* ── Right column: Let's talk 64 · photo 337 · Say hello 412 (12 gaps) ── */
@@ -268,9 +280,6 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     bottom: var(--space-16);
     display: grid;
     gap: var(--space-24);
-  }
-  .site-menu__socials a:hover {
-    color: var(--color-orange);
   }
 
   @media (prefers-reduced-motion: reduce) {
