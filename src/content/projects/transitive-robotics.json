@@ -7,9 +7,10 @@
     "UX/UI"
   ],
   "reveal": "../../assets/projects/transitive-robotics/media-01.jpg",
+  "background": "#FFFFFF",
   "micrographics": {
-    "left": "/images/project/badge-25.svg",
-    "right": "/images/project/stamp-project-hero.svg"
+    "left": "/images/menu/menu-micrographic.svg",
+    "right": "/images/home/stamp-clients.svg"
   },
   "sections": [
     {

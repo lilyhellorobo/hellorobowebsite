@@ -6,12 +6,23 @@
     "User Research",
     "Product Strategy"
   ],
-  "reveal": "../../assets/projects/cosmic-robotics/media-01.webp",
+  "reveal": {
+    "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/Cosmic+Robotic+Reel+V7.webm"
+  },
+  "background": "#000000",
   "micrographics": {
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
   "sections": [
+    {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/Cosmic+Robotic+Reel+V7.webm"
+        }
+      ]
+    },
     {
       "type": "facts",
       "label": "What Made People Say Yes",
@@ -26,9 +37,23 @@
           "value": "Constellation"
         }
       ]
+    },
+    {
+      "type": "facts",
+      "facts": [
+        {
+          "label": "test  2",
+          "value": "test 2"
+        }
+      ]
     }
   ],
-  "credits": [],
+  "credits": [
+    {
+      "role": "Designerr",
+      "name": "Daria"
+    }
+  ],
   "next": {
     "name": "Transitive Robotics",
     "href": "/work/transitive-robotics",
