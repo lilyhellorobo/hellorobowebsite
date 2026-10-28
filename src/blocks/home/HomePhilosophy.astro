@@ -68,7 +68,8 @@ import WebGLSlot from '../../components/ui/WebGLSlot.astro';
       margin-top: 44px;
     }
     .home-philosophy :global(.home-philosophy__bars) {
-      width: 360px;
+      /* 360 wide as in Figma, never wider than a narrow phone's screen */
+      width: min(360px, 100vw);
       max-width: none;
       margin-top: 149px;
     }
