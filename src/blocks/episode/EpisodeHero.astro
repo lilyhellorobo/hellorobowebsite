@@ -25,16 +25,19 @@ const art = data.poster ?? data.cover;
 </section>
 
 <style>
+  /* The hero fits the screen: the poster is as tall as the window allows (40 above and
+     below), never wider than Figma's 680, so it never runs past the bottom */
   .episode-hero {
     display: grid;
-    grid-template-columns: 1fr calc(680 * var(--px));
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--gutter);
     padding-top: var(--space-40);
+    padding-bottom: var(--space-40);
   }
   .episode-hero__text {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding-bottom: var(--space-40);
   }
   .episode-hero__title {
     width: calc(956 * var(--px));
@@ -49,6 +52,7 @@ const art = data.poster ?? data.cover;
     margin-top: auto;
   }
   .episode-hero__poster {
+    height: min(calc(962 * var(--px)), calc(100svh - 2 * var(--space-40)));
     aspect-ratio: 680 / 962;
     background: var(--color-ink);
     overflow: hidden;
@@ -63,7 +67,12 @@ const art = data.poster ?? data.cover;
   @media (max-width: 1023px) {
     .episode-hero {
       grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--space-40);
       padding-top: var(--space-20);
+      padding-bottom: 0;
+    }
+    .episode-hero__poster {
+      height: auto;
     }
     .episode-hero__guest {
       margin-top: var(--space-24);
