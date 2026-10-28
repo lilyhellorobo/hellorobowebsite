@@ -15,5 +15,4 @@ const { episode } = Astro.props as { episode: CollectionEntry<'episodes'> };
   <EpisodeHero episode={episode} />
   <EpisodeText episode={episode} />
   <RadioTV variant="episode" start={episode.data.youtube} />
-  <EpisodeText episode={episode} />
 </BaseLayout>
