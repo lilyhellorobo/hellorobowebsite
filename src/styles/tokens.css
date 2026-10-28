@@ -50,6 +50,7 @@
 
   /* ── Typography (Figma text styles only) ────────────────────── */
   --font-sans: "Alliance No.2", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   /* H1 — 120 / 95% / -6% */
   --type-h1-size: max(56px, calc(120 * var(--px)));

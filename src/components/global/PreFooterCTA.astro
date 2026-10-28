@@ -1,45 +1,84 @@
 ---
 /**
- * Pre-footer CTA — Figma "block" 1728×949 (Home 10093:2001, Careers 10100:15564).
- * Marked as a WebGL scene; the printer image is its static poster.
- * Two copy variants appear in the designs:
- *   "conversation" — "Start conversation if you are ready to make world say yes" + stamp
- *   "building"     — "Tell us what you are building" + "[Click anywhere to start]"
+ * Pre-footer CTA — Figma "block" 1728×949 (10412:1581): black, "The future is calling.
+ * We think it's you.", the printer twice (a blurred mirrored one far left, the sharp one
+ * on the right) and a faint mono "system log" behind them. The log is generated here from
+ * the site's own projects, episodes and open roles and types itself out line by line —
+ * the Figma image of mono text is only the visual reference for it.
  * Clicking it opens the contact flow right here in the block (no trip to /contact).
  */
-import WebGLSlot from '../ui/WebGLSlot.astro';
+import { getCollection } from 'astro:content';
 import ContactFlow from '../../blocks/contact/ContactFlow.astro';
 import { studio } from '../../data/site';
 
-interface Props {
-  variant?: 'conversation' | 'building';
-}
-const { variant = 'conversation' } = Astro.props;
-const title = 'Tell us what you are building';
+const projects = (await getCollection('projects')).slice(0, 6);
+const episodes = (await getCollection('episodes', (e) => e.data.listed !== false))
+  .sort((a, b) => b.data.number - a.data.number)
+  .slice(0, 2);
+const positions = (await getCollection('positions')).sort((a, b) => a.data.order - b.data.order).slice(0, 1);
+
+const up = (s: string) => s.toUpperCase();
+const now = new Date();
+const stamp = `${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getFullYear()).slice(2)}`;
+const project = (i: number) => {
+  const p = projects[i % projects.length];
+  return [`> ${up(p.data.name)}_`, ...p.data.services.slice(0, 2).map(up)];
+};
+const episode = (i: number) => {
+  const e = episodes[i % episodes.length];
+  return [`ROBO RADIO ${e.data.number}_`, up(e.data.guest)];
+};
+const role = () => {
+  const r = positions[0];
+  return [`> ${up(r.data.title)}_`, up(r.data.location), up(r.data.type)];
+};
+
+// Groups placed as in the Figma reference (x, y in % of the log's box); `n` is the label
+// `m` places the group on phones (x, y in the narrower box); groups without it are desktop only
+type Group = { x: number; y: number; n?: string; lines: string[]; wide?: boolean; m?: [number, number] };
+const groups: Group[] = [
+  { x: 2, y: 2, lines: ['[ HR'] },
+  { x: 15, y: 2, lines: ['HELLO ROBO®'] },
+  { x: 40, y: 2, lines: ['02 ]'] },
+  { x: 66, y: 2, lines: [`HELLO ROBO, INC. © ${now.getFullYear()}`] },
+  { x: 22.5, y: 15, n: '002', lines: ['HELLO ROBO®', 'SYSTEM LOG INTERVIEW', stamp], m: [0, 0] },
+  { x: 50, y: 15, lines: ['A studio for the human side of robotics —', 'shaping brands, interfaces and films for machines.'] },
+  { x: 11, y: 25, n: '(A)', lines: ['WORK_', ...project(0)], m: [0, 22] },
+  { x: 11, y: 39, n: '(B)', lines: project(1), m: [0, 50] },
+  { x: 2, y: 49, n: '(C)', lines: episode(0), m: [0, 76] },
+  { x: 2, y: 56, n: '(D)', lines: episode(1) },
+  { x: 22.5, y: 64, n: '(E)', lines: project(2) },
+  { x: 41.5, y: 64, n: '(F)', lines: project(3) },
+  { x: 22.5, y: 83, n: '(G)', lines: role() },
+];
 ---
 <section class="prefooter" aria-label="Start a project">
-  <WebGLSlot name="prefooter" class="prefooter__scene">
-    <img
-      class="prefooter__printer"
-      src="/images/shell/prefooter-printer.png"
-      alt=""
-      width="994" style="--w: 994"
-      height="949"
-      loading="lazy"
-      decoding="async"
-    />
-  </WebGLSlot>
+  <div class="prefooter__scene" aria-hidden="true">
+    <div class="prefooter__log" data-log>
+      {groups.map((g) => (
+        <div
+          class:list={['prefooter__group', !g.m && 'prefooter__group--desktop']}
+          style={`--x:${g.x}%;--y:${g.y}%` + (g.m ? `;--mx:${g.m[0]}%;--my:${g.m[1]}%` : '')}
+        >
+          {g.n && <span class="prefooter__n">{g.n}</span>}
+          <span class="prefooter__lines">
+            {g.lines.map((l) => <span class="prefooter__line" data-text={l}>{l}</span>)}
+          </span>
+        </div>
+      ))}
+    </div>
+    <img class="prefooter__printer prefooter__printer--back" src="/images/shell/prefooter-printer-dark.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
+    <img class="prefooter__printer prefooter__printer--front" src="/images/shell/prefooter-printer-dark.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
+  </div>
 
   <a class="prefooter__link" href="/contact" data-contact-open="start">
-    {variant === 'building' ? (
-      <h2 class="prefooter__title t-h2">{title}</h2>
-    ) : (
-      <h2 class="prefooter__title t-h2">Start conversation<br class="only-mobile" /> if you are ready to<br class="only-mobile" /> make world say yes</h2>
-    )}
+    <h2 class="prefooter__title t-h2">The future is calling. We think it’s you.</h2>
+    <p class="prefooter__text t-body">
+      Got something brilliant, weird, or impossible in mind? We're listening.<span class="only-desktop"> Click anywhere to break the ice.</span>
+    </p>
   </a>
 
-  <!-- Mobile layout (Figma 10129:31418): stamp under the title; at the bottom two buttons
-       side by side and "Copy our email" full width under them -->
+  <!-- Mobile: two buttons side by side and "Copy our email" full width under them -->
   <div class="prefooter__actions only-mobile">
     <a class="prefooter__button t-button" href="/contact#name" data-contact-open="name">Start a project</a>
     <a class="prefooter__button t-button" href="/contact#message" data-contact-open="message">Drop a word</a>
@@ -47,19 +86,6 @@ const title = 'Tell us what you are building';
       <span data-copy-label>Copy our email</span>
     </button>
   </div>
-
-  {variant === 'conversation' ? (
-    <img
-      class="prefooter__stamp"
-      src="/images/shell/stamp-human-core.svg"
-      alt=""
-      width="403" style="--w: 403"
-      height="174"
-      loading="lazy"
-    />
-  ) : (
-    <p class="prefooter__hint t-body">[Click anywhere to start]</p>
-  )}
 
   <ContactFlow embedded />
 </section>
@@ -98,99 +124,199 @@ const title = 'Tell us what you are building';
       timer = window.setTimeout(() => (label.textContent = text), 2000);
     });
   }
+
+  // The system log types itself out line by line while the block is on screen, with a
+  // cursor on the line being written; once done it rests, then rewrites a few lines.
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const log of document.querySelectorAll<HTMLElement>('[data-log]')) {
+    if (reduced) continue;
+    const lines = [...log.querySelectorAll<HTMLElement>('.prefooter__line')].filter((l) => l.offsetParent);
+    if (!lines.length) continue;
+    lines.forEach((l) => (l.textContent = ''));
+    let queue = [...lines];
+    let line: HTMLElement | undefined;
+    let pos = 0;
+    let rest = 0;
+    let timer = 0;
+    const tick = () => {
+      if (rest > 0) {
+        rest--;
+        return;
+      }
+      if (!line) {
+        line = queue.shift();
+        pos = 0;
+        if (!line) {
+          // all written: rest ~4s, then clear and rewrite three random lines
+          rest = 100;
+          queue = [...lines].sort(() => Math.random() - 0.5).slice(0, 3);
+          queue.forEach((l) => (l.textContent = ''));
+          return;
+        }
+      }
+      const full = line.dataset.text ?? '';
+      pos = Math.min(full.length, pos + 2 + Math.floor(Math.random() * 3));
+      line.textContent = full.slice(0, pos);
+      line.classList.add('is-typing');
+      if (pos >= full.length) {
+        line.classList.remove('is-typing');
+        line = undefined;
+        rest = 1 + Math.floor(Math.random() * 4);
+      }
+    };
+    new IntersectionObserver(([entry]) => {
+      clearInterval(timer);
+      if (entry.isIntersecting) timer = window.setInterval(tick, 40);
+    }).observe(log);
+  }
 </script>
 
 <style>
   .prefooter {
     position: relative;
     aspect-ratio: 1728 / 949;
-    background: var(--color-grey-350);
+    background: var(--color-black);
     color: var(--color-white);
     overflow: hidden;
   }
-  .prefooter :global(.prefooter__scene) {
+  .prefooter__scene {
     position: absolute;
     inset: 0;
+    pointer-events: none;
   }
+
+  /* ── System log: the mono text behind the printers (Figma box 338, 376 · 1319 wide) ── */
+  .prefooter__log {
+    position: absolute;
+    left: calc(338 / 1728 * 100%);
+    top: calc(376 / 949 * 100%);
+    width: calc(1319 / 1728 * 100%);
+    height: calc(771 / 949 * 100%);
+    font-family: var(--font-mono);
+    font-size: calc(15 * var(--px));
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    opacity: 0.4;
+    white-space: nowrap;
+  }
+  .prefooter__group {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    display: flex;
+    gap: 2.2em;
+  }
+  .prefooter__lines {
+    display: flex;
+    flex-direction: column;
+  }
+  /* each line keeps its height while empty, so groups don't jump as they type */
+  .prefooter__line {
+    min-height: 1.3em;
+  }
+  .prefooter__line.is-typing::after {
+    content: '_';
+    animation: prefooter-blink 0.8s steps(1) infinite;
+  }
+  @keyframes prefooter-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* ── Printers: the blurred mirrored one far left, the sharp one on the right ── */
   .prefooter__printer {
     position: absolute;
-    top: 0;
-    left: calc(607 / 1728 * 100%);
-    width: calc(994 / 1728 * 100%);
-    height: 100%;
-    object-fit: cover;
-    mix-blend-mode: multiply; /* as in Figma: the photo's white ground takes the grey */
+    max-width: none;
+    height: auto;
   }
-  /* The whole block is clickable ("Click anywhere to start") */
+  .prefooter__printer--back {
+    left: calc(-430 / 1728 * 100%);
+    top: calc(91 / 949 * 100%);
+    width: calc(796 / 1728 * 100%);
+    transform: scaleX(-1);
+    filter: blur(calc(14 * var(--px)));
+  }
+  .prefooter__printer--front {
+    left: calc(642 / 1728 * 100%);
+    top: calc(-352 / 949 * 100%);
+    width: calc(1009 / 1728 * 100%);
+  }
+
+  /* The whole block is clickable ("Click anywhere to break the ice") */
   .prefooter__link {
     position: absolute;
     inset: 0;
     z-index: var(--z-raised);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(30 * var(--px));
     padding: var(--space-40);
   }
   .prefooter__title {
-    max-width: calc(716 * var(--px));
+    max-width: calc(844 * var(--px));
   }
-  .prefooter__stamp,
-  .prefooter__hint {
-    position: absolute;
-    left: var(--space-40);
-    bottom: var(--space-40);
-    z-index: var(--z-raised);
-    pointer-events: none;
-  }
-  .prefooter__stamp {
-    width: calc(403 / 1728 * 100%);
-    min-width: calc(200 * var(--px));
-    height: auto;
+  .prefooter__text {
+    max-width: calc(442 * var(--px));
   }
 
-  /* ── Mobile: Figma 390×694 ─────────────────────────────── */
+  /* ── Mobile: full screen; title and text on top, the printer filling the middle with the
+     log behind it, the buttons above the menu bar ── */
   @media (max-width: 1023px) {
-    /* Full screen height (Figma's frame is 694 on a 390×844 phone) */
     .prefooter {
       aspect-ratio: auto;
       height: 100vh;
       height: 100svh;
       min-height: 600px;
     }
-    /* Printer photo fitted (not cropped) in Figma's 424-wide box from 97 down to 38 past
-       the bottom; the box stretches with the screen height */
-    .prefooter__printer {
-      left: 39px;
-      top: 97px;
-      width: 424px;
-      max-width: none;
-      height: calc(100% - 97px + 38px);
-      object-fit: contain;
+    .prefooter__log {
+      left: var(--page-margin);
+      right: var(--page-margin);
+      top: 40%;
+      width: auto;
+      height: 32%;
+      font-size: 9px;
     }
-    /* Only the title is the link here; the buttons below do the rest */
+    /* four groups stacked down the left, clear of the printer's paper */
+    .prefooter__group {
+      left: var(--mx);
+      top: var(--my);
+    }
+    .prefooter__group--desktop {
+      display: none;
+    }
+    .prefooter__printer--back {
+      left: -62%;
+      top: 30%;
+      width: 90%;
+    }
+    /* the column runs up under the text, the board and paper sit mid-screen */
+    .prefooter__printer--front {
+      left: 26%;
+      top: 12%;
+      width: 96%;
+    }
+    /* Only the title and text are the link here; the buttons below do the rest */
     .prefooter__link {
       inset: auto;
       top: 44px;
       left: var(--page-margin);
       right: var(--page-margin);
       padding: 0;
+      gap: var(--space-16);
     }
-    /* Figma uses Mobile/H3 for this title (line breaks as in Figma) */
+    /* Mobile/H3 for the title, as the block had before */
     .prefooter__title {
       max-width: none;
       font-size: var(--type-h3-size);
       line-height: var(--type-h3-line);
       letter-spacing: var(--type-h3-track);
     }
-    /* Stamp 224×96 under the title, at (9, 168) — the SVG's stroke overflow takes it
-       7 left of the margin */
-    .prefooter__stamp {
-      left: calc(var(--page-margin) - 7px);
-      top: 168px;
-      bottom: auto;
-      width: 224px;
-      min-width: 0;
-    }
-    /* The buttons replace "[Click anywhere to start]" on mobile */
-    .prefooter__hint {
-      display: none;
+    .prefooter__text {
+      max-width: 280px;
     }
     /* Buttons: white, 48 tall, label centred; 8 between the pair, 12 above the email one.
        The block fills the screen, so they stand 8 above the fixed menu bar, not under it */

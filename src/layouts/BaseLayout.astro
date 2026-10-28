@@ -14,7 +14,7 @@ interface Props {
   description?: string;
   /** Color of the Get in touch button: white on pages that open on black */
   headerVariant?: 'dark' | 'light' | 'grey';
-  /** Pre-footer copy variant, or false to hide it */
+  /** Shows the pre-footer contact block (false hides it; the old copy variants all show the same block now) */
   prefooter?: 'conversation' | 'building' | false;
   /** Adds the back button to the nav pill */
   back?: string;
@@ -69,7 +69,7 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     <main>
       <slot />
     </main>
-    {prefooter && <PreFooterCTA variant={prefooter} />}
+    {prefooter && <PreFooterCTA />}
     {footer && <Footer />}
     {chrome && <NavPill back={back} />}
     <script is:inline>
