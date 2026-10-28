@@ -6,7 +6,9 @@
     "Operating Software Design",
     "Fleet Management Design"
   ],
-  "reveal": "../../assets/projects/bedrock-robotics/reveal.png",
+  "reveal": {
+    "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/bedrock+thumb.mp4"
+  },
   "micrographics": {
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
@@ -29,10 +31,6 @@
     }
   ],
   "credits": [],
-  "next": {
-    "name": "Cosmic Robotics",
-    "href": "/work/cosmic-robotics",
-    "image": "../../assets/projects/cosmic-robotics/media-01.webp"
-  },
+  "next": "cosmic-robotics",
   "order": 2
 }

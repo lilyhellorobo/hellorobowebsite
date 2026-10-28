@@ -450,14 +450,17 @@ function control(f: Field, value: Value, path: string): Control {
       };
     }
     case 'select': {
+      // an empty option of the field's own ('None', 'Automatic') is a real choice: it
+      // replaces the placeholder (and the browser would refuse it as `required`)
+      const empty = f.options.some((o) => o.value === '');
       const select = h(
         'select',
-        { id, required: true },
-        h('option', { value: '', text: 'Choose…' }),
+        { id, required: !empty },
+        ...(empty ? [] : [h('option', { value: '', text: 'Choose…' })]),
         ...f.options.map((o) => h('option', { value: o.value, text: o.label, selected: o.value === value })),
       );
       return {
-        el: h('div', { class: 'cms-field' }, labelRow(f.label, id, true), select, hint(f.hint)),
+        el: h('div', { class: 'cms-field' }, labelRow(f.label, id, !empty), select, hint(f.hint)),
         get: () => select.value,
       };
     }

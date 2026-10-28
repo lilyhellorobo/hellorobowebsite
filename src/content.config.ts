@@ -54,7 +54,8 @@ const projects = defineCollection({
         .object({ quote: z.string(), author: z.string(), role: z.string() })
         .optional(),
       credits: z.array(z.object({ role: z.string(), name: z.string() })).default([]),
-      next: z.object({ name: z.string(), href: z.string(), image: image() }).optional(),
+      /** id of the project shown under "Next project" (its name and cover); none = the next one in the Work order */
+      next: z.string().optional(),
       order: z.number().default(0),
     }),
 });

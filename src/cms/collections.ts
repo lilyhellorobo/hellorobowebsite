@@ -19,7 +19,19 @@ export type Field =
       /** Kept and saved, but not shown in the editor (e.g. order, set by dragging) */
       hidden?: boolean;
     }
-  | { kind: 'select'; key: string; label: string; options: { value: string; label: string }[]; hint?: string }
+  /**
+   * `optionsFrom`: the options are that CMS section's entries (value = entry id), filled in
+   * when the form is shown and checked on save (resolveOptions in store.ts); the entry
+   * being edited and entries under NDA are left out. Empty = none chosen (not saved).
+   */
+  | {
+      kind: 'select';
+      key: string;
+      label: string;
+      options: { value: string; label: string }[];
+      optionsFrom?: string;
+      hint?: string;
+    }
   /** `limit`: at most this many entries in the collection can have it switched on */
   | { kind: 'boolean'; key: string; label: string; default?: boolean; limit?: number; hint?: string }
   /** A hex color like #FF6B03; empty means the default */
@@ -286,15 +298,12 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
         ],
       },
       {
-        kind: 'group',
+        kind: 'select',
         key: 'next',
         label: 'Next project',
-        optional: true,
-        fields: [
-          { kind: 'text', key: 'name', label: 'Name', required: true },
-          { kind: 'text', key: 'href', label: 'Link', required: true },
-          { kind: 'image', key: 'image', label: 'Image', required: true },
-        ],
+        hint: 'Shown at the bottom of the page with its cover. Automatic: the next project in the Work order.',
+        options: [{ value: '', label: 'Automatic' }],
+        optionsFrom: 'projects',
       },
       order,
     ],

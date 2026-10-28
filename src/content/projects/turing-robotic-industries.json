@@ -68,10 +68,6 @@
     }
   ],
   "credits": [],
-  "next": {
-    "name": "Surf Air Flight Ops",
-    "href": "/work/surf-air-flight-ops",
-    "image": "../../assets/projects/surf-air-flight-ops/reveal.png"
-  },
-  "order": 6
+  "next": "surf-air-flight-ops",
+  "order": 7
 }

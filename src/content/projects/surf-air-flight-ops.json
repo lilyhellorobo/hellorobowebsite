@@ -1,12 +1,15 @@
 {
   "name": "Surf Air Flight Ops",
+  "nda": false,
   "intro": "Hello Robo partnered with Surf Air Mobility to redesign an app that helps pilots manage their daily tasks.",
   "services": [
     "Fleet Management Design",
     "Brand Identity",
     "Video Production"
   ],
-  "reveal": "../../assets/projects/surf-air-flight-ops/reveal.png",
+  "reveal": {
+    "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/SURFOS_REEL_2.mp4"
+  },
   "background": "#FFFFFF",
   "micrographics": {
     "left": "/images/menu/menu-micrographic.svg",
@@ -39,72 +42,91 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-01.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-01-4f53e9.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-02.png",
-        "../../assets/projects/surf-air-flight-ops/placeholder-03.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-02-900dbc.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-04.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-03-1e42ec.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-05.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-04-524363.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-06.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-05-8dbe0f.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-07.png",
-        "../../assets/projects/surf-air-flight-ops/placeholder-08.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-06-2be5f6.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-09.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-07-4c6a8e.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-10.png",
-        "../../assets/projects/surf-air-flight-ops/placeholder-11.png",
-        "../../assets/projects/surf-air-flight-ops/placeholder-12.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-08-3fe350.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-13.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-09-3e6f6d.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-14.png",
-        "../../assets/projects/surf-air-flight-ops/placeholder-15.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-10-5b2ae6.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/surf-air-flight-ops/placeholder-16.png"
+        "../../assets/projects/surf-air-flight-ops/surf-air-11-fe720a.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/surf-air-12-078062.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/surf-air-13-b696f8.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/surf-air-14-9e1aec.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/surf-air-flight-ops/surf-air-15-6cab8a.avif"
       ]
     }
   ],

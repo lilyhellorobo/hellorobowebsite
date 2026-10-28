@@ -19,7 +19,7 @@
  * half screen of scrolling widens it to full screen, then the wheel turns.
  * Work page: full screen from the start; quicker follow with magnetic detents (each
  * project sticks at the front, then the drum moves fast to the next and snaps into
- * place), and a 40% black layer over the backgrounds (30% on Home).
+ * place), and a 60% black layer over the backgrounds (30% on Home).
  * Mobile, Home (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
  * slides that pin and change on scroll, like the Home showcase: the photo crossfades,
  * name / services / VIEW swap, and the bright segment of the line shows the progress.
@@ -61,6 +61,9 @@ const faces = Array.from({ length: FACES }, (_, i) => {
   const d = Math.min(i, FACES - i); // rows from the front at rest
   return { i, project: projects[i % projects.length], opacity: fadeAt(d) };
 });
+// The mark at the left of the front name: each project's first (round) micrographic from
+// the CMS, the globe when it has none; it changes with the active project
+const markOf = (p: (typeof projects)[number]) => p.data.micrographics.left ?? '/images/home/work-globe.svg';
 const wheelData = JSON.stringify({ step: STEP, fade: FADE, faces: FACES, items: projects.map((p) => ({ name: p.data.name, href: `/work/${p.id}`, nda: p.data.nda })) });
 // Mobile slides: every project once, in order
 const cards = projects.slice(0, mobileLimit ?? projects.length);
@@ -78,7 +81,9 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
         <div class="project-wheel__shade" aria-hidden="true"></div>
 
         <hr class="project-wheel__rule" />
-        <img class="project-wheel__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
+        {projects.map((p, i) => (
+          <img class:list={['project-wheel__mark', { 'is-current': i === 0 }]} data-index={i} src={markOf(p)} alt="" height="79" loading="lazy" />
+        ))}
 
         <div class="project-wheel__names" aria-hidden="true" style={`--radius: ${RADIUS}`}>
           <ol class="project-wheel__drum">
@@ -132,7 +137,9 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     ))}
     <div class="project-wheel__shade" aria-hidden="true"></div>
     <div class="project-scroller__scanlines" aria-hidden="true"></div>
-    <img class="project-card__mark" src="/images/home/work-globe.svg" alt="" width="72" style="--w: 72" height="79" loading="lazy" />
+    {cards.map((c, i) => (
+      <img class:list={['project-card__mark', { 'is-current': i === 0 }]} data-index={i} src={markOf(c)} alt="" height="56" loading="lazy" />
+    ))}
 
     <div class="project-card__info">
       <hr class="project-card__rule" />
@@ -172,7 +179,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     const rows = [...root.querySelectorAll<HTMLElement>('.project-wheel__name')];
     const view = root.querySelector<HTMLAnchorElement>('.project-wheel__view');
     const bgs = [...root.querySelectorAll<HTMLElement>('.project-wheel__bg')];
-    const lists = [...root.querySelectorAll<HTMLElement>('.project-wheel__services')];
+    const lists = [...root.querySelectorAll<HTMLElement>('.project-wheel__services, .project-wheel__mark')];
     if (!stage || !canvas || !drum || !N) continue;
     const F = data.faces;
     const last = data.fade.length - 1;
@@ -369,7 +376,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   // showing / hiding doesn't make slides jump.
   for (const root of document.querySelectorAll<HTMLElement>('[data-project-slides]')) {
     const stage = root.querySelector<HTMLElement>('.project-cards__stage');
-    const slides = [...root.querySelectorAll<HTMLElement>('.project-cards__bg, .project-card')];
+    const slides = [...root.querySelectorAll<HTMLElement>('.project-cards__bg, .project-card, .project-card__mark')];
     const count = root.querySelectorAll('.project-card').length;
     if (!stage || !count) continue;
     let frame = 0;
@@ -467,9 +474,9 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     inset: 0;
     background: rgb(0 0 0 / 0.3);
   }
-  /* Work page: a darker layer over the project backgrounds (40%) */
+  /* Work page: a darker layer over the project backgrounds (60%) */
   .project-wheel--infinite .project-wheel__shade {
-    background: rgb(0 0 0 / 0.4);
+    background: rgb(0 0 0 / 0.6);
   }
   .project-wheel :global(.project-wheel__bg-media) {
     width: 100%;
@@ -489,13 +496,19 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   }
   /* Globe mark on the same line as the front name: centred on the drum's front row
      (549 / 1117), nudged up to the middle of the capitals, at any window shape */
+  /* every project's mark is the same height (the globe's 79 in the 1117 frame), any width */
   .project-wheel__mark {
     position: absolute;
     left: calc(104 / 1728 * 100%);
     top: calc(549 / 1117 * 100%);
-    width: calc(72 / 1728 * 100%);
-    height: auto;
+    width: auto;
+    height: calc(79 / 1117 * 100%);
     translate: 0 calc(-50% - 0.06 * var(--type-h2-size));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .project-wheel__mark.is-current {
+    opacity: 1;
   }
 
   /* ── The 3D drum ──────────────────────────────────────────────
@@ -693,8 +706,13 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     position: absolute;
     left: var(--page-margin);
     top: var(--space-20);
-    width: calc(51 * var(--px));
-    height: auto;
+    width: auto;
+    height: calc(56 * var(--px));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .project-card__mark.is-current {
+    opacity: 1;
   }
   /* Rule, name 24 below, services + VIEW 44 below — kept 20 above the nav pill */
   .project-card__info {

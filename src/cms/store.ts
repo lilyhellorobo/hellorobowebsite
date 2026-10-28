@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { youtubeId, type CmsCollection, type Field } from './collections';
+import { getCmsCollection, youtubeId, type CmsCollection, type Field } from './collections';
 import { graphicSize, libraryFileExists } from './library';
 
 const ROOT = process.cwd();
@@ -108,6 +108,19 @@ async function writeJson(file: string, data: Data) {
 
 // --- Read ---
 
+/** Fills in the options of `optionsFrom` selects with that section's entries */
+export async function resolveOptions(fields: Field[], selfId?: string): Promise<Field[]> {
+  return Promise.all(
+    fields.map(async (f) => {
+      const from = f.kind === 'select' && f.optionsFrom ? getCmsCollection(f.optionsFrom) : undefined;
+      if (f.kind !== 'select' || !from) return f;
+      const entries = (await listEntries(from)).filter((e) => e.id !== selfId && !e.data.nda);
+      const options = entries.map((e) => ({ value: e.id, label: String(e.data[from.titleField] ?? e.id) }));
+      return { ...f, options: [...f.options, ...options] };
+    }),
+  );
+}
+
 export async function listEntries(c: CmsCollection): Promise<Entry[]> {
   const dir = path.join(CONTENT_DIR, c.collection);
   const files = existsSync(dir) ? (await readdir(dir)).filter((f) => f.endsWith('.json')) : [];
@@ -207,7 +220,7 @@ function validateFields(fields: Field[], input: unknown, where: string, errors: 
       case 'select': {
         const s = typeof v === 'string' ? v : '';
         if (!f.options.some((o) => o.value === s)) errors.push(`${at}: choose one of the options`);
-        out[f.key] = s;
+        if (s || !f.optionsFrom) out[f.key] = s;
         break;
       }
       case 'boolean': {
@@ -455,7 +468,7 @@ export async function saveEntry(
   try {
     const resolved = await resolveUploads(c, id, input, files, saved);
     const errors: string[] = [];
-    const data = validateFields(c.fields, resolved, '', errors);
+    const data = validateFields(await resolveOptions(c.fields, id), resolved, '', errors);
     if (errors.length) throw new CmsError('Please fix the highlighted fields', 422, errors);
     await checkLimits(c, id, data);
     // A new entry in a draggable list goes to the end (order is set by dragging, not typed)

@@ -5,7 +5,7 @@
  */
 import AdminLayout from './AdminLayout.astro';
 import { getCmsCollection, type CmsCollection } from './collections';
-import type { Entry } from './store';
+import { resolveOptions, type Entry } from './store';
 
 interface Props {
   c: CmsCollection;
@@ -20,7 +20,7 @@ const saved = Astro.url.searchParams.get('saved') != null;
 const config = JSON.stringify({
   section: c.slug,
   titleField: c.titleField,
-  fields: c.fields,
+  fields: await resolveOptions(c.fields, entry?.id),
   id: entry?.id ?? null,
   data: entry?.data ?? null,
 });
