@@ -15,10 +15,10 @@
  * The YouTube player (privacy-enhanced, youtube-nocookie) loads only on the first play. Its
  * own overlays (title, logo) sit at the frame's edges, so the frame is a little bigger
  * than the screen and they fall outside it; captions are switched off; the screen takes no
- * pointer input, so YouTube's hover overlays never show; while the video isn't playing
- * the TV's own dark screen covers it. Some phone browsers only start a video tapped
- * directly: if it hasn't started 2s after Play, the screen steps aside for YouTube's own
- * play button, and after that tap the controls work as usual.
+ * pointer input — not even on phones — so YouTube's own buttons (the big play / pause in
+ * the middle) never show; while the video isn't playing the TV's own dark screen covers
+ * it. If a phone doesn't start the video on the first Play (the player was still
+ * loading), the next Play starts it straight from the tap.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
@@ -96,10 +96,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       </button>
       <input class="radio-tv__seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Position in the episode" data-seek />
       <button type="button" class="radio-tv__btn radio-tv__btn--sound" aria-label="Sound on" aria-pressed="false" data-sound>
-        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path stroke="currentColor" stroke-width="1.5" d="M7 13h4l6-5v16l-6-5H7z" />
-          <path class="radio-tv__icon-muted" stroke="currentColor" stroke-width="1.5" d="m20.5 12.5 7 7m0-7-7 7" />
-          <path class="radio-tv__icon-sound" stroke="currentColor" stroke-width="1.5" d="M20.5 12.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13" />
+        <svg viewBox="2.5 2.5 27 27" fill="none" aria-hidden="true">
+          <path stroke="currentColor" stroke-width="1.27" d="M7 13h4l6-5v16l-6-5H7z" />
+          <path class="radio-tv__icon-muted" stroke="currentColor" stroke-width="1.27" d="m20.5 12.5 7 7m0-7-7 7" />
+          <path class="radio-tv__icon-sound" stroke="currentColor" stroke-width="1.27" d="M20.5 12.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13" />
         </svg>
       </button>
       <p class="radio-tv__title visually-hidden" aria-live="polite" data-title></p>
@@ -156,7 +156,6 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     let player: YTPlayer | null = null;
     let playing = false;
     let sound = false; // muted until the visitor turns the sound on
-    let asked = false; // a pause the visitor asked for (vs one the browser / YouTube made)
     let seeking = false;
     let pendingSeek: number | null = null; // a spot picked on the line before the video had started
     let frame = 0;
@@ -219,7 +218,6 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
             onReady: () => {
               player = p;
               fit();
-              setTimeout(() => !playing && root.classList.add('needs-tap'), 2000);
               if (sound) p.unMute();
               else p.mute();
               p.playVideo();
@@ -233,15 +231,9 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
                   p.seekTo(pendingSeek * p.getDuration(), true);
                   pendingSeek = null;
                 }
-                root.classList.remove('needs-tap');
                 setPlaying(true);
               }
-              else if (e.data === YT.PlayerState.PAUSED) {
-                // paused without being asked: this browser wants the video tapped
-                if (!asked) root.classList.add('needs-tap');
-                asked = false;
-                setPlaying(false);
-              }
+              else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
               else if (e.data === YT.PlayerState.ENDED) go(1);
             },
           },
@@ -261,10 +253,8 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
 
     playBtn.addEventListener('click', async () => {
       if (!player) return void start();
-      if (playing) {
-        asked = true;
-        player.pauseVideo();
-      } else player.playVideo();
+      if (playing) player.pauseVideo();
+      else player.playVideo();
     });
     root.querySelector('[data-prev]')!.addEventListener('click', () => go(-1));
     root.querySelector('[data-next]')!.addEventListener('click', () => go(1));
@@ -363,13 +353,8 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       #121212;
     transition: opacity var(--duration-normal) var(--ease-out);
   }
-  .radio-tv.is-playing .radio-tv__standby,
-  .radio-tv.needs-tap .radio-tv__standby {
+  .radio-tv.is-playing .radio-tv__standby {
     opacity: 0;
-  }
-  /* a phone that wants the video tapped: YouTube's play button can be reached */
-  .radio-tv.needs-tap .radio-tv__screen {
-    pointer-events: auto;
   }
   .radio-tv__video,
   .radio-tv__screen :global(iframe) {
@@ -388,7 +373,8 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     --u: var(--px);
     position: absolute;
     z-index: 3;
-    width: calc(504 * var(--u));
+    /* Figma's 504, ending 20 after the sound button */
+    width: calc(404.4 * var(--u));
     height: calc(80 * var(--u));
     background: var(--color-black);
     border-radius: var(--radius-ui);
@@ -428,9 +414,10 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   .radio-tv__btn--next {
     left: calc(122.4 * var(--u));
   }
-  /* Sound at the end of the bar */
+  /* Sound right after the line, as far from it as next is (14.4); its glyph drawn as
+     tall as previous / next */
   .radio-tv__btn--sound {
-    right: calc(20 * var(--u));
+    left: calc(352.4 * var(--u));
     width: calc(32 * var(--u));
     height: calc(32 * var(--u));
   }
@@ -524,7 +511,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       margin-top: auto;
     }
     .radio-tv__bar {
-      --u: calc((100vw - 2 * var(--page-margin)) / 504);
+      --u: calc((100vw - 2 * var(--page-margin)) / 384.4); /* the controls (to the sound button's end) span the width */
       position: relative;
       left: auto !important;
       top: auto !important;
