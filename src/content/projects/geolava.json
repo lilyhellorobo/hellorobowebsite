@@ -1,0 +1,14 @@
+{
+  "name": "Geolava",
+  "nda": true,
+  "intro": "The intelligence layer that reasons over how the physical world changes and predicts failure before it happens",
+  "services": [
+    "UX/UI",
+    "Video production"
+  ],
+  "reveal": "../../assets/projects/geolava/rectangle-240655501-07b927.png",
+  "micrographics": {},
+  "sections": [],
+  "credits": [],
+  "order": 4
+}

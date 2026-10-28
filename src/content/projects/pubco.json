@@ -1,0 +1,16 @@
+{
+  "name": "PubCo",
+  "nda": true,
+  "intro": "Test",
+  "services": [
+    "UX/UI",
+    "Brand identity"
+  ],
+  "reveal": {
+    "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/public+cover.webm"
+  },
+  "micrographics": {},
+  "sections": [],
+  "credits": [],
+  "order": 8
+}

@@ -1,11 +1,14 @@
 {
   "name": "Weekly Robotics",
+  "nda": false,
   "intro": "Hello Robo partnered with Weekly Robotics to reimagine their brand and website and a technical newsletter that curates the latest news, research, and projects in robotics.",
   "services": [
     "UX/UI",
     "Brand Identity"
   ],
-  "reveal": "../../assets/projects/weekly-robotics/logo-reveal.png",
+  "reveal": {
+    "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/Weekly+Robotics+Reel+Final.webm"
+  },
   "micrographics": {
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
@@ -44,8 +47,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-02a.png",
-        "../../assets/projects/weekly-robotics/media-02b.png"
+        "../../assets/projects/weekly-robotics/media-02a.png"
       ]
     },
     {
@@ -120,10 +122,6 @@
       "name": "Anastasia Kucherenko"
     }
   ],
-  "next": {
-    "name": "Turing Robotic Industries",
-    "href": "/work/turing-robotic-industries",
-    "image": "../../assets/projects/turing-robotic-industries/media-01.avif"
-  },
-  "order": 5
+  "next": "turing-robotic-industries",
+  "order": 6
 }

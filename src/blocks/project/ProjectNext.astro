@@ -13,17 +13,13 @@ interface Props {
 }
 const { project } = Astro.props;
 // Only projects with a page: the one chosen in the CMS, unless it's under NDA (or none is
-// set) — then the next viewable project in the Work order
-const viewable = (await getCollection('projects', (p) => !p.data.nda)).sort((a, b) => a.data.order - b.data.order);
-const chosen = project.data.next;
-const chosenOk = !!chosen && viewable.some((p) => `/work/${p.id}` === chosen.href.replace(/\/$/, ''));
-let next = chosenOk ? chosen : undefined;
-if (!next) {
-  const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-  const at = all.findIndex((p) => p.id === project.id);
-  const following = [...all.slice(at + 1), ...all.slice(0, at)].find((p) => !p.data.nda);
-  if (following) next = { name: following.data.name, href: `/work/${following.id}`, image: following.data.reveal };
-}
+// set) — then the next viewable project in the Work order. It shows that project's cover.
+const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const at = all.findIndex((p) => p.id === project.id);
+const nextEntry =
+  all.find((p) => p.id === project.data.next && p.id !== project.id && !p.data.nda) ??
+  [...all.slice(at + 1), ...all.slice(0, at)].find((p) => !p.data.nda);
+const next = nextEntry && { name: nextEntry.data.name, href: `/work/${nextEntry.id}`, image: nextEntry.data.reveal };
 ---
 {next && (
   <section class="project-next container">
@@ -33,7 +29,7 @@ if (!next) {
       <Button href={next.href} icon="hex">View project</Button>
     </div>
     <div class="project-next__media">
-      <Media media={next.image} alt="" widths={[818, 1636]} sizes="(min-width: 1728px) 818px, 48vw" loading="lazy" />
+      <Media class="project-next__fill" media={next.image} alt="" widths={[818, 1636]} sizes="(min-width: 1728px) 818px, 48vw" loading="lazy" />
     </div>
   </section>
 )}
@@ -71,9 +67,13 @@ if (!next) {
     border-radius: calc(4 * var(--px));
     overflow: hidden;
   }
-  .project-next__media :global(img) {
+  /* Whatever the cover is (image, GIF, video, YouTube), it fills the box, cropped */
+  .project-next__media :global(.project-next__fill) {
+    display: block;
     width: 100%;
+    max-width: none;
     height: 100%;
+    aspect-ratio: auto;
     object-fit: cover;
   }
 

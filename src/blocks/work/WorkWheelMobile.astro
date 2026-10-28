@@ -3,7 +3,7 @@
  * Work page — the project wheel on phones (≤ 1023px)
  * A lighter, flat version of the desktop drum (ProjectScroller, Figma "Portfolio page"
  * 10100:11973) with the same structure: full screen, the active project's photo behind
- * a 40% black layer and CRT lines, the globe mark, the project names as a wheel, and the
+ * a 60% black layer and CRT lines, the globe mark, the project names as a wheel, and the
  * active project's services under a rule. No VIEW button: tapping the name in front opens
  * the project (NDA projects show their tag and don't open).
  *
@@ -18,6 +18,8 @@ import { getCollection } from 'astro:content';
 import Media from '../../components/ui/Media.astro';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+// The mark: each project's first (round) micrographic from the CMS, the globe when it has none
+const markOf = (p: (typeof projects)[number]) => p.data.micrographics.left ?? '/images/home/work-globe.svg';
 const LOOPS = 5;
 const rows = Array.from({ length: projects.length * LOOPS }, (_, i) => ({ i, project: projects[i % projects.length] }));
 const start = projects.length * Math.floor(LOOPS / 2); // first project of the middle copy
@@ -31,7 +33,9 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
   ))}
   <div class="work-wheel__shade" aria-hidden="true"></div>
   <div class="work-wheel__lines" aria-hidden="true"></div>
-  <img class="work-wheel__mark" src="/images/home/work-globe.svg" alt="" width="51" height="56" />
+  {projects.map((p, i) => (
+    <img class:list={['work-wheel__mark', { 'is-current': i === 0 }]} data-index={i} src={markOf(p)} alt="" height="56" />
+  ))}
 
   <ol class="work-wheel__names" data-names>
     {rows.map(({ i, project: p }) => (
@@ -68,7 +72,7 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     const names = rows.map((r) => r.firstElementChild as HTMLElement);
     const count = Number(root.dataset.count);
     const start = Number(root.dataset.start);
-    const layers = [...root.querySelectorAll<HTMLElement>('.work-wheel__bg, .work-wheel__services')];
+    const layers = [...root.querySelectorAll<HTMLElement>('.work-wheel__bg, .work-wheel__services, .work-wheel__mark')];
     // Opacity by distance from the centre, in rows (as on the desktop drum: the front
     // name stands out, the others fall away fast)
     const FADE = [1, 0.25, 0.14, 0.08, 0.05, 0];
@@ -203,11 +207,11 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     object-fit: cover;
     transform: translateX(-50%);
   }
-  /* 40% black, as on the desktop Work wheel */
+  /* 60% black, as on the desktop Work wheel */
   .work-wheel__shade {
     position: absolute;
     inset: 0;
-    background: rgb(0 0 0 / 0.4);
+    background: rgb(0 0 0 / 0.6);
   }
   .work-wheel__lines {
     position: absolute;
@@ -219,8 +223,14 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     position: absolute;
     left: var(--page-margin);
     top: var(--space-20);
-    width: 51px;
-    height: auto;
+    /* every project's mark is the same height, any width */
+    width: auto;
+    height: 56px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .work-wheel__mark.is-current {
+    opacity: 1;
   }
 
   /* The wheel: fills the space between the mark and the services; the row at its centre

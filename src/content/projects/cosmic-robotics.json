@@ -1,5 +1,6 @@
 {
   "name": "Cosmic Robotics",
+  "nda": false,
   "intro": "Cosmic Robotics builds autonomous construction equipment to build critical infrastructure. Starting here on Earth and eventually to build a city on Mars.",
   "services": [
     "UX/UI",
@@ -11,7 +12,7 @@
   },
   "background": "#000000",
   "micrographics": {
-    "left": "/images/project/badge-25.svg",
+    "left": "/images/radio/badge-episode.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
   "sections": [
@@ -37,27 +38,9 @@
           "value": "Constellation"
         }
       ]
-    },
-    {
-      "type": "facts",
-      "facts": [
-        {
-          "label": "test  2",
-          "value": "test 2"
-        }
-      ]
     }
   ],
-  "credits": [
-    {
-      "role": "Designerr",
-      "name": "Daria"
-    }
-  ],
-  "next": {
-    "name": "Transitive Robotics",
-    "href": "/work/transitive-robotics",
-    "image": "../../assets/projects/transitive-robotics/media-01.jpg"
-  },
+  "credits": [],
+  "next": "transitive-robotics",
   "order": 3
 }

@@ -1,18 +1,29 @@
 {
   "name": "Transitive Robotics",
+  "nda": false,
   "intro": "Hello Robo partnered with Transitive Robotics to reimagine the brand and website of a platform that gives robotics companies the tools to build, operate, and scale their own robot fleets.",
   "services": [
     "Brand Strategy",
     "Brand Identity",
     "UX/UI"
   ],
-  "reveal": "../../assets/projects/transitive-robotics/media-01.jpg",
-  "background": "#FFFFFF",
+  "reveal": {
+    "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/TR+Reel+Horizontal.webm"
+  },
+  "background": "#151518",
   "micrographics": {
     "left": "/images/menu/menu-micrographic.svg",
     "right": "/images/home/stamp-clients.svg"
   },
   "sections": [
+    {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/TR+Reel+Horizontal.webm"
+        }
+      ]
+    },
     {
       "type": "facts",
       "label": "What Made People Say Yes",
@@ -31,61 +42,123 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-01.png"
+        "../../assets/projects/transitive-robotics/transitive-01-9b0c3b.jpg"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-02.png",
-        "../../assets/projects/transitive-robotics/placeholder-03.png"
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/Video+Case+study.webm"
+        }
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-04.png"
+        "../../assets/projects/transitive-robotics/transitive-02-8d8405.jpg"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-05.png"
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/duo.webm"
+        }
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-06.png"
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/TR+intro.webm"
+        }
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-07.png",
-        "../../assets/projects/transitive-robotics/placeholder-08.png"
+        "../../assets/projects/transitive-robotics/transitive-03-3b3e70.jpg"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-09.png"
+        "../../assets/projects/transitive-robotics/transitive-04-0e38f0.jpg"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/transitive-robotics/placeholder-10.png",
-        "../../assets/projects/transitive-robotics/placeholder-11.png",
-        "../../assets/projects/transitive-robotics/placeholder-12.png"
+        "../../assets/projects/transitive-robotics/transitive-05-4654f3.png"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-06-a5e262.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/19.webm"
+        }
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-07-af6f45.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/212.webm"
+        }
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-08-a93d6f.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-09-62131c.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-10-e9f3ba.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-11-8373ee.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-12-e4a109.jpg"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/transitive-robotics/transitive-13-bf5647.jpg"
       ]
     }
   ],
   "credits": [],
-  "next": {
-    "name": "Weekly Robotics",
-    "href": "/work/weekly-robotics",
-    "image": "../../assets/projects/weekly-robotics/logo-reveal.png"
-  },
-  "order": 4
+  "next": "weekly-robotics",
+  "order": 5
 }
