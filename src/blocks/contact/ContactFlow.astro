@@ -310,6 +310,55 @@ const first = embedded ? 'cover' : 'start';
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /** Wraps every word of `el` in spans (for the title rise and the lead light-up) */
+  function splitWords(el: HTMLElement, wrap: (word: HTMLElement) => Node, wordClass: string) {
+    let n = 0;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const texts: Text[] = [];
+    for (let t = walker.nextNode(); t; t = walker.nextNode()) texts.push(t as Text);
+    for (const text of texts) {
+      const frag = document.createDocumentFragment();
+      for (const part of text.nodeValue!.split(/( +)/)) {
+        if (!part) continue;
+        if (/^ +$/.test(part)) {
+          frag.append(part);
+          continue;
+        }
+        const w = document.createElement('span');
+        w.className = wordClass;
+        w.style.setProperty('--d', String(n++));
+        w.textContent = part;
+        frag.append(wrap(w));
+      }
+      text.replaceWith(frag);
+    }
+  }
+
+  /** Each time a screen opens: its title rises word by word (like the headlines), its lead
+   *  lights up word by word (like the reading text) */
+  function prepareText(root: HTMLElement) {
+    if (reduced) return;
+    root.querySelectorAll<HTMLElement>('.contact__title').forEach((t) => {
+      splitWords(t, (w) => {
+        const mask = document.createElement('span');
+        mask.className = 'hl-mask';
+        mask.append(w);
+        return mask;
+      }, 'hl-word');
+      t.classList.add('hl-ready');
+    });
+    root.querySelectorAll<HTMLElement>('.contact__lead').forEach((l) => {
+      splitWords(l, (w) => w, 'cr-word');
+      l.classList.add('cr-ready');
+    });
+  }
+  function playText(screen: HTMLElement) {
+    const parts = screen.querySelectorAll<HTMLElement>('.contact__title.hl-ready, .contact__lead.cr-ready');
+    parts.forEach((p) => p.classList.remove('is-in'));
+    void screen.offsetWidth;
+    parts.forEach((p) => p.classList.add('is-in'));
+  }
   const phone = matchMedia('(max-width: 1023px)');
 
   /** The faint mono log in one box: shows a screen's groups and types them out line by
@@ -390,6 +439,18 @@ const first = embedded ? 'cover' : 'start';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-contact]')) {
     const embedded = root.dataset.contact === 'embedded';
+    prepareText(root);
+    // the first screen's words play when the block first comes into view (it sits at the
+    // bottom of the page); after that, on every screen change
+    let seen = false;
+    const firstView = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      seen = true;
+      firstView.disconnect();
+      const current = root.querySelector<HTMLElement>('.contact__screen[data-active]');
+      if (current) playText(current);
+    }, { rootMargin: '0px 0px -15% 0px' });
+    firstView.observe(root);
     const screens = [...root.querySelectorAll<HTMLElement>('.contact__screen')];
     const logs: Logs = JSON.parse(root.querySelector('[data-logs]')?.textContent ?? '{}');
     const write = { a: typewriter(root.querySelector('[data-log=a]')!), b: typewriter(root.querySelector('[data-log=b]')!) };
@@ -476,6 +537,7 @@ const first = embedded ? 'cover' : 'start';
         write.a(fill(logs[id]?.a));
         write.b(fill(logs[id]?.b));
         typeCount(target);
+        if (seen) playText(target);
         // after "Beep boop" / "thanks for saying hi", the block goes back to its first screen
         clearTimeout(homeTimer);
         if (id === 'done' || id === 'sent') homeTimer = window.setTimeout(() => go(embedded ? 'cover' : 'start'), 6000);
@@ -917,7 +979,8 @@ const first = embedded ? 'cover' : 'start';
   .contact__screen > * {
     transition: translate 0.7s var(--ease-move);
   }
-  .contact__screen:not([data-active]) > :is(.contact__count, .contact__title, .contact__lead, .contact__cards, .contact__field) {
+  /* (titles and leads have their own word-by-word entrance, below) */
+  .contact__screen:not([data-active]) > :is(.contact__count, .contact__cards, .contact__field) {
     translate: 0 calc(24 * var(--px));
   }
 
@@ -956,6 +1019,17 @@ const first = embedded ? 'cover' : 'start';
   .contact__screen--done .contact__lead {
     width: calc(378 * var(--px));
     margin-top: calc(30 * var(--px));
+  }
+
+  /* Lead text: words light up dim → full one after another as the screen opens (the
+     title's rise uses the global .hl-ready / .is-in styles) */
+  .cr-ready :global(.cr-word) {
+    opacity: 0.15;
+  }
+  .cr-ready.is-in :global(.cr-word) {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    transition-delay: calc(0.35s + var(--d) * 40ms);
   }
 
   /* ── Cards (start screen and mission): 402×140, 10 apart, from y 350 / 288 ── */
