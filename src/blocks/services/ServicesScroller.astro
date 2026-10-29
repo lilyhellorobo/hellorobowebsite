@@ -66,7 +66,7 @@ const { items } = Astro.props;
               </ul>
             </div>
             <div class="services-scroller__media" style={`z-index: ${i + 1}`}>
-              <Image src={item.image} alt={item.imageAlt} widths={[818, 1636]} sizes="(min-width: 1728px) 818px, 48vw" loading="lazy" />
+              <Image src={item.image} alt={item.imageAlt} widths={[818, 1200, 1636]} sizes="(min-width: 1728px) 818px, (min-width: 1024px) 48vw, calc(100vw - 32px)" loading="lazy" />
             </div>
           </div>
         );
