@@ -537,7 +537,7 @@ const first = embedded ? 'cover' : 'start';
     );
 
     // "Just wanna copy email": puts the address on the clipboard, the card says "Email
-    // copied" and the pixel dinosaur runs along it for a few seconds
+    // copied" while the pixel dinosaur runs across it once (1.4s), then the card is back
     root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
       const label = btn.querySelector<HTMLElement>('[data-copy-label]');
       const text = label?.textContent;
@@ -551,12 +551,15 @@ const first = embedded ? 'cover' : 'start';
           return;
         }
         if (label) label.textContent = 'Email copied';
+        // a second click restarts the run
+        btn.classList.remove('is-copied');
+        void btn.offsetWidth;
         btn.classList.add('is-copied');
         clearTimeout(timer);
         timer = window.setTimeout(() => {
           if (label) label.textContent = text!;
           btn.classList.remove('is-copied');
-        }, 4000);
+        }, 1500);
       });
     });
 
@@ -916,10 +919,10 @@ const first = embedded ? 'cover' : 'start';
   }
   .contact__card--copy.is-copied .contact__dino {
     opacity: 1;
-    animation: contact-dino-run 2.6s steps(26) infinite;
+    animation: contact-dino-run 1.4s steps(18) both;
   }
   .contact__card--copy.is-copied .contact__dino img {
-    animation: contact-dino-legs 0.2s steps(1) infinite, contact-dino-hop 2.6s steps(13) infinite;
+    animation: contact-dino-legs 0.16s steps(1) infinite, contact-dino-hop 1.4s steps(9) both;
   }
   @keyframes contact-dino-run {
     from {
