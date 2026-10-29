@@ -1,0 +1,114 @@
+---
+/**
+ * Legal page (Terms of use, Privacy policy) — no Figma frame; built from the site's own
+ * parts: the page title in H1 at the top left like the other pages, then the numbered
+ * sections in the Position page's two columns (heading H3 left, text right), each under a
+ * thin rule. One column on phones.
+ */
+import type { LegalSection } from '../../data/legal';
+
+interface Props {
+  title: string;
+  sections: LegalSection[];
+}
+const { title, sections } = Astro.props;
+---
+<section class="legal container">
+  <h1 class="legal__title t-h1">{title}</h1>
+  <ol class="legal__sections">
+    {sections.map((s, i) => (
+      <li class="legal__row">
+        <h2 class="legal__label t-h3">
+          <span class="legal__n t-body">[{String(i + 1).padStart(2, '0')}]</span>
+          {s.title}
+        </h2>
+        <div class="legal__text t-body">
+          {s.paragraphs?.map((p) => <p>{p}</p>)}
+          {s.list && <ul class="legal__list">{s.list.map((item) => <li>{item}</li>)}</ul>}
+          {s.lines && (
+            <p class="legal__lines">
+              {s.lines.map((l) => (
+                <span>
+                  {l.label && `${l.label}: `}
+                  {l.href ? <a href={l.href}>{l.value}</a> : l.value}
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .legal {
+    padding-top: var(--space-40);
+    padding-bottom: calc(160 * var(--px));
+  }
+  .legal__title {
+    max-width: calc(1100 * var(--px));
+  }
+  .legal__sections {
+    margin: calc(160 * var(--px)) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .legal__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+    align-items: start;
+    padding-block: calc(40 * var(--px)) calc(80 * var(--px));
+    border-top: var(--line-width) solid var(--line-on-light);
+  }
+  .legal__label {
+    display: grid;
+    gap: var(--space-12);
+    width: calc(560 * var(--px));
+    max-width: 100%;
+  }
+  .legal__n {
+    color: var(--color-grey-600);
+  }
+  .legal__text {
+    display: grid;
+    gap: var(--space-20);
+    max-width: calc(760 * var(--px));
+  }
+  .legal__list {
+    display: grid;
+    gap: var(--space-12);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .legal__lines {
+    display: grid;
+  }
+  .legal__lines a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  @media (hover: hover) {
+    .legal__lines a:hover {
+      color: var(--color-orange);
+    }
+  }
+
+  /* ── Mobile: heading above text ── */
+  @media (max-width: 1023px) {
+    .legal {
+      padding-top: var(--space-20);
+      padding-bottom: 100px;
+    }
+    .legal__sections {
+      margin-top: 64px;
+    }
+    .legal__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-16);
+      padding-block: var(--space-20) 48px;
+    }
+  }
+</style>

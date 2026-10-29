@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LegalPage from '../blocks/legal/LegalPage.astro';
+import { privacy } from '../data/legal';
+---
+<BaseLayout title={'Privacy policy'} prefooter={false}>
+  <LegalPage title="Privacy policy" sections={privacy} />
+</BaseLayout>
