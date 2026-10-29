@@ -3,6 +3,7 @@
  * Contact block — every screen of "Start a project" / "Drop a quick word" in one black block
  * Figma: 10412:2240 (cover) · 10412:2249 (start) · 10412:2436 / 2548 / 10419:222 (steps
  * 01–03) · 10419:276 (mission) · 10419:3537 (done) · 10412:2490 / 2602 (error states) ·
+ * 10419:6147 (email copied) · 10419:6404 / 6622 (quick word, sent) ·
  * mobile 10419:5894 (cover) / 10419:5961 (start).
  * Screens switch in place (data-step on the block); the printers move and the faint mono
  * "system log" behind them retypes itself with new words on every screen — partly built
@@ -157,6 +158,17 @@ const logs: Record<string, { a: Group[]; b?: Group[] }> = {
   },
 };
 
+logs.sent = {
+  a: groups({
+    h1: ['[ OK'], h2: ['MESSAGE DELIVERED'], h3: ['✓ ]'], h4: ['QUICK WORD'],
+    intro: ['HI RECEIVED', 'MOOD: DELIGHTED', stamp],
+    st: ['Your message is on its way', 'to a real human.'],
+    a: ['HUMANS_', 'READING'], b: ['ROBOTS_', 'WAVING BACK'], c: ['STATUS_', 'HELLO → HELLO'],
+    d: ['REPLY_', '< 24 H'], e: ['> WE LIKE THOSE', 'AROUND HERE_'], f: ['CHANNEL_', 'STILL OPEN'], g: ['SAY HI AGAIN_', 'ANYTIME'],
+  }),
+  b: logs.done.b,
+};
+
 const steps = [
   { id: 'name', n: '01', title: 'Who’s on the other side?', lead: 'Before we connect the dots, let’s identify the human.', field: 'Your name', type: 'text', auto: 'name', back: 'start' },
   { id: 'email', n: '02', title: 'Where should we say hello?', lead: 'Every good connection needs a destination. Drop your coordinates.', field: 'Your email', type: 'email', auto: 'email', back: 'name' },
@@ -205,9 +217,11 @@ const first = embedded ? 'cover' : 'start';
         <span class="t-body">Drop a quick word</span>
         <img class="contact__card-sticker" src="/images/contact/start-word.svg" alt="" width="148" height="140" style="--x: 254; --y: -4; --w: 148; --mx: 226; --my: -5; --mw: 131" loading="lazy" />
       </a>
-      <button class="contact__card" type="button" data-copy={studio.email}>
+      <button class="contact__card contact__card--copy" type="button" data-copy={studio.email}>
         <span class="t-body"><span data-copy-label>Just wanna copy email</span><img class="contact__smiley" src="/images/contact/start-email-smiley.svg" alt="" width="36" height="27" loading="lazy" /></span>
         <img class="contact__card-sticker" src="/images/contact/start-email.svg" alt="" width="152" height="66" style="--x: 244; --y: 65; --w: 152; --mx: 223; --my: 49; --mw: 132" loading="lazy" />
+        <!-- "Email copied" (10419:6147): a pixel dinosaur runs along the card -->
+        <span class="contact__dino" aria-hidden="true"><img src="/images/contact/dino.svg" alt="" width="22" height="28" /></span>
       </button>
     </div>
   </div>
@@ -251,24 +265,30 @@ const first = embedded ? 'cover' : 'start';
   </form>
 
   <!-- Quick word -->
-  <form class="contact__screen contact__screen--step" data-step="message" action="#" novalidate>
-    <p class="contact__count t-body">[HR]</p>
-    <h2 class="contact__title t-h2">We’re all ears. Drop us a line.</h2>
-    <p class="contact__lead t-body">Don’t overthink it. Just type away — a real human reads every word.</p>
+  <!-- Quick word (10419:6404): title, lead, the field with Submit under its right end -->
+  <form class="contact__screen contact__screen--message" data-step="message" action="#" novalidate>
+    <h2 class="contact__title t-h2">We’re all ears. Well, sort of. Drop your message below</h2>
+    <p class="contact__lead t-body">Big idea, random thought, or just a hello? We’re programmed to care.</p>
     <div class="contact__field">
       <label class="visually-hidden" for="contact-message">Your message</label>
-      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Your message"></textarea>
+      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Don’t overthink it. Just type away..."></textarea>
       <p class="contact__error" role="alert" data-error></p>
+      <button class="contact__next contact__next--submit t-button" type="submit" data-send="message">Submit <Icon name="hex" /></button>
     </div>
     <input class="contact__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <a class="contact__back t-button" href="#start" data-go="start">Go back <Icon name="undo" /></a>
-    <button class="contact__submit t-button" type="submit" data-send="message">Submit <Icon name="hex" /></button>
   </form>
 
   <!-- Done -->
   <div class="contact__screen contact__screen--done" data-step="done">
     <h2 class="contact__title t-h2">Beep boop. We got you.</h2>
     <p class="contact__lead t-body">Your message has landed safely. Our humans are on it. Our robots are pretending to help.</p>
+  </div>
+
+  <!-- Quick word sent (10419:6622) -->
+  <div class="contact__screen contact__screen--done" data-step="sent">
+    <h2 class="contact__title t-h2">Hey, thanks for saying hi.</h2>
+    <p class="contact__lead t-body">Your message is on its way to a real human. We like those around here.</p>
   </div>
 
   <script type="application/json" data-logs set:html={JSON.stringify(logs)} />
@@ -516,7 +536,8 @@ const first = embedded ? 'cover' : 'start';
       }),
     );
 
-    // "Just wanna copy email": puts the address on the clipboard and says so for a moment
+    // "Just wanna copy email": puts the address on the clipboard, the card says "Email
+    // copied" and the pixel dinosaur runs along it for a few seconds
     root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
       const label = btn.querySelector<HTMLElement>('[data-copy-label]');
       const text = label?.textContent;
@@ -524,12 +545,18 @@ const first = embedded ? 'cover' : 'start';
       btn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(btn.dataset.copy!);
-          if (label) label.textContent = 'Email copied';
-          clearTimeout(timer);
-          timer = window.setTimeout(() => label && (label.textContent = text!), 2000);
         } catch {
+          // no clipboard access (old browser / not https): open the mail app instead
           location.href = `mailto:${btn.dataset.copy}`;
+          return;
         }
+        if (label) label.textContent = 'Email copied';
+        btn.classList.add('is-copied');
+        clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          if (label) label.textContent = text!;
+          btn.classList.remove('is-copied');
+        }, 4000);
       });
     });
 
@@ -567,7 +594,7 @@ const first = embedded ? 'cover' : 'start';
         });
         if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
         setError(form, '');
-        go('done');
+        go(type === 'message' ? 'sent' : 'done');
         // the done screen's log has used the answers; now the forms can be cleared
         root.querySelectorAll<HTMLFormElement>('form').forEach((f) => {
           f.reset();
@@ -631,7 +658,7 @@ const first = embedded ? 'cover' : 'start';
     --lx: 338;
     --ly: 376;
   }
-  .contact:is([data-step='name'], [data-step='email'], [data-step='company'], [data-step='mission'], [data-step='message'], [data-step='done']) .contact__log--a {
+  .contact:is([data-step='name'], [data-step='email'], [data-step='company'], [data-step='mission'], [data-step='done'], [data-step='sent']) .contact__log--a {
     --lx: 800;
     --ly: 321;
   }
@@ -641,7 +668,7 @@ const first = embedded ? 'cover' : 'start';
     --ly: 475;
     opacity: 0;
   }
-  .contact[data-step='done'] .contact__log--b {
+  .contact:is([data-step='done'], [data-step='sent']) .contact__log--b {
     opacity: 0.4;
   }
   .contact__log :global(.contact__group) {
@@ -695,12 +722,12 @@ const first = embedded ? 'cover' : 'start';
     transform: scaleX(-1);
     filter: blur(calc(14 * var(--px)));
   }
-  .contact[data-step='start'] .contact__printer--front {
+  .contact:is([data-step='start'], [data-step='message']) .contact__printer--front {
     left: calc(900 * var(--px));
     top: calc(-280 * var(--px));
     width: calc(796 * var(--px));
   }
-  .contact[data-step='start'] .contact__printer--back {
+  .contact:is([data-step='start'], [data-step='message']) .contact__printer--back {
     left: calc(-659 * var(--px));
     top: calc(67 * var(--px));
   }
@@ -712,13 +739,13 @@ const first = embedded ? 'cover' : 'start';
     translate: 0 calc(-80 * var(--px));
   }
   /* the form screens swap the printers for the kiosk printing the receipt */
-  .contact:not([data-step='cover'], [data-step='start']) .contact__printer {
+  .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__printer {
     opacity: 0;
   }
-  .contact:not([data-step='cover'], [data-step='start']) .contact__printer--front {
+  .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__printer--front {
     translate: 0 calc(-80 * var(--px));
   }
-  .contact:not([data-step='cover'], [data-step='start']) .contact__kiosk {
+  .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__kiosk {
     opacity: 1;
     translate: none;
   }
@@ -864,6 +891,59 @@ const first = embedded ? 'cover' : 'start';
   .contact__card--check:has(input:checked) .contact__card-sticker {
     filter: invert(1);
   }
+  /* Email copied: the stickers step aside and the dinosaur runs along the bottom of the card,
+     in pixel steps with a hop */
+  .contact__card--copy.is-copied :is(.contact__card-sticker, .contact__smiley) {
+    opacity: 0;
+  }
+  .contact__dino {
+    position: absolute;
+    left: calc(22 * var(--px));
+    bottom: calc(18 * var(--px));
+    width: calc(22 * var(--px));
+    min-width: 18px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .contact__dino img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .contact__card--copy.is-copied .contact__dino {
+    opacity: 1;
+    animation: contact-dino-run 2.6s steps(26) infinite;
+  }
+  .contact__card--copy.is-copied .contact__dino img {
+    animation: contact-dino-legs 0.2s steps(1) infinite, contact-dino-hop 2.6s steps(13) infinite;
+  }
+  @keyframes contact-dino-run {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: var(--dino-run, calc(330 * var(--px))) 0;
+    }
+  }
+  /* a 1px bob every other step reads as running legs */
+  @keyframes contact-dino-legs {
+    50% {
+      translate: 0 -1px;
+    }
+  }
+  /* one jump in the middle of each run */
+  @keyframes contact-dino-hop {
+    0%, 38%, 62%, 100% {
+      margin-top: 0;
+    }
+    46%, 54% {
+      margin-top: calc(-22 * var(--px));
+    }
+  }
+  .contact__card--copy .contact__card-sticker,
+  .contact__card--copy .contact__smiley {
+    transition: opacity 0.25s ease;
+  }
   .contact__smiley {
     display: inline-block;
     width: calc(36 * var(--px));
@@ -947,6 +1027,20 @@ const first = embedded ? 'cover' : 'start';
   .is-filled .contact__next {
     opacity: 1;
   }
+  /* Quick word: "Submit" under the field's right end (x 530, 190×60), dimmed until typed */
+  .contact__next--submit {
+    justify-content: space-between;
+    width: calc(190 * var(--px));
+    min-width: 150px;
+    padding: 0 var(--space-16);
+    font: inherit;
+  }
+  .contact__next--submit[aria-busy='true'] {
+    cursor: progress;
+  }
+  .contact__screen--message .contact__title {
+    width: calc(1009 * var(--px));
+  }
   .contact__trap {
     position: absolute;
     left: -9999px;
@@ -955,7 +1049,7 @@ const first = embedded ? 'cover' : 'start';
     opacity: 0;
   }
 
-  /* ── Buttons along the bottom: Go back (left), Submit (x 593) ── */
+  /* ── Buttons along the bottom: Go back (left), Submit right beside it (196 wide, x 247) ── */
   .contact__back,
   .contact__submit {
     position: absolute;
@@ -963,7 +1057,7 @@ const first = embedded ? 'cover' : 'start';
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: calc(190 * var(--px));
+    width: calc(196 * var(--px));
     min-width: 150px;
     height: var(--button-height);
     padding: 0 var(--space-16);
@@ -982,7 +1076,7 @@ const first = embedded ? 'cover' : 'start';
     background: var(--color-grey-600);
   }
   .contact__submit {
-    left: calc(593 * var(--px));
+    left: calc(247 * var(--px));
     background: var(--color-white);
     color: var(--color-black);
   }
@@ -1105,7 +1199,7 @@ const first = embedded ? 'cover' : 'start';
       width: 300px;
     }
     /* done: the kiosk comes up so its receipt shows above the menu bar */
-    .contact[data-step='done'] .contact__kiosk {
+    .contact:is([data-step='done'], [data-step='sent']) .contact__kiosk {
       right: calc(50% - 190px);
       bottom: -40px;
       width: 380px;
@@ -1144,6 +1238,11 @@ const first = embedded ? 'cover' : 'start';
       right: 14px;
       bottom: 12px;
       width: calc(var(--w) * 0.72px);
+    }
+    .contact__dino {
+      --dino-run: calc(100vw - 2 * var(--page-margin) - 64px);
+      left: 16px;
+      bottom: 16px;
     }
     .contact__smiley {
       width: 32px;
