@@ -875,9 +875,6 @@ const first = embedded ? 'cover' : 'start';
     .contact__card--check:has(input:checked):hover {
       background: var(--color-grey-100);
     }
-    .contact__card:hover .contact__card-sticker {
-      rotate: -4deg;
-    }
     .contact__back:hover {
       background: var(--color-grey-600);
     }
@@ -927,9 +924,7 @@ const first = embedded ? 'cover' : 'start';
     height: auto;
     max-width: none;
     pointer-events: none;
-    transition:
-      filter 0.25s ease,
-      rotate 0.4s var(--ease-move);
+    transition: filter 0.25s ease;
   }
   /* white stickers turn black on a selected (white) card */
   .contact__card--check:has(input:checked) .contact__card-sticker {
