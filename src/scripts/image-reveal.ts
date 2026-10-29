@@ -13,6 +13,7 @@ const SKIP = [
   '.get-in-touch',
   '.contact',
   '.services-scroller',
+  '.home-showcase__stage',
   '.radio-clips',
   '.project-wheel',
   '.work-wheel',

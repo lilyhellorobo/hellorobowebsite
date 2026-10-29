@@ -254,18 +254,11 @@ const last = topics[topics.length - 1].line / 1648;
 
   /* ── Clips: the next topic's clips slide in from the bottom over the previous ── */
   .radio-clips__clips {
-    clip-path: inset(100% 0 0 0);
-    transition: clip-path var(--duration-slow) var(--ease-out);
+    transition: translate var(--slide-duration) var(--slide-ease);
   }
-  .radio-clips__slide:is([data-state='current'], [data-state='past']) .radio-clips__clips {
-    clip-path: inset(0 0 0 0);
-  }
-  .radio-clips__clips :global(img) {
-    transform: translateY(12%) scale(1.08);
-    transition: transform var(--duration-slow) var(--ease-out);
-  }
-  .radio-clips__slide:is([data-state='current'], [data-state='past']) .radio-clips__clips :global(img) {
-    transform: none;
+  /* waiting below the screen; rises over the current topic's clips when its turn comes */
+  .radio-clips__slide[data-state='next'] .radio-clips__clips {
+    translate: 0 100vh;
   }
   /* The first topic is simply there */
   .radio-clips__slide[data-index='0'] .radio-clips__clips {
@@ -275,8 +268,7 @@ const last = topics[topics.length - 1].line / 1648;
   @media (prefers-reduced-motion: reduce) {
     .mask > span,
     .radio-clips__stamp,
-    .radio-clips__clips,
-    .radio-clips__clips :global(img) {
+    .radio-clips__clips {
       transition-duration: 0.01s !important;
       transition-delay: 0s !important;
     }
