@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LegalPage from '../blocks/legal/LegalPage.astro';
+import { terms } from '../data/legal';
+---
+<BaseLayout title={'Terms of use'} prefooter={false}>
+  <LegalPage title="Terms of use" sections={terms} />
+</BaseLayout>
