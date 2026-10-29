@@ -233,6 +233,13 @@ button {
 .hover-fx__label {
   position: relative;
   display: inline-block;
+}
+/* buttons stay on one line; link labels (e.g. long job titles on phones) may wrap */
+.button .hover-fx__label,
+.get-in-touch .hover-fx__label,
+.contact__back .hover-fx__label,
+.contact__submit .hover-fx__label,
+.contact__next .hover-fx__label {
   white-space: nowrap;
 }
 .hover-fx__label.is-pixel {

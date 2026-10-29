@@ -1,8 +1,10 @@
 /**
- * Button hover — after exp.fiddle.digital: on hover the label breaks into chunky pixels that
- * get finer, then into random letters that settle on the real word from left to right.
- * Buttons without a label (arrows, play / pause, close, back) pixelate their icon the same
- * way and snap back. The button keeps its own colours throughout. With a mouse it plays on
+ * Hover for buttons and text links — after exp.fiddle.digital: on hover the label breaks into
+ * chunky pixels that get finer, then into random letters that settle on the real word from
+ * left to right; an icon next to it (an arrow, the hexagon) pixelates and snaps back at the
+ * same time. Buttons with only an icon (play / pause, close, back) pixelate the icon.
+ * Text links: every plain link with a short label (menu, footer, socials, "View →",
+ * "Portfolio →", legal pages…), not the ones made of pictures or blocks of text. The button keeps its own colours throughout. With a mouse it plays on
  * hover (leaving early puts everything back); on phones and tablets it plays on press.
  * Off for reduced motion.
  */
@@ -23,9 +25,28 @@ const SELECTOR = [
 ].join(',');
 
 /** where the words are: the first match inside the button wins */
-const LABEL = '[data-copy-label], .button__label, .contact__card > .t-body, .t-button:not(.button)';
+const LABEL = '[data-copy-label], .button__label, .contact__card > .t-body, .t-button:not(.button), :scope > span';
+
+/** links made of more than words: only the named part animates */
+const ROW_LINKS: Record<string, string> = {
+  '.careers-positions__link': '.careers-positions__title .t-h2',
+};
+
+/** text links: plain links with a short label, outside the wheels / Team canvas */
+const isTextLink = (a: HTMLAnchorElement) =>
+  !a.matches(SELECTOR) &&
+  !a.matches(Object.keys(ROW_LINKS).join(',')) &&
+  !a.closest('.project-wheel, .work-wheel, .project-cards, .team, [aria-hidden="true"]:not(.site-menu)') &&
+  !a.querySelector('img, picture, video, canvas, h1, h2, h3, h4, p, li, ul, div') &&
+  a.textContent!.trim().length > 0 &&
+  a.textContent!.trim().length <= 40;
 
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=<>/';
+/** a random character in the case of `ch` (lower-case words scramble in lower case) */
+const glyph = (ch: string) => {
+  const g = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+  return ch === ch.toLowerCase() && ch !== ch.toUpperCase() ? g.toLowerCase() : g;
+};
 /** pixel size (in CSS px) and share of blocks left out, frame by frame */
 const TEXT_STEPS: [number, number][] = [
   [9, 0.5],
@@ -74,9 +95,12 @@ function makeCanvas(w: number, h: number) {
   return canvas;
 }
 
-function setup(btn: HTMLElement) {
+function setup(btn: HTMLElement, labelSelector?: string) {
   // the label: its own span (wrapping a bare text node if needed)
-  let label = btn.querySelector<HTMLElement>(LABEL);
+  // in the order of LABEL (not document order: the copy card's words sit inside its .t-body)
+  let label: HTMLElement | null = null;
+  for (const sel of (labelSelector ?? LABEL).split(',')) if ((label = btn.querySelector<HTMLElement>(sel.trim()))) break;
+  if (labelSelector && !label) return;
   if (!label) {
     const text = [...btn.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
     if (text) {
@@ -165,7 +189,7 @@ function setup(btn: HTMLElement) {
         lbl.textContent =
           f === frames
             ? word
-            : [...word].map((ch, i) => (ch === ' ' || i < settled ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join('');
+            : [...word].map((ch, i) => (ch === ' ' || i < settled ? ch : glyph(ch))).join('');
         written = lbl.textContent;
         if (f === frames) {
           running = false;
@@ -175,9 +199,9 @@ function setup(btn: HTMLElement) {
     }
   };
 
-  /** an icon-only button: the icon pixelates and snaps back */
+  /** the icon pixelates and snaps back (on its own, or next to the label) */
   const playIcon = () => {
-    icon = [...btn.querySelectorAll<SVGSVGElement>('svg')].find((s) => s.getBoundingClientRect().width > 0) ?? null;
+    icon = [...btn.querySelectorAll<SVGSVGElement>('svg')].find((s) => !label?.contains(s) && s.getBoundingClientRect().width > 0) ?? null;
     if (!icon) return;
     const box = icon.getBoundingClientRect();
     const own = btn.getBoundingClientRect();
@@ -200,14 +224,17 @@ function setup(btn: HTMLElement) {
       ICON_STEPS.forEach(([size, holes], i) =>
         at(i * PIXEL_MS, () => pixelFrame(canvas, size, holes, (s, w, h) => s.drawImage(img, 0, 0, w, h))),
       );
-      at(ICON_STEPS.length * PIXEL_MS, settle);
+      at(ICON_STEPS.length * PIXEL_MS, () => {
+        canvas.remove();
+        shown.style.visibility = '';
+      });
     };
   };
 
   const play = () => {
     settle();
     if (label) playText(label);
-    else playIcon();
+    playIcon();
   };
   // mouse: on hover, back when it leaves
   btn.addEventListener('pointerenter', (e) => {
@@ -223,5 +250,7 @@ function setup(btn: HTMLElement) {
 }
 
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  document.querySelectorAll<HTMLElement>(SELECTOR).forEach(setup);
+  document.querySelectorAll<HTMLElement>(SELECTOR).forEach((b) => setup(b));
+  document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => isTextLink(a) && setup(a));
+  for (const [row, label] of Object.entries(ROW_LINKS)) document.querySelectorAll<HTMLElement>(row).forEach((a) => setup(a, label));
 }
