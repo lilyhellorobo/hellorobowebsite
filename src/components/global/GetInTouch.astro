@@ -1,6 +1,6 @@
 ---
 /**
- * "Get in touch" — fixed top-right (Figma hero "nav", 265×64, 40px from the top
+ * "Get in touch" — top-right of the page, scrolling away with it (Figma hero "nav", 265×64, 40px from the top
  * and right edges, background blur). Black on light pages, white on dark pages,
  * light grey on the Position page.
  */
@@ -20,7 +20,7 @@ const { variant = 'dark', href = '/contact' } = Astro.props;
 <style>
   .get-in-touch {
     view-transition-name: get-in-touch; /* stays put between pages */
-    position: fixed;
+    position: absolute;
     top: var(--space-40);
     right: var(--page-margin);
     z-index: var(--z-header);
