@@ -19,9 +19,9 @@ export const studio = {
   email: 'info@hellorobo.co',
 };
 
-// TODO: add the real profile URLs (shown in the menu overlay "Say hello" card)
+// The studio's profiles, as linked from hellorobo.co (menu overlay "Say hello" card)
 export const socials = [
-  { label: 'LinkedIn', href: '#' },
-  { label: 'Instagram', href: '#' },
-  { label: 'X / Twitter', href: '#' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/hello-robo/' },
+  { label: 'Instagram', href: 'https://www.instagram.com/hellorobo.co/' },
+  { label: 'X / Twitter', href: 'https://twitter.com/HelloRobo_co' },
 ];

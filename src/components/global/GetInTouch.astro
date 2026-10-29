@@ -9,13 +9,35 @@ import Icon from '../icons/Icon.astro';
 interface Props {
   variant?: 'dark' | 'light' | 'grey';
   href?: string;
+  /** /contact: the same button as "Close" — back to the page you came from (home if none) */
+  close?: boolean;
 }
-const { variant = 'dark', href = '/contact' } = Astro.props;
+const { variant = 'dark', href = '/contact', close = false } = Astro.props;
 ---
-<a class:list={['get-in-touch', `get-in-touch--${variant}`]} href={href}>
-  <span class="t-button">Get in touch</span>
-  <Icon name="corners" />
-</a>
+{close ? (
+  <a class:list={['get-in-touch', 'get-in-touch--close', `get-in-touch--${variant}`]} href="/" aria-label="Close" data-close>
+    <span class="t-button">Close</span>
+    <svg class="icon" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M6.4 6.4L25.6 25.6M25.6 6.4L6.4 25.6" stroke="currentColor" stroke-width="1.28" />
+    </svg>
+  </a>
+) : (
+  <a class:list={['get-in-touch', `get-in-touch--${variant}`]} href={href}>
+    <span class="t-button">Get in touch</span>
+    <Icon name="corners" />
+  </a>
+)}
+
+<script>
+  // Close: back to the previous page of this site, or home when /contact was opened directly
+  document.querySelector<HTMLAnchorElement>('[data-close]')?.addEventListener('click', (e) => {
+    const ref = document.referrer && new URL(document.referrer);
+    if (ref && ref.origin === location.origin && ref.pathname !== location.pathname && history.length > 1) {
+      e.preventDefault();
+      history.back();
+    }
+  });
+</script>
 
 <style>
   .get-in-touch {
@@ -62,9 +84,20 @@ const { variant = 'dark', href = '/contact' } = Astro.props;
     background: var(--color-white);
     color: var(--color-black);
   }
-  /* Mobile: no header button — "Let's talk" lives in the menu overlay (Figma "menu", 10112:25477) */
+  /* Mobile: no header button — "Let's talk" lives in the menu overlay (Figma "menu", 10112:25477);
+     Close stays, as a 44px square with the cross, top right */
   @media (max-width: 1023px) {
-    .get-in-touch {
+    .get-in-touch:not(.get-in-touch--close) {
+      display: none;
+    }
+    .get-in-touch--close {
+      top: var(--page-margin);
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      justify-content: center;
+    }
+    .get-in-touch--close .t-button {
       display: none;
     }
   }

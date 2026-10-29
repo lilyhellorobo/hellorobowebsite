@@ -193,7 +193,17 @@ const first = embedded ? 'cover' : 'start';
     <div class="contact__log contact__log--b" data-log="b"></div>
     <img class="contact__printer contact__printer--back" src="/images/shell/prefooter-printer-dark.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
     <img class="contact__printer contact__printer--front" src="/images/shell/prefooter-printer-dark.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
-    <img class="contact__kiosk" src="/images/contact/printer-kiosk.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
+    <!-- The kiosk prints the visitor's own receipt: name, company, picked services and the
+         thanks line go over the sample ones on the paper as soon as they're typed / chosen -->
+    <div class="contact__kiosk">
+      <img src="/images/contact/printer-kiosk.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
+      <div class="contact__receipt" data-receipt>
+        <p class="contact__receipt-name" data-r="name" hidden></p>
+        <p class="contact__receipt-company" data-r="company" hidden></p>
+        <ul class="contact__receipt-services" data-r="services" hidden></ul>
+        <p class="contact__receipt-thanks" data-r="thanks" hidden></p>
+      </div>
+    </div>
   </div>
 
   <!-- Cover (pre-footer only): the whole block opens the start screen -->
@@ -387,6 +397,36 @@ const first = embedded ? 'cover' : 'start';
     const value = (id: string) => field(id)?.value.trim() ?? '';
     const chosen = () => [...root.querySelectorAll<HTMLInputElement>('input[name=services]:checked')].map((i) => i.value);
 
+    /** The receipt in the kiosk: the visitor's name, company and services over the sample */
+    const receipt = root.querySelector<HTMLElement>('[data-receipt]');
+    const printReceipt = () => {
+      if (!receipt) return;
+      const slot = (k: string) => receipt.querySelector<HTMLElement>(`[data-r=${k}]`)!;
+      // long words get smaller type instead of running off the paper
+      const put = (k: string, text: string, fits: number) => {
+        const el = slot(k);
+        el.hidden = !text;
+        el.textContent = text;
+        el.style.setProperty('--fit', String(Math.min(1, fits / Math.max(1, text.length))));
+      };
+      const name = value('name');
+      put('name', name, 11);
+      put('company', value('company'), 20);
+      put('thanks', name ? `***Thanks, ${name}***` : '', 19);
+      const list = slot('services');
+      const picked = chosen().slice(0, 3);
+      list.hidden = !picked.length;
+      list.replaceChildren(
+        ...picked.map((sv) => {
+          const li = document.createElement('li');
+          li.textContent = sv.toUpperCase();
+          return li;
+        }),
+      );
+    };
+    root.addEventListener('input', printReceipt);
+    root.addEventListener('change', printReceipt);
+
     /** The log groups of `step`, with what the visitor has typed filled in */
     const fill = (groups: Group[] = []) => {
       const data: Record<string, string> = {
@@ -455,6 +495,16 @@ const first = embedded ? 'cover' : 'start';
       show('cover', false);
       // other places on the page can open a step: dispatch "contact:show" with its name
       root.addEventListener('contact:show', (e) => show((e as CustomEvent<string>).detail));
+      // "Get in touch" and the menu's "Let's talk" don't leave the page when it has this
+      // block: the menu closes, the page glides down to the block and it opens on the start
+      document.addEventListener('click', (e) => {
+        const link = (e.target as Element).closest<HTMLAnchorElement>('a[href="/contact"]');
+        if (!link || root.contains(link) || e.metaKey || e.ctrlKey || e.shiftKey) return;
+        e.preventDefault();
+        if (document.documentElement.dataset.menu === 'open') document.querySelector<HTMLElement>('[data-menu-close]')?.click();
+        show('start');
+        root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      });
     } else {
       show(location.hash.slice(1), false);
       addEventListener('hashchange', () => show(location.hash.slice(1)));
@@ -606,11 +656,15 @@ const first = embedded ? 'cover' : 'start';
         if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
         setError(form, '');
         go(type === 'message' ? 'sent' : 'done');
-        // the done screen's log has used the answers; now the forms can be cleared
-        root.querySelectorAll<HTMLFormElement>('form').forEach((f) => {
-          f.reset();
-          f.classList.remove('is-filled');
-        });
+        // the done screen's log and receipt have used the answers; the forms are cleared
+        // once the block has gone back to its first screen
+        setTimeout(() => {
+          root.querySelectorAll<HTMLFormElement>('form').forEach((f) => {
+            f.reset();
+            f.classList.remove('is-filled');
+          });
+          printReceipt();
+        }, 7000);
       } catch (err) {
         setError(form, `Couldn’t send: ${(err as Error).message}. Please try again or email info@hellorobo.co`);
       } finally {
@@ -764,6 +818,78 @@ const first = embedded ? 'cover' : 'start';
   .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__kiosk {
     opacity: 1;
     translate: none;
+  }
+
+  /* The kiosk image (1024×1535) with the receipt over it; --u = one image pixel */
+  .contact__kiosk {
+    container-type: inline-size;
+  }
+  .contact__kiosk > img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .contact__receipt {
+    --u: calc(100cqw / 1024);
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-mono);
+    color: #232323;
+    pointer-events: none;
+  }
+  /* Each line sits on a patch of the paper's grey (with soft edges) over the sample text */
+  .contact__receipt > * {
+    position: absolute;
+    left: calc(340 * var(--u));
+    width: calc(216 * var(--u));
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    background: linear-gradient(90deg, rgb(210 208 207), rgb(205 202 201) 50%, rgb(200 198 196));
+    box-shadow: 0 0 calc(4 * var(--u)) calc(3 * var(--u)) rgb(205 202 201);
+    font-size: calc(var(--size) * var(--u) * var(--fit, 1));
+    letter-spacing: 0.02em;
+  }
+  .contact__receipt-name {
+    --size: 30;
+    top: calc(762 * var(--u));
+    height: calc(38 * var(--u));
+    line-height: calc(38 * var(--u));
+  }
+  .contact__receipt-company {
+    --size: 17;
+    top: calc(801 * var(--u));
+    height: calc(25 * var(--u));
+    line-height: calc(25 * var(--u));
+  }
+  .contact__receipt-services {
+    --size: 12;
+    left: calc(332 * var(--u));
+    width: calc(226 * var(--u));
+    top: calc(866 * var(--u));
+    height: calc(80 * var(--u));
+    list-style: none;
+    text-align: left;
+    letter-spacing: 0.06em;
+  }
+  .contact__receipt-services :global(li) {
+    position: relative;
+    height: calc(27 * var(--u));
+    line-height: calc(25 * var(--u));
+    padding-left: calc(31 * var(--u));
+  }
+  .contact__receipt-services :global(li)::before {
+    content: '<<';
+    position: absolute;
+    left: calc(6 * var(--u));
+  }
+  .contact__receipt-thanks {
+    --size: 18;
+    top: calc(1252 * var(--u));
+    height: calc(25 * var(--u));
+    line-height: calc(25 * var(--u));
   }
 
   /* ── Screens: one at a time, fading over each other ── */
@@ -1192,6 +1318,10 @@ const first = embedded ? 'cover' : 'start';
     .contact__screen {
       gap: 20px;
       padding: 40px var(--page-margin) calc(var(--page-margin) + var(--nav-height) + 16px);
+    }
+    /* /contact: room for the Close square at the top right */
+    .contact:not(.contact--embedded) .contact__screen {
+      padding-top: 76px;
     }
     .contact__title,
     .contact__screen--start .contact__title,
