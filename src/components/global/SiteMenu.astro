@@ -75,25 +75,48 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
 </div>
 
 <script>
-  // A different studio photo each time the menu opens (never the same twice in a row)
+  // A different studio photo each time the menu opens (never the same twice in a row). It is
+  // chosen, loaded and drawn into the CRT screen while the menu is closed, so opening shows
+  // it straight away — nothing swaps or blinks during the opening animation.
   const box = document.querySelector<HTMLElement>('[data-menu-photos]');
   const imgs = box ? [...box.querySelectorAll('img')] : [];
-  if (imgs.length > 1) {
-    let current = 0;
-    const shuffle = () => {
-      const next = (current + 1 + Math.floor(Math.random() * (imgs.length - 1))) % imgs.length;
+  if (box && imgs.length > 1) {
+    const html = document.documentElement;
+    let current = imgs.findIndex((i) => i.classList.contains('is-current'));
+    // resolves once photo `i` has loaded (it starts loading now)
+    const ready = (i: number) =>
+      new Promise<void>((done) => {
+        const img = imgs[i];
+        img.loading = 'eager';
+        if (img.complete && img.naturalWidth) return done();
+        img.addEventListener('load', () => done(), { once: true });
+        img.addEventListener('error', () => done(), { once: true });
+      });
+    const put = (i: number) => {
       imgs[current].classList.remove('is-current');
       imgs[current].alt = '';
-      imgs[next].classList.add('is-current');
-      imgs[next].alt = 'The Hello Robo team';
-      current = next;
+      imgs[i].classList.add('is-current');
+      imgs[i].alt = 'The Hello Robo team';
+      current = i;
+      box.dispatchEvent(new Event('crt:update'));
     };
-    const html = document.documentElement;
-    let wasOpen = html.dataset.menu === 'open';
+    const pickNext = () => {
+      const next = (current + 1 + Math.floor(Math.random() * (imgs.length - 1))) % imgs.length;
+      ready(next).then(() => {
+        if (html.dataset.menu !== 'open') put(next);
+      });
+    };
+    // the first one: random, ready before the menu is ever opened
+    pickNext();
+    // after each close (once it has finished), get the next one ready
+    let wasOpen = false;
+    let timer = 0;
     new MutationObserver(() => {
       const open = html.dataset.menu === 'open';
-      if (open && !wasOpen) shuffle();
+      if (open === wasOpen) return;
       wasOpen = open;
+      clearTimeout(timer);
+      if (!open) timer = window.setTimeout(pickNext, 800);
     }).observe(html, { attributes: true, attributeFilter: ['data-menu'] });
   }
 </script>

@@ -375,6 +375,9 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
       const cs = getComputedStyle(box);
       return cs.visibility === 'visible' && cs.opacity !== '0';
     };
+    // "crt:update" on the box: redraw now, even while hidden (the menu swaps its photo while
+    // closed, so the screen already shows the new one the moment it opens — no blink)
+    box.addEventListener('crt:update', () => draw(performance.now()));
     const later = () => setTimeout(() => requestAnimationFrame(loop), 250);
     const loop = (now: number) => {
       if (!shown()) return later();
