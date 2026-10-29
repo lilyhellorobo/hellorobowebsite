@@ -228,8 +228,8 @@ button {
   }
 }
 
-/* ── Button hover (src/scripts/button-hover.ts): fill rising from a line, colours invert,
-   the label goes pixels → random letters → the word ── */
+/* ── Button hover (src/scripts/button-hover.ts): fill rising from a line (colours invert
+   for a moment), the label goes pixels → random letters → the word, the fill sinks back ── */
 .has-hover-fx {
   overflow: hidden;
   isolation: isolate;
@@ -271,9 +271,6 @@ button {
 }
 .hover-fx__label.is-pixel {
   color: transparent;
-}
-.has-hover-fx.is-cooling .hover-fx__label {
-  opacity: 0;
 }
 .hover-fx__pixels {
   position: absolute;
