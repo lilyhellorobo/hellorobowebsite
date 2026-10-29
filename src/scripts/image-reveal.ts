@@ -8,6 +8,7 @@
  */
 
 const SKIP = [
+  '.pt',
   '.site-menu',
   '.nav-pill',
   '.get-in-touch',

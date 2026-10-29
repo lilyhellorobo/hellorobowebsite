@@ -1,24 +1,71 @@
 @import "./fonts.css";
 @import "./tokens.css";
 
-/* ── Page transitions ─────────────────────────────────────────────
-   Moving between pages of the site (links, back / forward, reload): the browser keeps
-   the old page on screen until the new one is ready to paint, then crossfades — no
-   blank / half-loaded frame. The Get in touch button, the menu bar and the back button
-   have their own names (NavPill / GetInTouch) so they stay in place instead of fading. (Chrome / Edge / Safari 18.2+; other
-   browsers just load the page.) */
-@view-transition {
-  navigation: auto;
+/* ── Page transitions (src/scripts/page-transition.ts) ───────────────────────────────
+   Black columns rise from the bottom (left to right, a beat apart) until the screen is
+   black, the Hello Robo logo in the middle; the new page opens covered, the robot blinks,
+   the columns drop back down. 8 columns, 5 on phones. Sits under the film grain. */
+.pt {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-grain) - 1);
+  display: flex;
+  pointer-events: none;
+  visibility: hidden;
 }
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--duration-smooth);
-  animation-timing-function: var(--ease-out);
+html:is(.pt-in, .pt-hold, .pt-cover, .pt-out) .pt {
+  visibility: visible;
 }
-@media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: none;
+html:is(.pt-in, .pt-hold, .pt-cover) .pt {
+  pointer-events: auto; /* no clicks while the screen is covered */
+}
+.pt__col {
+  flex: 1;
+  /* a hair wider, so no seam shows between columns */
+  margin-right: -1px;
+  background: var(--color-black);
+  transform: scaleY(0);
+  transform-origin: bottom;
+}
+html:is(.pt-cover, .pt-hold) .pt__col {
+  transform: none;
+}
+html.pt-in .pt__col {
+  transform: none;
+  transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1) calc(var(--i) * 50ms);
+}
+html.pt-out .pt__col {
+  transition: transform 0.65s cubic-bezier(0.76, 0, 0.24, 1) calc(var(--i) * 55ms);
+}
+@media (max-width: 1023px) {
+  .pt__col:nth-child(n + 6) {
+    display: none;
   }
+}
+/* Logo 94×51 (Figma 120×69 frame), centred; two frames for the blink */
+.pt__logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(64px, calc(94 * var(--px)));
+  translate: -50% -50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+html:is(.pt-cover, .pt-hold) .pt__logo {
+  opacity: 1;
+}
+.pt__logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pt__eyes-closed,
+.pt__logo.is-blink .pt__eyes-open {
+  display: none !important;
+}
+.pt__logo.is-blink .pt__eyes-closed {
+  display: block !important;
 }
 
 /* Images that aren't loaded yet when the page shows fade in when they arrive, instead
