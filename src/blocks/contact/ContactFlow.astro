@@ -170,9 +170,9 @@ logs.sent = {
 };
 
 const steps = [
-  { id: 'name', n: '01', title: 'Who’s on the other side?', lead: 'Before we connect the dots, let’s identify the human.', field: 'Your name', type: 'text', auto: 'name', back: 'start' },
-  { id: 'email', n: '02', title: 'Where should we say hello?', lead: 'Every good connection needs a destination. Drop your coordinates.', field: 'Your email', type: 'email', auto: 'email', back: 'name' },
-  { id: 'company', n: '03', title: 'Who are we teaming up with?', lead: 'Startup, spaceship, or secret laboratory. We don’t judge.', field: 'Company name', type: 'text', auto: 'organization', back: 'email' },
+  { id: 'name', n: '01', title: 'Who’s on the other side?', lead: 'Before we connect the dots, let’s identify the human.', field: 'Your name', type: 'text', auto: 'name', cap: 'words', back: 'start' },
+  { id: 'email', n: '02', title: 'Where should we say hello?', lead: 'Every good connection needs a destination. Drop your coordinates.', field: 'Your email', type: 'email', auto: 'email', cap: 'off', back: 'name' },
+  { id: 'company', n: '03', title: 'Who are we teaming up with?', lead: 'Startup, spaceship, or secret laboratory. We don’t judge.', field: 'Company name', type: 'text', auto: 'organization', cap: 'words', back: 'email' },
 ];
 const services = [
   { label: 'Branding', sticker: 'mission-branding', w: 74, h: 75, x: 309, y: 50 },
@@ -234,7 +234,7 @@ const first = embedded ? 'cover' : 'start';
       <p class="contact__lead t-body">{s.lead}</p>
       <div class="contact__field">
         <label class="visually-hidden" for={`contact-${s.id}`}>{s.field}</label>
-        <input class="contact__input t-body" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.auto} />
+        <input class="contact__input t-body" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.auto} autocapitalize={s.cap} autocorrect="off" spellcheck="false" enterkeyhint="next" />
         <p class="contact__error" role="alert" data-error></p>
         <button class="contact__next" type="submit" aria-label="Next"><Icon name="next" /></button>
       </div>
@@ -271,7 +271,7 @@ const first = embedded ? 'cover' : 'start';
     <p class="contact__lead t-body">Big idea, random thought, or just a hello? We’re programmed to care.</p>
     <div class="contact__field">
       <label class="visually-hidden" for="contact-message">Your message</label>
-      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Don’t overthink it. Just type away..."></textarea>
+      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" autocapitalize="sentences" placeholder="Don’t overthink it. Just type away..."></textarea>
       <p class="contact__error" role="alert" data-error></p>
       <button class="contact__next contact__next--submit t-button" type="submit" data-send="message">Submit <Icon name="hex" /></button>
     </div>
@@ -860,17 +860,54 @@ const first = embedded ? 'cover' : 'start';
       background-color 0.25s ease,
       color 0.25s ease;
   }
-  .contact__card:hover {
-    background: rgb(255 255 255 / 0.18);
-  }
   .contact__card--light,
-  .contact__card--light:hover,
   .contact__card--check:has(input:checked) {
     background: var(--color-white);
     color: var(--color-black);
   }
-  .contact__card--light:hover {
+  /* hover only with a mouse — on a phone it would stay "stuck" after the tap (a deselected
+     mission card would keep looking half-selected); a tap gets a press state instead */
+  @media (hover: hover) {
+    .contact__card:hover {
+      background: rgb(255 255 255 / 0.18);
+    }
+    .contact__card--light:hover,
+    .contact__card--check:has(input:checked):hover {
+      background: var(--color-grey-100);
+    }
+    .contact__card:hover .contact__card-sticker {
+      rotate: -4deg;
+    }
+    .contact__back:hover {
+      background: var(--color-grey-600);
+    }
+    .contact__submit:hover,
+    .is-filled .contact__next:hover {
+      background: var(--color-grey-100);
+    }
+  }
+  .contact__card:active {
+    background: rgb(255 255 255 / 0.18);
+  }
+  .contact__card--light:active,
+  .contact__card--check:has(input:checked):active {
     background: var(--color-grey-100);
+  }
+
+  /* Phone browser defaults off: the blue / grey tap flash, double-tap zoom delay, iOS
+     input and button styling, long-press text selection / image menu on the controls */
+  .contact :is(a, button, label, input, textarea) {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .contact :is(.contact__input, button) {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .contact :is(.contact__card, .contact__back, .contact__submit, .contact__next, .contact__screen--cover) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
   .contact__card:focus-visible,
   .contact__card--check:has(input:focus-visible) {
@@ -893,9 +930,6 @@ const first = embedded ? 'cover' : 'start';
     transition:
       filter 0.25s ease,
       rotate 0.4s var(--ease-move);
-  }
-  .contact__card:hover .contact__card-sticker {
-    rotate: -4deg;
   }
   /* white stickers turn black on a selected (white) card */
   .contact__card--check:has(input:checked) .contact__card-sticker {
@@ -1097,7 +1131,7 @@ const first = embedded ? 'cover' : 'start';
     background: var(--color-grey-800);
     color: var(--color-white);
   }
-  .contact__back:hover {
+  .contact__back:active {
     background: var(--color-grey-600);
   }
   .contact__submit {
@@ -1105,7 +1139,7 @@ const first = embedded ? 'cover' : 'start';
     background: var(--color-white);
     color: var(--color-black);
   }
-  .contact__submit:hover {
+  .contact__submit:active {
     background: var(--color-grey-100);
   }
   .contact__submit[aria-busy='true'] {
