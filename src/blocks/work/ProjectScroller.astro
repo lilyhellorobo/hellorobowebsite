@@ -508,6 +508,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   /* every project's mark is the same height (the globe's 79 in the 1117 frame), any width */
   .project-wheel__mark {
     position: absolute;
+    filter: brightness(0) invert(1); /* every mark white on the wheel */
     left: calc(40 / 1728 * 100%); /* the rule's left end */
     top: calc(549 / 1117 * 100%);
     width: auto;
@@ -647,6 +648,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   }
   .project-card__mark {
     position: absolute;
+    filter: brightness(0) invert(1); /* every mark white on the wheel */
     left: var(--page-margin);
     top: var(--space-20);
     width: auto;

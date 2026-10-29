@@ -221,6 +221,7 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
   }
   .work-wheel__mark {
     position: absolute;
+    filter: brightness(0) invert(1); /* every mark white on the wheel */
     left: var(--page-margin);
     top: var(--space-20);
     /* every project's mark is the same height, any width */
