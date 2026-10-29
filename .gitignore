@@ -28,3 +28,6 @@ out/
 # Licensed fonts are added locally (see public/fonts/README.md)
 public/fonts/*.woff
 public/fonts/*.woff2
+
+# Preview deploys (built site uploaded to Vercel)
+.deploy/

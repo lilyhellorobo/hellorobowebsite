@@ -10,7 +10,8 @@
     "check": "astro check",
     "svg": "svgo -r -f public/images --config svgo.config.mjs",
     "cms:user": "node scripts/cms-user.mjs",
-    "team:layout": "node scripts/team-layout.mjs"
+    "team:layout": "node scripts/team-layout.mjs",
+    "deploy:preview": "sh scripts/deploy-preview.sh"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.9",
