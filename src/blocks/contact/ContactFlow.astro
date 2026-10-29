@@ -403,6 +403,7 @@ const first = embedded ? 'cover' : 'start';
 
     /** The step number ([01] …) types itself in like the log behind it, cursor and all */
     let countTimer = 0;
+    let homeTimer = 0;
     function typeCount(screen: HTMLElement) {
       const count = screen.querySelector<HTMLElement>('.contact__count');
       clearInterval(countTimer);
@@ -436,6 +437,9 @@ const first = embedded ? 'cover' : 'start';
         write.b(fill(logs[id]?.b));
         tuckNav();
         typeCount(target);
+        // after "Beep boop" / "thanks for saying hi", the block goes back to its first screen
+        clearTimeout(homeTimer);
+        if (id === 'done' || id === 'sent') homeTimer = window.setTimeout(() => go(embedded ? 'cover' : 'start'), 6000);
       }
       if (focus) target.querySelector<HTMLElement>('.contact__input')?.focus({ preventScroll: true });
     }
