@@ -106,8 +106,10 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
         if (html.dataset.menu !== 'open') put(next);
       });
     };
-    // the first one: random, ready before the menu is ever opened
-    pickNext();
+    // the first one: random, ready before the menu is ever opened (phones don't show the
+    // photo, so they don't load it)
+    const photoShown = () => box.offsetWidth > 0;
+    if (photoShown()) pickNext();
     // after each close (once it has finished), get the next one ready
     let wasOpen = false;
     let timer = 0;
@@ -116,7 +118,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
       if (open === wasOpen) return;
       wasOpen = open;
       clearTimeout(timer);
-      if (!open) timer = window.setTimeout(pickNext, 800);
+      if (!open && photoShown()) timer = window.setTimeout(pickNext, 800);
     }).observe(html, { attributes: true, attributeFilter: ['data-menu'] });
   }
 </script>
@@ -351,6 +353,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     .site-menu__side {
       display: contents;
     }
+    /* Phones: the blocks rise from the bottom up (Say hello, links, Let's talk), towards
+       the menu bar; closing goes the other way */
+    .site-menu__hello { --p: 0; }
+    .site-menu__links { --p: 1; }
+    .site-menu__talk { --p: 2; }
     .site-menu__talk {
       grid-row: 1;
       height: 64px;
