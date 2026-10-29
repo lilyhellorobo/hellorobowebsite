@@ -1,15 +1,21 @@
 /**
  * Headline reveal — after the reference recording: when a headline scrolls into view, its
  * words slide up out of their line one after another (the line clips them), the next line
- * following the first. Every h1 / h2 / h3 and H1 / H2 text on the site, except blocks that
+ * following the first. Every h1 / h2 / h3 and every text set in a heading style (H1–H3,
+ * e.g. the big statement paragraphs) on the site — body text has the reading reveal
+ * (text-reveal.ts) instead — except blocks that
  * already move their titles (Services scroller, Robo Radio clips, Careers values, the
  * contact block, the Home showcase slides, the wheels, the menu) and labels that run the
  * hover scramble. Runs once per headline; off for reduced motion. Without JS, headlines
  * simply show.
  */
 
-const HEADLINES = 'h1, h2, h3, .t-h1, .t-h2';
+const HEADLINES = 'h1, h2, h3, .t-h1, .t-h2, .t-h3';
 const SKIP = [
+  '.footer',
+  '.nav-pill',
+  'a',
+  'button',
   '.services-scroller',
   '.radio-clips',
   '.careers-values',
@@ -58,7 +64,9 @@ function split(h: HTMLElement) {
 }
 
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const heads = [...document.querySelectorAll<HTMLElement>(HEADLINES)].filter(
+  // headings, and big statement paragraphs without a heading class
+  const big = [...document.querySelectorAll<HTMLElement>('main p')].filter((p) => !p.matches(HEADLINES) && parseFloat(getComputedStyle(p).fontSize) > 26);
+  const heads = [...document.querySelectorAll<HTMLElement>(HEADLINES), ...big].filter(
     (h) =>
       !h.closest(SKIP) &&
       !h.querySelector('.has-hover-fx, .hover-fx__label') &&

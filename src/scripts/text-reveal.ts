@@ -2,15 +2,15 @@
  * Reading text reveal — after the reference recording: as a paragraph scrolls up into view
  * its words light up one after another, dim to full, in reading order; scrolling back
  * dims them again from the end. Scroll-linked, so it follows the reader's pace.
- * Body paragraphs and list items with real sentences across the site; not headings
- * (headline-reveal.ts), links, buttons, the menu, the footer, or blocks that already move
+ * Body text only — paragraphs and list items in the body sizes; anything set in a heading
+ * style (H1–H3, big statements) rises like the headlines instead (headline-reveal.ts). Not links, buttons, the menu, the footer, or blocks that already move
  * their text (contact block, Services scroller, Robo Radio clips, Careers values, the
  * wheels, Team canvas). Off for reduced motion.
  */
 
 const TEXT = 'main p, main li, main blockquote, main dd';
 const SKIP = [
-  'h1', 'h2', 'h3', 'a', 'button', 'label',
+  'h1', 'h2', 'h3', '.t-h1', '.t-h2', '.t-h3', 'a', 'button', 'label',
   '.site-menu', '.nav-pill', '.footer', '.contact', '.services-scroller', '.radio-clips',
   '.careers-values', '.home-showcase__titles', '.project-wheel', '.work-wheel', '.project-cards',
   '.team', '.careers-positions', '.visually-hidden', '[aria-hidden="true"]', '.has-hover-fx',
@@ -60,6 +60,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     // a list item holding paragraphs: the paragraphs do it
     if (el.querySelector('p, li, blockquote, dd')) continue;
     if (el.textContent!.trim().length < 30) continue;
+    // body sizes only (a big statement without a heading class is still a headline)
+    if (parseFloat(getComputedStyle(el).fontSize) > 26) continue;
     const words = split(el);
     if (words.length < 4) continue;
     paras.push({ el, words, last: [] });
