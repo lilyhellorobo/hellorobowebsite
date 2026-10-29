@@ -121,8 +121,8 @@
   --duration-slow: 1.1s;                            /* image reveals */
   /* image → image in the slideshows (Home, Services, Robo Radio): the next picture rises
      from below the screen over the current one, which stays still */
-  --slide-duration: 1s;
-  --slide-ease: cubic-bezier(0.76, 0, 0.24, 1);
+  --slide-duration: 1.4s;
+  --slide-ease: cubic-bezier(0.65, 0, 0.35, 1);
   --stagger: 0.04s;                                 /* delay between words / lines */
 
   /* ── Z-index ────────────────────────────────────────────────── */

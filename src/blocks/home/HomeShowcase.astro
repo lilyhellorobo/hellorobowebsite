@@ -169,6 +169,7 @@ const slides = [
     position: absolute;
     inset: 0;
     transition: translate var(--slide-duration) var(--slide-ease);
+    will-change: translate;
   }
   .home-showcase__bg[data-slide-state='next'] {
     translate: 0 100%;

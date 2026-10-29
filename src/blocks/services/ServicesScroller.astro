@@ -230,11 +230,16 @@ const { items } = Astro.props;
   .services-scroller__slide:not([data-index='0']) .services-scroller__media {
     background: none;
   }
+  /* arriving, the picture also settles from 106% to its size — one soft glide */
   .services-scroller__media :global(img) {
-    transition: translate var(--slide-duration) var(--slide-ease);
+    transition:
+      translate var(--slide-duration) var(--slide-ease),
+      scale var(--slide-duration) var(--slide-ease);
+    will-change: translate;
   }
   .services-scroller__slide[data-state='next'] .services-scroller__media :global(img) {
     translate: 0 100%;
+    scale: 1.06;
   }
   .services-scroller__media :global(img) {
     width: 100%;
