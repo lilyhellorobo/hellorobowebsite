@@ -401,6 +401,26 @@ const first = embedded ? 'cover' : 'start';
       }));
     };
 
+    /** The step number ([01] …) types itself in like the log behind it, cursor and all */
+    let countTimer = 0;
+    function typeCount(screen: HTMLElement) {
+      const count = screen.querySelector<HTMLElement>('.contact__count');
+      clearInterval(countTimer);
+      if (!count || reduced) return;
+      const full = (count.dataset.text ??= count.textContent ?? '');
+      let pos = 0;
+      count.textContent = '';
+      count.classList.add('is-typing');
+      // starts as the screen fades in, one character every 90ms
+      countTimer = window.setInterval(() => {
+        count.textContent = full.slice(0, ++pos);
+        if (pos >= full.length) {
+          clearInterval(countTimer);
+          setTimeout(() => count.classList.remove('is-typing'), 1600);
+        }
+      }, 90);
+    }
+
     /** Shows screen `step` (the first one for an empty / unknown step) */
     function show(step: string, focus = true) {
       const target = screens.find((s) => s.dataset.step === step) ?? screens[0];
@@ -415,6 +435,7 @@ const first = embedded ? 'cover' : 'start';
         write.a(fill(logs[id]?.a));
         write.b(fill(logs[id]?.b));
         tuckNav();
+        typeCount(target);
       }
       if (focus) target.querySelector<HTMLElement>('.contact__input')?.focus({ preventScroll: true });
     }
@@ -692,9 +713,14 @@ const first = embedded ? 'cover' : 'start';
   .contact__log :global(.contact__line) {
     min-height: 1.3em;
   }
-  .contact__log :global(.contact__line.is-typing)::after {
+  .contact__log :global(.contact__line.is-typing)::after,
+  .contact__count.is-typing::after {
     content: '_';
     animation: contact-blink 0.8s steps(1) infinite;
+  }
+  /* the step number keeps its line while it types */
+  .contact__count {
+    min-height: 1.2em;
   }
   @keyframes contact-blink {
     50% {
