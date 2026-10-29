@@ -8,6 +8,10 @@
  * contact block, the Home showcase slides, the wheels, the menu) and labels that run the
  * hover scramble. Runs once per headline; off for reduced motion. Without JS, headlines
  * simply show.
+ *
+ * Those slide blocks only moved their words when the slide changed, so their first slide
+ * just sat there: it waits below its masks (.slide-wait, global.css) until it scrolls
+ * into view, then slides up with the block's own motion.
  */
 
 const HEADLINES = 'h1, h2, h3, .t-h1, .t-h2, .t-h3';
@@ -18,7 +22,7 @@ const SKIP = [
   'button',
   '.services-scroller',
   '.radio-clips',
-  '.careers-values',
+  '.careers-values__scroller',
   '.contact',
   '.home-showcase__titles',
   '.project-wheel',
@@ -88,5 +92,25 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (!split(h)) continue;
     h.classList.add('hl-ready');
     seen.observe(h);
+  }
+
+  // first slides of the slide blocks: in when they come into view
+  const firsts = document.querySelectorAll<HTMLElement>(
+    ':is(.services-scroller__slide, .radio-clips__slide, .careers-values__kanji, .careers-values__copy)[data-index="0"][data-state="current"]',
+  );
+  const slideSeen = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.closest('.slide-wait')?.classList.remove('slide-wait');
+        slideSeen.unobserve(e.target);
+      }
+    },
+    { rootMargin: '0px 0px -12% 0px' },
+  );
+  for (const el of firsts) {
+    el.classList.add('slide-wait');
+    // a slide drawn as `display: contents` has no box to watch: watch its text
+    slideSeen.observe(getComputedStyle(el).display === 'contents' ? el.firstElementChild! : el);
   }
 }
