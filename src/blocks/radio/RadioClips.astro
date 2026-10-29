@@ -60,7 +60,14 @@ const last = topics[topics.length - 1].line / 1648;
     <Divider accent class="radio-clips__rule" />
     <div class="radio-clips__grid">
       {topics.map((t, i) => {
-        const words = t.title.split(' ');
+        // a one- or two-letter word rides with the next one ("of robotics"), so no line
+        // ends on it — each word is its own animated mask, which the browser can break after
+        const words = t.title.split(' ').reduce<string[]>((out, w) => {
+          const prev = out[out.length - 1];
+          if (prev !== undefined && prev.split('\u00a0').pop()!.length <= 2) out[out.length - 1] = `${prev}\u00a0${w}`;
+          else out.push(w);
+          return out;
+        }, []);
         return (
           <div class="radio-clips__slide" data-index={i} data-state={i === 0 ? 'current' : 'next'} aria-hidden={i > 0 ? 'true' : undefined}>
             <div class="radio-clips__text">

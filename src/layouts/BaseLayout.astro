@@ -83,6 +83,25 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
         }, { once: true });
         img.addEventListener('error', () => img.classList.remove('img-wait'), { once: true });
       }
+
+      // Headings never end a line on a one- or two-letter word ("We", "a", "to", "&"):
+      // the space after such a word becomes a no-break space, so it moves down with the
+      // next word. Runs before the first paint, on CMS text too.
+      for (const h of document.querySelectorAll('h1, h2, h3, .t-h1, .t-h2, .t-h3')) {
+        const walker = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          const text = node.nodeValue;
+          // inside one text node: "calling. We think" → "calling. We\u00a0think"
+          let next = text.replace(/(^|[\s\u00a0])([^\s\u00a0]{1,2}) +(?=\S)/g, '$1$2\u00a0');
+          next = next.replace(/(^|[\s\u00a0])([^\s\u00a0]{1,2}) +(?=\S)/g, '$1$2\u00a0'); // runs like "is a to"
+          // words split into their own elements (e.g. reveal masks): a lone space after a short one
+          if (/^ +$/.test(text)) {
+            const prev = node.previousSibling;
+            if (prev && prev.textContent.trim().length > 0 && prev.textContent.trim().length <= 2) next = '\u00a0';
+          }
+          if (next !== text) node.nodeValue = next;
+        }
+      }
     </script>
   </body>
 </html>
