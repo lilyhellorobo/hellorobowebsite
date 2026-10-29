@@ -12,7 +12,7 @@
  * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px);
  * the front name is at full opacity and the others fade fast (FADE), for contrast.
  * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
- * into one continuous turn; one project = a screen of scrolling on Home, 70% on Work. Figma's CRT screen shader
+ * into one continuous turn; one project = half a screen of scrolling on Home, 70% on Work. Figma's CRT screen shader
  * (CrtScreen overlay, as on the Robo Radio player) sits on top, with the Work frame's values.
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
  * half screen of scrolling widens it to full screen, then the wheel turns.
@@ -205,7 +205,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     // any frame rate. SMOOTH = seconds to cover ~63% of the remaining turn.
     // Home (scroll-driven) is softer than the Work page, where input drives the drum directly
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const SMOOTH = reduceMotion ? 0.001 : root.hasAttribute('data-infinite') ? 0.16 : 0.45;
+    const SMOOTH = reduceMotion ? 0.001 : root.hasAttribute('data-infinite') ? 0.16 : 0.3;
     // Work page: magnetic detents. The drum sticks a little to the project at the front,
     // then moves quickly to the next one, as if each name were pulled into place.
     // magnet(x) keeps every whole project where it is and is steepest halfway between
@@ -263,7 +263,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
 
     if (root.hasAttribute('data-infinite')) {
       let idle = 0;
-      const perProject = () => window.innerHeight * 0.7; // same pace as the pinned wheel
+      const perProject = () => window.innerHeight * 0.7;
       const nudge = (projects: number) => {
         target += projects;
         window.clearTimeout(idle);
@@ -428,7 +428,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   .project-wheel {
     position: relative;
     --expand: 0;
-    --per-project: 1; /* screens of scrolling per project (Home) */
+    --per-project: 0.5; /* screens of scrolling per project (Home) */
     height: calc(100vh + (var(--expand) + var(--count) * var(--per-project)) * 100vh);
   }
   .project-wheel__stage {
