@@ -5,8 +5,11 @@
  *
  * Blurred backdrop (black 20% + 100px blur) and a 1094-wide block centred above
  * the nav pill: links panel (541×837) | Let's talk bar, photo card, Say hello card.
- * Opened/closed by NavPill (html[data-menu="open"]). The reveal is a simple
- * fade + rise for now; the motion step replaces it.
+ * Opened/closed by NavPill (html[data-menu="open"]). Motion after the reference recording:
+ * each block grows out of a small rectangle at its bottom edge (towards the Menu pill), then
+ * the contents arrive — icons and pictures pixelate in, texts wipe up one after another and
+ * the rules between the links draw left to right. Closing: the contents vanish at once and
+ * the blocks shrink back down into the pill.
  * Photo card: one of the 8 studio photos (Figma "Photos", 10240:141), a different one
  * picked at random each time the menu opens (desktop; phones don't show the photo), shown
  * through Figma's CRT screen shader (CrtScreen, a WebGL port of it).
@@ -33,14 +36,14 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
   <div class="site-menu__grid" role="dialog" aria-modal="true" aria-label="Menu">
     <section class="site-menu__panel site-menu__links">
       <div class="site-menu__head">
-        <RoboLogo width={82} />
-        <p class="site-menu__ja t-body" lang="ja">私たちはHello Roboです。</p>
+        <RoboLogo width={82} class="site-menu__logo" />
+        <p class="site-menu__ja t-body" lang="ja" data-reveal style="--i: 0">私たちはHello Roboです。</p>
       </div>
       <ul class="site-menu__list">
-        {mainNav.map((item) => (
-          <li>
+        {mainNav.map((item, i) => (
+          <li style={`--i: ${i + 1}`}>
             <a class:list={['site-menu__link', 't-h3', { 'is-active': isActive(item.href) }]} href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
-              <span>{item.label}</span>
+              <span data-reveal>{item.label}</span>
               <svg class="site-menu__arrow" viewBox="0 0 40 40" fill="none" aria-hidden="true">
                 <path d="M6 20h27M23 10l10 10-10 10" stroke="currentColor" stroke-width="1.5" />
               </svg>
@@ -52,7 +55,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
 
     <div class="site-menu__side">
       <a class="site-menu__talk" href="/contact">
-        <span class="t-button">Let’s talk</span>
+        <span class="t-button" data-reveal style="--i: 0">Let’s talk</span>
         <Icon name="corners" />
       </a>
       <div class="site-menu__panel site-menu__photo" data-menu-photos>
@@ -64,9 +67,9 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
       <section class="site-menu__panel site-menu__hello">
         <Image class="site-menu__robot" src={robot} alt="" widths={[541, 1082]} sizes="(min-width: 1728px) 541px, 32vw" loading="lazy" />
         <img class="site-menu__micro" src="/images/menu/menu-micrographic.svg" alt="" width="380" height="224" loading="lazy" />
-        <p class="site-menu__hello-title t-body">Say hello</p>
+        <p class="site-menu__hello-title t-body" data-reveal style="--i: 3">Say hello</p>
         <ul class="site-menu__socials t-body">
-          {socials.map((s) => <li><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>)}
+          {socials.map((s, i) => <li><a href={s.href} target="_blank" rel="noopener" data-reveal style={`--i: ${i + 4}`}>{s.label}</a></li>)}
         </ul>
       </section>
     </div>
@@ -74,6 +77,35 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
 </div>
 
 <script>
+  import { pixelIn } from '../../scripts/pixel';
+
+  // On open, once the blocks have grown: the logo, the Let's talk corners and the Say hello
+  // micrographic pixelate in (closing stops them)
+  {
+    const html = document.documentElement;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const art = [
+      ['.site-menu__logo', '.site-menu__links', 300],
+      ['.site-menu__talk .icon', '.site-menu__talk', 340],
+      ['.site-menu__micro', '.site-menu__hello', 420],
+    ] as const;
+    let stops: (() => void)[] = [];
+    let wasOpen = false;
+    new MutationObserver(() => {
+      const open = html.dataset.menu === 'open';
+      if (open === wasOpen) return;
+      wasOpen = open;
+      stops.forEach((stop) => stop());
+      stops = [];
+      if (!open || reduced) return;
+      for (const [sel, hostSel, delay] of art) {
+        const el = document.querySelector<SVGSVGElement | HTMLImageElement>(`.site-menu ${sel}`);
+        const host = document.querySelector<HTMLElement>(`.site-menu ${hostSel}`);
+        if (el && host && el.getBoundingClientRect().width) stops.push(pixelIn(el, host, delay));
+      }
+    }).observe(html, { attributes: true, attributeFilter: ['data-menu'] });
+  }
+
   // A different studio photo each time the menu opens (never the same twice in a row)
   const box = document.querySelector<HTMLElement>('[data-menu-photos]');
   const imgs = box ? [...box.querySelectorAll('img')] : [];
@@ -143,25 +175,43 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     overflow: hidden;
   }
 
-  /* Placeholder reveal: panels fade and rise in, staggered */
+  /* ── Motion ──
+     Blocks: grow out of a small rectangle at their bottom centre (towards the pill), a beat
+     apart; closing, they shrink back into it fast, in reverse order. */
+  .site-menu__links { --p: 0; }
+  .site-menu__talk { --p: 1; }
+  .site-menu__photo { --p: 2; }
+  .site-menu__hello { --p: 3; }
   .site-menu__links,
   .site-menu__talk,
   .site-menu__photo,
   .site-menu__hello {
-    opacity: 0;
-    transform: translateY(calc(24 * var(--px)));
-    transition:
-      opacity 0.35s ease,
-      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    clip-path: inset(calc(100% - 4px) 44% 0 44%);
+    transition: clip-path 0.28s cubic-bezier(0.55, 0, 0.8, 0.2);
+    transition-delay: calc((3 - var(--p)) * 0.03s);
   }
   :global(html[data-menu='open']) :is(.site-menu__links, .site-menu__talk, .site-menu__photo, .site-menu__hello) {
-    opacity: 1;
-    transform: none;
+    clip-path: inset(0);
+    transition: clip-path 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(var(--p) * 0.05s);
   }
-  :global(html[data-menu='open']) .site-menu__links { transition-delay: 0.1s; }
-  :global(html[data-menu='open']) .site-menu__talk { transition-delay: 0.15s; }
-  :global(html[data-menu='open']) .site-menu__photo { transition-delay: 0.2s; }
-  :global(html[data-menu='open']) .site-menu__hello { transition-delay: 0.25s; }
+  /* Texts: wipe up from their baseline once the blocks are in, one after another; gone at
+     once on close */
+  .site-menu [data-reveal] {
+    clip-path: inset(100% 0 -20% 0);
+    translate: 0 0.35em;
+  }
+  .site-menu :is(span, a)[data-reveal] {
+    display: inline-block;
+  }
+  :global(html[data-menu='open']) .site-menu [data-reveal] {
+    clip-path: inset(-20% 0 -20% 0);
+    translate: none;
+    transition:
+      clip-path 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      translate 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(0.3s + var(--i, 0) * 0.05s);
+  }
 
   /* ── Links panel ─────────────────────────────── */
   .site-menu__links {
@@ -186,9 +236,26 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     margin-bottom: var(--space-16);
   }
   .site-menu__list li + li {
+    position: relative;
     margin-top: var(--space-32);
     padding-top: var(--space-32);
-    border-top: var(--line-width) solid rgb(0 0 0 / 0.1);
+  }
+  /* the rules between the links draw left to right with their row */
+  .site-menu__list li + li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--line-width);
+    background: rgb(0 0 0 / 0.1);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  :global(html[data-menu='open']) .site-menu__list li + li::before {
+    transform: none;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(0.26s + var(--i, 0) * 0.05s);
   }
   .site-menu__link {
     display: flex;
@@ -283,11 +350,10 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .site-menu__links,
-    .site-menu__talk,
-    .site-menu__photo,
-    .site-menu__hello {
-      transform: none;
+    .site-menu :is(.site-menu__links, .site-menu__talk, .site-menu__photo, .site-menu__hello, [data-reveal]),
+    .site-menu__list li + li::before {
+      transition-duration: 0.01s !important;
+      transition-delay: 0s !important;
     }
   }
 

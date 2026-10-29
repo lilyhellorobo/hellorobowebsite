@@ -9,6 +9,8 @@
  * Off for reduced motion.
  */
 
+import { ICON_STEPS, makeCanvas, pixelFrame } from './pixel';
+
 const SELECTOR = [
   '.button',
   '.get-in-touch',
@@ -54,46 +56,9 @@ const TEXT_STEPS: [number, number][] = [
   [5, 0.3],
   [4, 0.2],
 ];
-const ICON_STEPS: [number, number][] = [
-  [6, 0.45],
-  [4, 0.3],
-  [3, 0.2],
-  [2, 0.1],
-];
 const START = 40;
 const PIXEL_MS = 60;
 const SCRAMBLE_MS = 45;
-
-/** Draws `draw` (into a w×h context) at 1/size resolution, drops some blocks, scales up */
-function pixelFrame(canvas: HTMLCanvasElement, size: number, holes: number, draw: (c: CanvasRenderingContext2D, w: number, h: number) => void) {
-  const dpr = canvas.width / canvas.clientWidth || 1;
-  const w = Math.max(1, Math.round(canvas.width / dpr / size));
-  const h = Math.max(1, Math.round(canvas.height / dpr / size));
-  const small = document.createElement('canvas');
-  small.width = w;
-  small.height = h;
-  const s = small.getContext('2d')!;
-  draw(s, w, h);
-  const img = s.getImageData(0, 0, w, h);
-  for (let p = 3; p < img.data.length; p += 4) img.data[p] = img.data[p] > 60 && Math.random() > holes ? 255 : 0;
-  s.putImageData(img, 0, 0);
-  const ctx = canvas.getContext('2d')!;
-  ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
-}
-
-function makeCanvas(w: number, h: number) {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'hover-fx__pixels';
-  canvas.setAttribute('aria-hidden', 'true');
-  const dpr = Math.min(2, devicePixelRatio || 1);
-  canvas.width = Math.ceil(w * dpr);
-  canvas.height = Math.ceil(h * dpr);
-  canvas.style.width = `${w}px`;
-  canvas.style.height = `${h}px`;
-  return canvas;
-}
 
 function setup(btn: HTMLElement, labelSelector?: string) {
   // the label: its own span (wrapping a bare text node if needed)
