@@ -253,22 +253,33 @@ const last = topics[topics.length - 1].line / 1648;
   }
 
   /* ── Clips: the next topic's clips slide in from the bottom over the previous ── */
-  .radio-clips__clips {
+  /* The boxes stay put; the next topic's pictures slide up inside them (clipped by them)
+     over the current ones, which stay still — back: they slide down again. Boxes after the
+     first topic are see-through, and each topic's captions show only while it's current. */
+  .radio-clips__slide:not([data-index='0']) .radio-clips__media {
+    background: none;
+  }
+  .radio-clips__media :global(img) {
     transition: translate var(--slide-duration) var(--slide-ease);
   }
-  /* waiting below the screen; rises over the current topic's clips when its turn comes */
-  .radio-clips__slide[data-state='next'] .radio-clips__clips {
-    translate: 0 100vh;
+  .radio-clips__slide[data-state='next'] .radio-clips__media :global(img) {
+    translate: 0 100%;
   }
-  /* The first topic is simply there */
-  .radio-clips__slide[data-index='0'] .radio-clips__clips {
-    transition: none;
+  .radio-clips__clip figcaption {
+    transition: opacity 0.35s ease;
+  }
+  .radio-clips__slide:not([data-state='current']) .radio-clips__clip figcaption {
+    opacity: 0;
+  }
+  .radio-clips__slide[data-state='current'] .radio-clips__clip figcaption {
+    transition-delay: 0.45s;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .mask > span,
     .radio-clips__stamp,
-    .radio-clips__clips {
+    .radio-clips__media :global(img),
+    .radio-clips__clip figcaption {
       transition-duration: 0.01s !important;
       transition-delay: 0s !important;
     }
