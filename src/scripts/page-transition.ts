@@ -26,7 +26,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function blink() {
   const logo = document.querySelector<HTMLElement>('[data-pt-logo]');
   if (!logo) return;
-  for (const [closed, ms] of [[false, 160], [true, 110], [false, 170], [true, 110], [false, 160]] as const) {
+  for (const [closed, ms] of [[false, 180], [true, 220], [false, 240], [true, 220], [false, 200]] as const) {
     logo.classList.toggle('is-blink', closed);
     await wait(ms);
   }
