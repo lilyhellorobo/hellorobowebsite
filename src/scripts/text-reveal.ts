@@ -12,7 +12,7 @@ const TEXT = 'main p, main li, main blockquote, main dd';
 const SKIP = [
   'h1', 'h2', 'h3', '.t-h1', '.t-h2', '.t-h3', 'a', 'button', 'label',
   '.site-menu', '.nav-pill', '.footer', '.contact', '.services-scroller', '.radio-clips',
-  '.careers-values', '.home-showcase__titles', '.project-wheel', '.work-wheel', '.project-cards',
+  '.careers-values__scroller', '.home-showcase__titles', '.project-wheel', '.work-wheel', '.project-cards',
   '.team', '.careers-positions', '.visually-hidden', '[aria-hidden="true"]', '.has-hover-fx',
 ].join(',');
 /** dimmest a word gets */
