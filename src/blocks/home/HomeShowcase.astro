@@ -188,8 +188,10 @@ const slides = [
 
   /* Rule at 683, content row at 714 in the 1728×1117 frame (scaled to the screen height) */
   /* Inside the margins at first (80 from the screen edge), 40 when full screen */
+  /* above the sliding photos (they stack by slide number) */
   .home-showcase__overlay {
     position: absolute;
+    z-index: 10;
     left: calc(var(--page-margin) * (2 - var(--enter)));
     right: calc(var(--page-margin) * (2 - var(--enter)));
     top: calc(683 / 1117 * 100%);
