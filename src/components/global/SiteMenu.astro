@@ -136,7 +136,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     z-index: calc(var(--z-nav) - 1);
     visibility: hidden;
     pointer-events: none;
-    transition: visibility 0s linear 0.5s;
+    transition: visibility 0s linear 0.3s;
   }
   :global(html[data-menu='open']) .site-menu {
     visibility: visible;
@@ -151,10 +151,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     backdrop-filter: blur(calc(100 * var(--px)));
     -webkit-backdrop-filter: blur(calc(100 * var(--px)));
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.26s ease;
   }
   :global(html[data-menu='open']) .site-menu__backdrop {
     opacity: 1;
+    transition: opacity 0.4s ease;
   }
 
   /* 1094 wide, centred; bottom edge 12 above the nav pill; 837 tall (less if the window is short) */
@@ -177,7 +178,8 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
 
   /* ── Motion ──
      Blocks: grow out of a small rectangle at their bottom centre (towards the pill), a beat
-     apart; closing, they shrink back into it fast, in reverse order. */
+     apart; closing, all together they sink a little towards it while fading out — quick
+     and soft, nothing left blinking. */
   .site-menu__links { --p: 0; }
   .site-menu__talk { --p: 1; }
   .site-menu__photo { --p: 2; }
@@ -187,12 +189,17 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
   .site-menu__photo,
   .site-menu__hello {
     clip-path: inset(calc(100% - 4px) 44% 0 44%);
-    transition: clip-path 0.28s cubic-bezier(0.55, 0, 0.8, 0.2);
-    transition-delay: calc((3 - var(--p)) * 0.03s);
+    opacity: 0;
+    transition:
+      clip-path 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.18s ease-out;
   }
   :global(html[data-menu='open']) :is(.site-menu__links, .site-menu__talk, .site-menu__photo, .site-menu__hello) {
     clip-path: inset(0);
-    transition: clip-path 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 1;
+    transition:
+      clip-path 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.12s ease;
     transition-delay: calc(var(--p) * 0.05s);
   }
   /* Texts: wipe up from their baseline once the blocks are in, one after another; gone at
