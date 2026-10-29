@@ -86,7 +86,7 @@ const last = topics[topics.length - 1].line / 1648;
               {t.clips.map((c) => (
                 <figure class="radio-clips__clip">
                   <div class="radio-clips__media">
-                    <Image src={c.image} alt="" widths={[403, 806]} sizes="(min-width: 1728px) 403px, 24vw" loading="lazy" />
+                    <Image src={c.image} alt="" widths={[403, 806, 1200]} sizes="(min-width: 1728px) 403px, (min-width: 1024px) 24vw, calc(100vw - 32px)" loading="lazy" />
                   </div>
                   <figcaption class="t-body">{c.caption}</figcaption>
                 </figure>
