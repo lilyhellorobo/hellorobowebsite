@@ -25,8 +25,9 @@
  *   screen's height, with the photo large across it; tap × or the canvas to close.
  * - While an object is selected the menu pill and Get in touch fade / slide away
  *   (html[data-nav=hidden]).
- * - Close (×, a click outside the card, or Esc): the card fades out and the canvas
- *   returns to normal. /team#<person> opens that person's card on load.
+ * - Cards fly in from the right edge and settle, contents fading in after (desktop and
+ *   phones). Close (×, a click outside the card, or Esc): the card speeds back out to the
+ *   right and the canvas returns to normal. /team#<person> opens that person's card on load.
  * Objects are 2× renders on white, drawn with mix-blend-mode: multiply so the white
  * disappears into the canvas grey and only the object + its shadow remain.
  * Each object button carries data-object and, for its person, data-person / data-model
@@ -695,7 +696,9 @@ const config = JSON.stringify({
     transform: translate(-50%, calc(var(--h) * 0.075 * var(--px) * var(--s)));
   }
 
-  /* ── Card: 819×1037 white panel, 40 from the top and right; fades in ───────── */
+  /* ── Card: 819×1037 white panel, 40 from the top and right. Flies in from beyond the
+     right edge of the screen and settles; its contents fade in one after another once it
+     has landed. Closing: the contents fade, the card speeds back out to the right. ── */
   .team-card {
     display: grid;
     position: fixed;
@@ -716,22 +719,32 @@ const config = JSON.stringify({
     grid-template-rows: minmax(0, 1fr) auto;
     column-gap: calc(56 * var(--px));
     visibility: hidden;
-    opacity: 0;
-    transform: translateX(calc(32 * var(--px)));
+    --fly-out: calc(100% + var(--page-margin) + 24px);
+    transform: translateX(var(--fly-out));
     transition:
-      opacity var(--duration-smooth) var(--ease-out),
-      transform var(--duration-slow) var(--ease-out),
-      visibility 0s linear var(--duration-slow);
+      transform 0.5s cubic-bezier(0.7, 0, 0.84, 0),
+      visibility 0s linear 0.5s;
   }
   .team-card.is-open {
     visibility: visible;
-    opacity: 1;
     transform: none;
     transition:
-      opacity var(--duration-smooth) var(--ease-out),
-      transform var(--duration-slow) var(--ease-out),
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
       visibility 0s;
   }
+  .team-card > * {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .team-card.is-open > * {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+  .team-card.is-open > :nth-child(1) { transition-delay: 0.3s; }
+  .team-card.is-open > :nth-child(2) { transition-delay: 0.36s; }
+  .team-card.is-open > :nth-child(3) { transition-delay: 0.42s; }
+  .team-card.is-open > :nth-child(4) { transition-delay: 0.48s; }
+  .team-card.is-open > :nth-child(n + 5) { transition-delay: 0.54s; }
   /* Close sits in the card's top-left corner, above the names */
   .team-card__close {
     position: absolute;
@@ -809,8 +822,10 @@ const config = JSON.stringify({
     .team-obj,
     .team-obj__lens,
     .team-obj :global(img),
-    .team-card {
+    .team-card,
+    .team-card > * {
       transition-duration: 0.01s !important;
+      transition-delay: 0s !important;
     }
   }
 
@@ -844,7 +859,8 @@ const config = JSON.stringify({
       overscroll-behavior: contain;
       display: flex;
       flex-direction: column;
-      transform: translateY(calc(100% + 5svh));
+      /* same flight as desktop: in from the right edge, out the same way */
+      transform: translateX(var(--fly-out));
     }
     .team-card.is-open {
       transform: none;
