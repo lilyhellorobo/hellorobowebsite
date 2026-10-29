@@ -500,6 +500,9 @@ const first = embedded ? 'cover' : 'start';
       const input = form.querySelector<HTMLInputElement | HTMLTextAreaElement>('.contact__input');
       // the arrow is dimmed until there is something to send on
       const sync = () => form.classList.toggle('is-filled', !!input?.value.trim());
+      // autofill may fill the field without an input event: check on change and on load too
+      input?.addEventListener('change', sync);
+      setTimeout(sync, 600);
       input?.addEventListener('input', () => {
         sync();
         if (form.classList.contains('has-error')) setError(form, '');
@@ -980,6 +983,21 @@ const first = embedded ? 'cover' : 'start';
     font-family: inherit;
     outline: none;
     transition: border-color 0.2s ease;
+  }
+  /* Browser autofill paints the field light blue with black text: keep it black / white
+     (the inset shadow covers the fill, the long transition stops Chrome's own colour) */
+  .contact__input:is(:-webkit-autofill, :autofill),
+  .contact__input:is(:-webkit-autofill, :autofill):is(:hover, :focus) {
+    -webkit-text-fill-color: var(--color-white);
+    caret-color: var(--color-white);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-black) inset;
+    box-shadow: 0 0 0 1000px var(--color-black) inset;
+    transition:
+      background-color 99999s ease 0s,
+      border-color 0.2s ease;
+  }
+  .has-error .contact__input:is(:-webkit-autofill, :autofill) {
+    -webkit-text-fill-color: var(--color-orange);
   }
   .contact__input::placeholder {
     color: var(--color-white);
