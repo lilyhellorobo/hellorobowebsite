@@ -15,6 +15,14 @@
   },
   "sections": [
     {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/Weekly+Robotics+Reel+Final.webm"
+        }
+      ]
+    },
+    {
       "type": "facts",
       "label": "What Made People Say Yes",
       "text": "We redesigned the Robotics media ecosystem around how people actually consume content — making it easier to read, navigate, and discover across platforms. A unified system built for growth.",
@@ -36,7 +44,7 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-01.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-01-a72ca0.webp"
       ]
     },
     {
@@ -47,59 +55,103 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-02a.png"
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/screencasr.webm"
+        }
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-03.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-02-1d2395.webp"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-04.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-03-956dc6.webp"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-05.png"
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/1Frame+2131331262.webm"
+        }
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-06a.png",
-        "../../assets/projects/weekly-robotics/media-06b.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-04-dd01b3.webp"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-07.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-05-7fff6c.webp"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-08a.png",
-        "../../assets/projects/weekly-robotics/media-08b.png",
-        "../../assets/projects/weekly-robotics/media-08c.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-06-0299ba.gif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-09.png"
+        "../../assets/projects/weekly-robotics/weekly-robotics-07-682799.webp"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/weekly-robotics/media-10a.png",
-        "../../assets/projects/weekly-robotics/media-10b.png"
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/screen_2.webm"
+        }
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-08-614e34.webp"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-09-b59236.webp"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-10-452924.webp"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-11-2ac4a4.webp"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-12-2e1c1c.webp"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-13-7d9d19.webp"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/weekly-robotics/weekly-robotics-14-fe7327.webp"
       ]
     }
   ],

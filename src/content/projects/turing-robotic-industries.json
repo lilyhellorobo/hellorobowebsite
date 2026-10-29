@@ -7,12 +7,20 @@
     "Web Design",
     "Development"
   ],
-  "reveal": "../../assets/projects/turing-robotic-industries/media-01.avif",
+  "reveal": "../../assets/projects/turing-robotic-industries/turing-01-da2d2a.avif",
   "micrographics": {
     "left": "/images/project/badge-25.svg",
     "right": "/images/project/stamp-project-hero.svg"
   },
   "sections": [
+    {
+      "type": "media",
+      "images": [
+        {
+          "video": "https://hellorobosite.s3.us-east-2.amazonaws.com/tri+video+1.webm"
+        }
+      ]
+    },
     {
       "type": "facts",
       "label": "What Made People Say Yes",
@@ -31,39 +39,55 @@
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/placeholder-01.png"
+        "../../assets/projects/turing-robotic-industries/turing-01-da2d2a.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/placeholder-02.png",
-        "../../assets/projects/turing-robotic-industries/placeholder-03.png"
+        "../../assets/projects/turing-robotic-industries/turing-02-03ddf0.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/placeholder-04.png"
+        "../../assets/projects/turing-robotic-industries/turing-03-790cdc.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/placeholder-05.png"
+        "../../assets/projects/turing-robotic-industries/turing-04-71715a.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/placeholder-06.png"
+        "../../assets/projects/turing-robotic-industries/turing-05-e64c44.avif"
       ]
     },
     {
       "type": "media",
       "images": [
-        "../../assets/projects/turing-robotic-industries/placeholder-07.png",
-        "../../assets/projects/turing-robotic-industries/placeholder-08.png"
+        "../../assets/projects/turing-robotic-industries/turing-06-0cca9c.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/turing-07-8c9126.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/turing-08-25a41d.avif"
+      ]
+    },
+    {
+      "type": "media",
+      "images": [
+        "../../assets/projects/turing-robotic-industries/turing-09-d749be.avif"
       ]
     }
   ],
