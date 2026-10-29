@@ -26,7 +26,7 @@ const theme = bg
     : `--project-bg: ${bg}; --project-fg: var(--color-white); --project-muted: rgb(255 255 255 / 0.6)`
   : undefined;
 ---
-<BaseLayout title={project.data.name} headerVariant="light" prefooter="building">
+<BaseLayout title={project.data.name} headerVariant="light" prefooter="building" back="/work">
   <div class="project-page" style={theme}>
     <ProjectHero project={project} />
     <ProjectSections project={project} />
