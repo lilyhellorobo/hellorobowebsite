@@ -44,6 +44,19 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="preload" href="/fonts/AllianceNo2-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Page transition (src/scripts/page-transition.ts): a page reached through it opens
+         covered by the black columns, before its first paint; one being prepared in the
+         background while hovering a link does too (uncovered on arrival if it wasn't). -->
+    <script is:inline>
+      (() => {
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        let came = false;
+        try {
+          came = sessionStorage.getItem('pt') === '1';
+        } catch {}
+        if (came || document.prerendering) document.documentElement.classList.add('pt-cover');
+      })();
+    </script>
     <!-- Hovering a link to another page of the site (~200ms) prepares that page in the
          background, images included, so it opens instantly. Chrome / Edge; the CMS is
          left out. Desktop only (wide screen + mouse): a page prepared in the background
@@ -67,6 +80,13 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     </script>
   </head>
   <body>
+    <div class="pt" aria-hidden="true">
+      <span class="pt__col" style="--i: 0"></span><span class="pt__col" style="--i: 1"></span><span class="pt__col" style="--i: 2"></span><span class="pt__col" style="--i: 3"></span><span class="pt__col pt__col--wide" style="--i: 4"></span><span class="pt__col pt__col--wide" style="--i: 5"></span><span class="pt__col pt__col--wide" style="--i: 6"></span><span class="pt__col pt__col--wide" style="--i: 7"></span>
+      <span class="pt__logo" data-pt-logo>
+        <img class="pt__eyes-open" src="/images/transition/logo-open.svg" alt="" width="94" height="51" />
+        <img class="pt__eyes-closed" src="/images/transition/logo-blink.svg" alt="" width="94" height="51" />
+      </span>
+    </div>
     {chrome && <GetInTouch variant={headerVariant} close={close} />}
     <main>
       <slot />
@@ -79,11 +99,12 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
       import '../scripts/headline-reveal';
       import '../scripts/image-reveal';
       import '../scripts/text-reveal';
+      import '../scripts/page-transition';
     </script>
     <script is:inline>
       // Fade images in as they arrive instead of popping (styles in global.css)
       for (const img of document.images) {
-        if (img.complete && img.naturalWidth) continue;
+        if ((img.complete && img.naturalWidth) || img.closest('.pt')) continue;
         img.classList.add('img-wait');
         img.addEventListener('load', () => {
           img.classList.replace('img-wait', 'img-in');
