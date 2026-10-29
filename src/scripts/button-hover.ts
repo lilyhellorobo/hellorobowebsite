@@ -1,8 +1,9 @@
 /**
  * Button hover — after exp.fiddle.digital: on hover a fill rises from a thin line at the
- * bottom of the button (in the label's colour, so the button inverts), the label breaks into
- * chunky pixels that get finer, then into random letters that settle on the real word from
- * left to right. On leave the label blinks out, the fill sinks back and the label returns.
+ * bottom of the button (in the label's colour, so for a moment the button is inverted), the
+ * label breaks into chunky pixels that get finer, then into random letters that settle on
+ * the real word from left to right — and the fill sinks back, so the button ends in its own
+ * colours. Leaving early sinks it straight away.
  * Works on every filled button (transparent ones are skipped); mouse only, and just the
  * fill (no pixels / letters) for reduced motion.
  */
@@ -64,12 +65,30 @@ function setup(btn: HTMLElement, reduced: boolean) {
   };
   const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
 
+  /** back to the button's own colours: the word restored, the fill sinking to the line */
+  const settle = () => {
+    clear();
+    if (label) {
+      label.querySelector('.hover-fx__pixels')?.remove();
+      label.classList.remove('is-pixel');
+      if (label.dataset.word) label.textContent = label.dataset.word;
+      label.style.minWidth = '';
+    }
+    if (!btn.classList.contains('is-hot')) return;
+    btn.classList.remove('is-hot');
+    btn.classList.add('is-cooling');
+    at(280, () => btn.classList.remove('is-cooling'));
+  };
+
   btn.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'mouse') return;
     clear();
     btn.classList.remove('is-cooling');
     btn.classList.add('is-hot');
-    if (!label || reduced) return;
+    if (!label || reduced) {
+      at(450, settle);
+      return;
+    }
 
     const word = label.dataset.word ?? (label.dataset.word = label.textContent!.trim());
     const box = label.getBoundingClientRect();
@@ -130,21 +149,12 @@ function setup(btn: HTMLElement, reduced: boolean) {
                 .join('');
       });
     }
+    // the word is back: a short beat inverted, then the button's own colours again
+    at(start + frames * SCRAMBLE_MS + 160, settle);
   });
 
   btn.addEventListener('pointerleave', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    clear();
-    if (label) {
-      label.querySelector('.hover-fx__pixels')?.remove();
-      label.classList.remove('is-pixel');
-      if (label.dataset.word) label.textContent = label.dataset.word;
-      label.style.minWidth = '';
-    }
-    btn.classList.remove('is-hot');
-    // the label blinks out while the fill sinks, then comes back
-    btn.classList.add('is-cooling');
-    at(220, () => btn.classList.remove('is-cooling'));
+    if (e.pointerType === 'mouse') settle();
   });
 }
 
