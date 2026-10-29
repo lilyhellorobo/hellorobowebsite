@@ -830,9 +830,13 @@ const first = embedded ? 'cover' : 'start';
   .contact__screen--mission .contact__cards {
     top: calc(288 * var(--px));
   }
+  /* flex, top-left: a <button> (the copy card) would otherwise centre its label vertically */
   .contact__card {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
     width: calc(402 * var(--px));
     height: calc(140 * var(--px));
     padding: calc(20 * var(--px));
