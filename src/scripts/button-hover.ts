@@ -1,11 +1,8 @@
 /**
- * Button hover — after exp.fiddle.digital: on hover a fill rises from a thin line at the
- * bottom of the button (in the label's colour, so for a moment the button is inverted), the
- * label breaks into chunky pixels that get finer, then into random letters that settle on
- * the real word from left to right — and the fill sinks back, so the button ends in its own
- * colours. Leaving early sinks it straight away.
- * Works on every filled button (transparent ones are skipped); mouse only, and just the
- * fill (no pixels / letters) for reduced motion.
+ * Button hover — after exp.fiddle.digital: on hover the label breaks into chunky pixels that
+ * get finer, then into random letters that settle on the real word from left to right. The
+ * button keeps its own colours throughout. Leaving early puts the word straight back.
+ * Mouse only; off for reduced motion.
  */
 
 const SELECTOR = [
@@ -25,26 +22,13 @@ const PIXEL_STEPS: [number, number][] = [
   [5, 0.3],
   [4, 0.2],
 ];
-/** pixels start once the fill has mostly risen */
-const PIXEL_START = 150;
+/** a beat before the pixels start */
+const PIXEL_START = 40;
 const PIXEL_MS = 60;
 const SCRAMBLE_MS = 45;
 
-const transparent = (c: string) => c === 'transparent' || /rgba\(.*,\s*0\)$/.test(c);
-
 function setup(btn: HTMLElement, reduced: boolean) {
-  const cs = getComputedStyle(btn);
-  if (transparent(cs.backgroundColor)) return;
-
-  // the inverse colours: fill = label colour, label = button colour
-  btn.style.setProperty('--hover-fill', cs.color);
-  btn.style.setProperty('--hover-ink', cs.backgroundColor);
   btn.classList.add('has-hover-fx');
-  if (cs.position === 'static') btn.style.position = 'relative';
-  const fill = document.createElement('span');
-  fill.className = 'hover-fx__fill';
-  fill.setAttribute('aria-hidden', 'true');
-  btn.prepend(fill);
 
   // the label: its own span (wrapping a bare text node if needed)
   let label = btn.querySelector<HTMLElement>('.button__label, .t-button:not(.button)');
@@ -54,9 +38,11 @@ function setup(btn: HTMLElement, reduced: boolean) {
       label = document.createElement('span');
       text.replaceWith(label);
       label.append(text);
-    } else label = null; // icon-only (the contact arrow): fill only
+    } else label = null; // icon-only (the contact arrow): nothing to do
   }
-  label?.classList.add('hover-fx__label');
+  if (!label || reduced) return;
+  const lbl: HTMLElement = label;
+  lbl.classList.add('hover-fx__label');
 
   let timers: number[] = [];
   const clear = () => {
@@ -65,35 +51,23 @@ function setup(btn: HTMLElement, reduced: boolean) {
   };
   const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
 
-  /** back to the button's own colours: the word restored, the fill sinking to the line */
+  /** the word back as it was */
   const settle = () => {
     clear();
-    if (label) {
-      label.querySelector('.hover-fx__pixels')?.remove();
-      label.classList.remove('is-pixel');
-      if (label.dataset.word) label.textContent = label.dataset.word;
-      label.style.minWidth = '';
-    }
-    if (!btn.classList.contains('is-hot')) return;
-    btn.classList.remove('is-hot');
-    btn.classList.add('is-cooling');
-    at(280, () => btn.classList.remove('is-cooling'));
+    lbl.querySelector('.hover-fx__pixels')?.remove();
+    lbl.classList.remove('is-pixel');
+    if (lbl.dataset.word) lbl.textContent = lbl.dataset.word;
+    lbl.style.minWidth = '';
   };
 
   btn.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'mouse') return;
-    clear();
-    btn.classList.remove('is-cooling');
-    btn.classList.add('is-hot');
-    if (!label || reduced) {
-      at(450, settle);
-      return;
-    }
+    settle();
 
-    const word = label.dataset.word ?? (label.dataset.word = label.textContent!.trim());
-    const box = label.getBoundingClientRect();
+    const word = lbl.dataset.word ?? (lbl.dataset.word = lbl.textContent!.trim());
+    const box = lbl.getBoundingClientRect();
     // keep the width while letters change, so the button doesn't jitter
-    label.style.minWidth = `${box.width}px`;
+    lbl.style.minWidth = `${box.width}px`;
 
     // 1 · pixels: the word drawn tiny and scaled up without smoothing, some blocks left out
     const canvas = document.createElement('canvas');
@@ -102,10 +76,10 @@ function setup(btn: HTMLElement, reduced: boolean) {
     canvas.width = Math.ceil(box.width * dpr);
     canvas.height = Math.ceil(box.height * dpr);
     const ctx = canvas.getContext('2d')!;
-    const lcs = getComputedStyle(label);
-    const ink = getComputedStyle(btn).getPropertyValue('--hover-ink');
-    label.classList.add('is-pixel');
-    label.append(canvas);
+    const lcs = getComputedStyle(lbl);
+    const ink = lcs.color;
+    lbl.classList.add('is-pixel');
+    lbl.append(canvas);
 
     PIXEL_STEPS.forEach(([size, holes], i) =>
       at(PIXEL_START + i * PIXEL_MS, () => {
@@ -138,10 +112,10 @@ function setup(btn: HTMLElement, reduced: boolean) {
       at(start + f * SCRAMBLE_MS, () => {
         if (f === 0) {
           canvas.remove();
-          label!.classList.remove('is-pixel');
+          lbl.classList.remove('is-pixel');
         }
         const settled = Math.max(0, f - 4);
-        label!.textContent =
+        lbl.textContent =
           f === frames
             ? word
             : [...word]
@@ -149,8 +123,6 @@ function setup(btn: HTMLElement, reduced: boolean) {
                 .join('');
       });
     }
-    // the word is back: a short beat inverted, then the button's own colours again
-    at(start + frames * SCRAMBLE_MS + 160, settle);
   });
 
   btn.addEventListener('pointerleave', (e) => {

@@ -228,42 +228,8 @@ button {
   }
 }
 
-/* ── Button hover (src/scripts/button-hover.ts): fill rising from a line (colours invert
-   for a moment), the label goes pixels → random letters → the word, the fill sinks back ── */
-.has-hover-fx {
-  overflow: hidden;
-  isolation: isolate;
-}
-.hover-fx__fill {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--hover-fill);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  pointer-events: none;
-}
-/* doubled class: beats the components' own (scoped) colour rules */
-.has-hover-fx.has-hover-fx.is-hot {
-  color: var(--hover-ink);
-}
-.has-hover-fx.is-hot .hover-fx__fill {
-  animation: hover-fill-in 0.34s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-.has-hover-fx.is-cooling .hover-fx__fill {
-  animation: hover-fill-out 0.26s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-/* a thin line first, then the block */
-@keyframes hover-fill-in {
-  0% { transform: scaleY(0); }
-  30% { transform: scaleY(0.05); }
-  100% { transform: scaleY(1); }
-}
-@keyframes hover-fill-out {
-  0% { transform: scaleY(1); }
-  70% { transform: scaleY(0.05); }
-  100% { transform: scaleY(0); }
-}
+/* ── Button hover (src/scripts/button-hover.ts): the label goes pixels → random letters →
+   the word; the button keeps its colours ── */
 .hover-fx__label {
   position: relative;
   display: inline-block;
