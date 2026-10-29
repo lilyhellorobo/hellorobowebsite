@@ -34,6 +34,7 @@
   --color-grey-350: #c6c6c6;      /* pre-footer background */
   --color-grey-400: #bcbcbc;      /* menu dots icon */
   --color-grey-600: #747474;      /* secondary text, captions, thin rules */
+  --color-grey-800: #2f2f2f;      /* contact "Go back" button */
 
   /* ── Color: lines (measured) ────────────────────────────────── */
   --line-on-light: rgb(0 0 0 / 0.2);
