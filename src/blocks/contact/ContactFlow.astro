@@ -1,136 +1,424 @@
 ---
 /**
- * Contact — "Start a project" / "Drop a quick word" flow
- * Figma: "Contact" column (10093:10195 … 10093:10721), each screen 1728×949
- * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-10195
- * Every state is its own screen (data-step); links like href="#name" switch screens.
- * On /contact the step is kept in the URL hash; `embedded` (the pre-footer block on every
- * page) switches in place without touching the URL, so the page doesn't move.
- * Send posts the answers to /api/contact (saved for the CMS "Contact form responses"),
- * then shows "done".
- * TODO (logic step): copy email → "copied", receipt with real data.
+ * Contact block — every screen of "Start a project" / "Drop a quick word" in one black block
+ * Figma: 10412:2240 (cover) · 10412:2249 (start) · 10412:2436 / 2548 / 10419:222 (steps
+ * 01–03) · 10419:276 (mission) · 10419:3537 (done) · 10412:2490 / 2602 (error states) ·
+ * mobile 10419:5894 (cover) / 10419:5961 (start).
+ * Screens switch in place (data-step on the block); the printers move and the faint mono
+ * "system log" behind them retypes itself with new words on every screen — partly built
+ * from the site's projects / episodes, partly from what the visitor has typed so far.
+ * `embedded` = the pre-footer block on every page: opens on the cover, never touches the URL.
+ * On /contact it starts at "start" and keeps the step in the URL hash (so Back works).
+ * Send posts the answers to /api/contact (saved for the CMS "Contact form responses").
  */
-import Button from '../../components/ui/Button.astro';
-import Divider from '../../components/ui/Divider.astro';
-import Receipt from './Receipt.astro';
+import { getCollection } from 'astro:content';
+import Icon from '../../components/icons/Icon.astro';
+import { studio } from '../../data/site';
 
 interface Props {
-  /** Inside the pre-footer block: hidden until opened, steps don't change the URL */
+  /** The pre-footer block: opens on the cover; steps don't change the URL */
   embedded?: boolean;
 }
 const { embedded = false } = Astro.props;
 const Title = embedded ? 'h2' : 'h1';
 
+// ── System log content: one set of groups per screen ─────────────────────────────────
+const projects = (await getCollection('projects')).slice(0, 6);
+const episodes = (await getCollection('episodes', (e) => e.data.listed !== false))
+  .sort((a, b) => b.data.number - a.data.number)
+  .slice(0, 3);
+const positions = (await getCollection('positions')).sort((a, b) => a.data.order - b.data.order).slice(0, 1);
+
+const up = (s: string) => s.toUpperCase();
+const now = new Date();
+const stamp = `${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getFullYear()).slice(2)}`;
+const project = (i: number) => {
+  const p = projects[i % projects.length];
+  return [`> ${up(p.data.name)}_`, ...p.data.services.slice(0, 2).map(up)];
+};
+const episode = (i: number) => {
+  const e = episodes[i % episodes.length];
+  return [`ROBO RADIO ${e.data.number}_`, up(e.data.guest)];
+};
+const role = positions[0];
+const email = up(studio.email);
+
+// Slots placed as in the Figma reference image (x, y in % of the log's box); `n` is the
+// label, `m` the place on phones (groups without it are desktop only)
+type Group = { x: number; y: number; n?: string; lines: string[]; m?: [number, number] };
+type Slots = Partial<Record<'h1' | 'h2' | 'h3' | 'h4' | 'intro' | 'st' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'r1' | 'r2' | 'r3' | 'r4', string[]>>;
+const SLOT: Record<keyof Slots, Omit<Group, 'lines'>> = {
+  h1: { x: 2, y: 2 },
+  h2: { x: 15, y: 2 },
+  h3: { x: 40, y: 2 },
+  h4: { x: 66, y: 2 },
+  intro: { x: 22.5, y: 15, n: '002', m: [0, 0] },
+  st: { x: 50, y: 15 },
+  a: { x: 11, y: 25, n: '(A)', m: [0, 22] },
+  b: { x: 11, y: 39, n: '(B)', m: [0, 50] },
+  c: { x: 2, y: 49, n: '(C)', m: [0, 76] },
+  d: { x: 2, y: 56, n: '(D)' },
+  e: { x: 22.5, y: 64, n: '(E)' },
+  f: { x: 41.5, y: 64, n: '(F)' },
+  g: { x: 22.5, y: 83, n: '(G)' },
+  // right part: the open strip right of the printer (no labels, it's narrow)
+  r1: { x: 88, y: 12 },
+  r2: { x: 88, y: 29 },
+  r3: { x: 88, y: 46 },
+  r4: { x: 88, y: 60 },
+};
+const groups = (s: Slots): Group[] =>
+  (Object.keys(s) as (keyof Slots)[]).map((k) => ({ ...SLOT[k], lines: s[k]! }));
+
+// {name} {email} {company} {services} are filled in from the form as the visitor goes
+const logs: Record<string, { a: Group[]; b?: Group[] }> = {
+  cover: {
+    a: groups({
+      h1: ['[ HR'], h2: ['HELLO ROBO®'], h3: ['02 ]'], h4: [`HELLO ROBO, INC. © ${now.getFullYear()}`],
+      intro: ['HELLO ROBO®', 'SYSTEM LOG INTERVIEW', stamp],
+      st: ['A studio for the human side of robotics —', 'shaping brands, interfaces and films for machines.'],
+      a: ['WORK_', ...project(0)], b: project(1), c: episode(0), d: episode(1), e: project(2), f: project(3),
+      g: role ? [`> ${up(role.data.title)}_`, up(role.data.location), up(role.data.type)] : ['> WE ARE HIRING_'],
+      r1: project(4), r2: project(5), r3: episode(2), r4: ['> SERVICES_', 'BRANDING', 'INTERFACE', 'VIDEO PRODUCTION'],
+    }),
+  },
+  start: {
+    a: groups({
+      h1: ['[ HR'], h2: ['INCOMING SIGNAL'], h3: ['03 ]'], h4: ['CHANNELS: OPEN'],
+      intro: ['HELLO ROBO®', 'CONTACT TERMINAL', stamp],
+      st: ['Three ways in. Pick one —', 'we read everything, humans first.'],
+      a: ['> START A PROJECT_', 'BRIEF IN 4 STEPS', '~2 MIN'], b: ['> QUICK WORD_', 'ONE FIELD', 'NO PRESSURE'],
+      c: ['> COPY EMAIL_', email], d: ['RESPONSE TIME_', '< 24 H'], e: ['STATUS_', 'HUMANS: ONLINE', 'ROBOTS: STANDBY'],
+      f: ['QUEUE_', 'EMPTY. YOUR TURN.'], g: ['> WAITING FOR INPUT_'],
+      r1: ['CURIOSITY 98%', 'EGO 02%'], r2: ['TRUST_SYNCED', 'YES_PENDING'], r3: [up(`${studio.city} ${studio.region}`), 'EST'], r4: ['> SAY HELLO_'],
+    }),
+  },
+  name: {
+    a: groups({
+      h1: ['[ 01'], h2: ['IDENTITY SCAN'], h3: ['04 ]'], h4: ['STEP 1 / 4'],
+      intro: ['HUMAN DETECTED', 'NAME FIELD OPEN', stamp],
+      st: ['Before we connect the dots —', 'identify the human.'],
+      a: ['SCAN_', 'FACE: FRIENDLY', 'HANDS: 2'], b: ['ROLE_', 'FOUNDER?', 'ENGINEER?', 'DREAMER?'], c: ['NAME: {name}_'],
+      d: ['ALIAS ACCEPTED', 'NICKNAMES OK'], e: ['CONFIDENCE_', 'HUMAN 99.8%', 'ROBOT 0.2%'], f: ['> NEXT: EMAIL_'], g: ['WAITING FOR INPUT_'],
+    }),
+  },
+  email: {
+    a: groups({
+      h1: ['[ 02'], h2: ['ROUTING TABLE'], h3: ['04 ]'], h4: ['STEP 2 / 4'],
+      intro: ['HELLO, {name}', 'DESTINATION UNKNOWN', stamp],
+      st: ['Every good connection needs', 'a destination.'],
+      a: ['PROTOCOL_', 'SMTP / HELLO', 'PORT 587'], b: ['ROUTE_', '{name} → HELLO ROBO'], c: ['ADDRESS: {email}_'],
+      d: ['SPAM: NEVER', 'NEWSLETTER: NO'], e: ['PING_', '64 BYTES FROM HUMAN', 'TIME=1MS'], f: ['> NEXT: COMPANY_'], g: ['WAITING FOR @_'],
+    }),
+  },
+  company: {
+    a: groups({
+      h1: ['[ 03'], h2: ['TEAM-UP REGISTRY'], h3: ['04 ]'], h4: ['STEP 3 / 4'],
+      intro: ['{name}', '{email}', stamp],
+      st: ['Startup, spaceship or', 'secret laboratory.'],
+      a: ['CLASSIFY_', 'STARTUP', 'SPACESHIP', 'SECRET LAB'], b: ['JUDGEMENT_', 'DISABLED'], c: ['COMPANY: {company}_'],
+      d: ['NDA: AVAILABLE', 'STEALTH: RESPECTED'], e: ['FLEET SIZE_', '1 → 10,000 ROBOTS'], f: ['> NEXT: MISSION_'], g: ['WAITING FOR INPUT_'],
+    }),
+  },
+  mission: {
+    a: groups({
+      h1: ['[ 04'], h2: ['MISSION BRIEF'], h3: ['04 ]'], h4: ['STEP 4 / 4'],
+      intro: ['{company}', 'PRIORITY: HIGH', stamp],
+      st: ['Pick as many as you like —', 'all three live under one roof.'],
+      a: ['> BRANDING_', 'NAMING', 'IDENTITY', 'TONE OF VOICE'], b: ['> INTERFACE_', 'HRI', 'FLEET UI', 'DASHBOARDS'],
+      c: ['> VIDEO PRODUCTION_', 'LAUNCH FILMS', 'DEMOS'], d: ['SELECTED: {services}'], e: ['BUDGET_', "LET'S TALK"],
+      f: ['TIMELINE_', 'YESTERDAY?'], g: ['> READY TO SUBMIT_'],
+    }),
+  },
+  message: {
+    a: groups({
+      h1: ['[ HR'], h2: ['OPEN CHANNEL'], h3: ['01 ]'], h4: ['QUICK WORD'],
+      intro: ['ONE FIELD', 'NO FORMS', stamp],
+      st: ["Don't overthink it.", 'Just type away.'],
+      a: ['> MESSAGE_', 'LENGTH: ANY'], b: ['TONE_', 'CASUAL OK', 'WEIRD OK'], c: ['READ BY_', 'A REAL HUMAN'],
+      d: ['REPLY_', '< 24 H'], e: ['ENCRYPTION_', 'HANDWRITTEN-GRADE'], f: ['> SEND_'], g: ['WAITING FOR WORDS_'],
+    }),
+  },
+  done: {
+    a: groups({
+      h1: ['[ OK'], h2: ['TRANSMISSION COMPLETE'], h3: ['✓ ]'], h4: ['RECEIPT #321'],
+      intro: ['THANKS, {name}', '{company}', stamp],
+      st: ['Your message has landed safely.', 'Our humans are on it.'],
+      a: ['HUMANS_', 'NOTIFIED'], b: ['ROBOTS_', 'PRETENDING TO HELP'], c: ['STATUS_', 'YES_PENDING → YES'],
+      d: ['ARCHIVED BY', 'HUMAN INPUT CONFIRMED'], e: ['> WE BUILD FOR', 'WHO MOVES NEXT_'], f: ['REPLY_', '< 24 H'], g: ['KEEP THIS RECEIPT_', "OR DON'T. WE HAVE A COPY."],
+    }),
+    b: groups({
+      h2: ['SIGNAL RECEIVED'], h3: ['OK ]'], h4: ['CONNECTION ESTABLISHED'],
+      intro: ['{name}', '{email}', '{company}'],
+      st: ['Your message is in good hands.', 'Human hands, actually.'],
+      a: ['SELECTED_', '{services}'], b: ['QUEUE_', 'POSITION #1'], c: ['NEXT_', 'A REAL HUMAN REPLIES'],
+      d: ['YOUR ROBOT', 'REMAINS CALM'], e: ['> SEE YOU SOON_'],
+    }),
+  },
+};
+
 const steps = [
-  { id: 'name', title: 'Who’s on the other side?', field: 'Your name', type: 'text', back: '#', next: '#email' },
-  { id: 'email', title: 'Where should we say hello?', field: 'Your email', type: 'email', back: '#name', next: '#company' },
-  { id: 'company', title: 'Who are we teaming up with?', field: 'Company name', type: 'text', back: '#email', next: '#mission' },
+  { id: 'name', n: '01', title: 'Who’s on the other side?', lead: 'Before we connect the dots, let’s identify the human.', field: 'Your name', type: 'text', auto: 'name', back: 'start' },
+  { id: 'email', n: '02', title: 'Where should we say hello?', lead: 'Every good connection needs a destination. Drop your coordinates.', field: 'Your email', type: 'email', auto: 'email', back: 'name' },
+  { id: 'company', n: '03', title: 'Who are we teaming up with?', lead: 'Startup, spaceship, or secret laboratory. We don’t judge.', field: 'Company name', type: 'text', auto: 'organization', back: 'email' },
 ];
 const services = [
-  { label: 'Branding', selected: false },
-  { label: 'Interface design', selected: true },
-  { label: 'Video production', selected: false },
+  { label: 'Branding', sticker: 'mission-branding', w: 74, h: 75, x: 309, y: 50 },
+  { label: 'Interface', sticker: 'mission-interface', w: 76, h: 68, x: 307, y: 53 },
+  { label: 'Video production', sticker: 'mission-video', w: 87, h: 52, x: 295, y: 68 },
 ];
+const first = embedded ? 'cover' : 'start';
 ---
-<section class:list={['contact', embedded && 'contact--embedded']} aria-label="Contact" data-contact={embedded ? 'embedded' : 'page'} inert={embedded}>
-  <!-- Shared background: grey ground, printer photo (multiply), HUMAN_CORE stamp -->
+<section
+  class:list={['contact', embedded && 'contact--embedded']}
+  aria-label="Contact"
+  data-contact={embedded ? 'embedded' : 'page'}
+  data-step={first}
+>
+  <!-- Background: printers and the system log; each screen moves / swaps them in CSS -->
   <div class="contact__bg" aria-hidden="true">
-    <img class="contact__printer" src="/images/shell/prefooter-printer.png" alt="" width="994" style="--w: 994" height="949" />
-    <img class="contact__stamp" src="/images/shell/stamp-human-core.svg" alt="" width="403" style="--w: 403" height="174" />
+    <div class="contact__log contact__log--a" data-log="a"></div>
+    <div class="contact__log contact__log--b" data-log="b"></div>
+    <img class="contact__printer contact__printer--back" src="/images/shell/prefooter-printer-dark.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
+    <img class="contact__printer contact__printer--front" src="/images/shell/prefooter-printer-dark.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
+    <img class="contact__kiosk" src="/images/contact/printer-kiosk.png" alt="" width="1024" height="1535" loading="lazy" decoding="async" />
   </div>
 
-  <!-- Start -->
-  <div class="contact__screen contact__screen--start" data-step="start" data-active>
-    <Title class="contact__title t-h2">Okay, we’re listening. So, what’s on your mind?</Title>
-    <div class="contact__actions">
-      <Button href="#name" variant="light" icon="none" style="min-width: calc(266 * var(--px))">Start a project</Button>
-      <Button href="#message" variant="light" icon="none" style="min-width: calc(307 * var(--px))">Drop a quick word</Button>
-      <Button variant="light" icon="none" style="min-width: calc(266 * var(--px))" data-copy="info@hellorobo.co">Copy our email</Button>
+  <!-- Cover (pre-footer only): the whole block opens the start screen -->
+  {embedded && (
+    <a class="contact__screen contact__screen--cover" data-step="cover" href="/contact" data-go="start">
+      <h2 class="contact__title t-h2">The future is calling. We think it’s you.</h2>
+      <p class="contact__lead t-body">Got something brilliant, weird, or impossible in mind? We're listening. Click anywhere to break the ice.</p>
+    </a>
+  )}
+
+  <!-- Start: three ways in -->
+  <div class="contact__screen contact__screen--start" data-step="start">
+    <Title class="contact__title t-h2">Welcome! Okay, we're listening. So, what's on your mind?</Title>
+    <p class="contact__lead t-body">Big ideas, tiny questions, weird requests. Our circuits are open.</p>
+    <div class="contact__cards">
+      <a class="contact__card contact__card--light" href="#name" data-go="name">
+        <span class="t-body">Start a project</span>
+        <img class="contact__card-sticker" src="/images/contact/start-project.svg" alt="" width="165" height="54" style="--x: 219; --y: 65; --w: 165; --mx: 179; --my: 51" loading="lazy" />
+      </a>
+      <a class="contact__card" href="#message" data-go="message">
+        <span class="t-body">Drop a quick word</span>
+        <img class="contact__card-sticker" src="/images/contact/start-word.svg" alt="" width="148" height="140" style="--x: 254; --y: -4; --w: 148; --mx: 226; --my: -5; --mw: 131" loading="lazy" />
+      </a>
+      <button class="contact__card" type="button" data-copy={studio.email}>
+        <span class="t-body"><span data-copy-label>Just wanna copy email</span><img class="contact__smiley" src="/images/contact/start-email-smiley.svg" alt="" width="36" height="27" loading="lazy" /></span>
+        <img class="contact__card-sticker" src="/images/contact/start-email.svg" alt="" width="152" height="66" style="--x: 244; --y: 65; --w: 152; --mx: 223; --my: 49; --mw: 132" loading="lazy" />
+      </button>
     </div>
   </div>
 
-  <!-- Name / Email / Company -->
+  <!-- 01 Name · 02 Email · 03 Company -->
   {steps.map((s) => (
-    <form class="contact__screen" data-step={s.id} action="#" onsubmit="return false">
+    <form class="contact__screen contact__screen--step" data-step={s.id} action="#" novalidate>
+      <p class="contact__count t-body">[{s.n}]</p>
       <h2 class="contact__title t-h2">{s.title}</h2>
-      <label class="contact__field">
-        <span class="visually-hidden">{s.field}</span>
-        <input class="contact__input t-h3" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.type === 'email' ? 'email' : s.id === 'name' ? 'name' : 'organization'} />
-        <span class="contact__error t-body" role="alert" data-error></span>
-      </label>
-      <div class="contact__actions">
-        <Button href={s.back} variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
-        <Button href={s.next} variant="light" icon="none" style="min-width: calc(147 * var(--px))">Next</Button>
+      <p class="contact__lead t-body">{s.lead}</p>
+      <div class="contact__field">
+        <label class="visually-hidden" for={`contact-${s.id}`}>{s.field}</label>
+        <input class="contact__input t-body" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.auto} />
+        <p class="contact__error" role="alert" data-error></p>
+        <button class="contact__next" type="submit" aria-label="Next"><Icon name="next" /></button>
       </div>
-      <Divider tone="dark" accent class="contact__rule" />
+      <a class="contact__back t-button" href={`#${s.back}`} data-go={s.back}>Go back <Icon name="undo" /></a>
+      <img class="contact__sticker" src="/images/contact/step-globe.svg" alt="" width="277" height="277" loading="lazy" />
     </form>
   ))}
 
-  <!-- Mission -->
-  <form class="contact__screen" data-step="mission" action="#" onsubmit="return false">
+  <!-- 04 Mission -->
+  <form class="contact__screen contact__screen--step contact__screen--mission" data-step="mission" action="#" novalidate>
+    <p class="contact__count t-body">[04]</p>
     <h2 class="contact__title t-h2">What’s the mission?</h2>
-    <p class="contact__hint t-body">Select what you need. Pick as many as you like.</p>
-    <fieldset class="contact__chips">
+    <p class="contact__lead t-body">Select what you need. Pick as many as you like.</p>
+    <fieldset class="contact__cards">
       <legend class="visually-hidden">Services</legend>
       {services.map((s) => (
-        <label class="contact__chip t-button">
-          <input type="checkbox" name="services" value={s.label} checked={s.selected} />
-          <span>{s.label}</span>
+        <label class="contact__card contact__card--check">
+          <input type="checkbox" name="services" value={s.label} />
+          <span class="t-body">{s.label}</span>
+          <img class="contact__card-sticker" src={`/images/contact/${s.sticker}.svg`} alt="" width={s.w} height={s.h} style={`--x: ${s.x}; --y: ${s.y}; --w: ${s.w}`} loading="lazy" />
         </label>
       ))}
     </fieldset>
-    <div class="contact__actions">
-      <Button href="#company" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
-      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))" data-send="project">Send</Button>
-    </div>
-    <span class="contact__error contact__error--inline t-body" role="alert" data-error></span>
+    <p class="contact__error contact__error--send" role="alert" data-error></p>
     <input class="contact__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-    <Divider tone="dark" accent class="contact__rule" />
+    <a class="contact__back t-button" href="#company" data-go="company">Go back <Icon name="undo" /></a>
+    <button class="contact__submit t-button" type="submit" data-send="project">Submit <Icon name="hex" /></button>
   </form>
 
   <!-- Quick word -->
-  <form class="contact__screen" data-step="message" action="#" onsubmit="return false">
-    <h2 class="contact__title t-h2">We’re all ears. Well, sort of. Drop your message below</h2>
-    <label class="contact__field contact__field--message">
-      <span class="visually-hidden">Your message</span>
-      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Don’t overthink it. Just type away..."></textarea>
-      <span class="contact__error t-body" role="alert" data-error></span>
-    </label>
-    <div class="contact__actions">
-      <Button href="#" variant="dark" icon="none" style="min-width: calc(149 * var(--px))">Back</Button>
-      <Button href="#done" variant="light" icon="none" style="min-width: calc(151 * var(--px))" data-send="message">Send</Button>
+  <form class="contact__screen contact__screen--step" data-step="message" action="#" novalidate>
+    <p class="contact__count t-body">[HR]</p>
+    <h2 class="contact__title t-h2">We’re all ears. Drop us a line.</h2>
+    <p class="contact__lead t-body">Don’t overthink it. Just type away — a real human reads every word.</p>
+    <div class="contact__field">
+      <label class="visually-hidden" for="contact-message">Your message</label>
+      <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" placeholder="Your message"></textarea>
+      <p class="contact__error" role="alert" data-error></p>
     </div>
     <input class="contact__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-    <Divider tone="dark" accent class="contact__rule" />
+    <a class="contact__back t-button" href="#start" data-go="start">Go back <Icon name="undo" /></a>
+    <button class="contact__submit t-button" type="submit" data-send="message">Submit <Icon name="hex" /></button>
   </form>
 
   <!-- Done -->
   <div class="contact__screen contact__screen--done" data-step="done">
-    <div class="contact__done-text">
-      <h2 class="t-h2">Signal received. Connection established.</h2>
-      <p class="t-body">Your message is in good hands. Human hands, actually. We'll be in touch.</p>
-    </div>
-    <Receipt class="contact__receipt" />
+    <h2 class="contact__title t-h2">Beep boop. We got you.</h2>
+    <p class="contact__lead t-body">Your message has landed safely. Our humans are on it. Our robots are pretending to help.</p>
   </div>
+
+  <script type="application/json" data-logs set:html={JSON.stringify(logs)} />
 </section>
 
 <script>
+  type Group = { x: number; y: number; n?: string; lines: string[]; m?: [number, number] };
+  type Logs = Record<string, { a: Group[]; b?: Group[] }>;
+
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const phone = matchMedia('(max-width: 1023px)');
+
+  /** The faint mono log in one box: shows a screen's groups and types them out line by
+   *  line while the block is on screen; once done it rests, then rewrites a few lines. */
+  function typewriter(box: HTMLElement) {
+    let lines: HTMLElement[] = [];
+    let queue: HTMLElement[] = [];
+    let line: HTMLElement | undefined;
+    let pos = 0;
+    let rest = 0;
+    let timer = 0;
+    let visible = false;
+
+    const tick = () => {
+      if (rest > 0) return void rest--;
+      if (!line) {
+        line = queue.shift();
+        pos = 0;
+        if (!line) {
+          // all written: rest ~4s, then clear and rewrite three random lines
+          rest = 100;
+          queue = [...lines].sort(() => Math.random() - 0.5).slice(0, 3);
+          queue.forEach((l) => (l.textContent = ''));
+          return;
+        }
+      }
+      const full = line.dataset.text ?? '';
+      pos = Math.min(full.length, pos + 2 + Math.floor(Math.random() * 3));
+      line.textContent = full.slice(0, pos);
+      line.classList.add('is-typing');
+      if (pos >= full.length) {
+        line.classList.remove('is-typing');
+        line = undefined;
+        rest = 1 + Math.floor(Math.random() * 4);
+      }
+    };
+    const run = () => {
+      clearInterval(timer);
+      if (visible && !reduced) timer = window.setInterval(tick, 40);
+    };
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      run();
+    }).observe(box);
+
+    return (groups: Group[] = []) => {
+      box.replaceChildren(
+        ...groups.map((g) => {
+          const el = document.createElement('div');
+          el.className = 'contact__group' + (g.m ? '' : ' contact__group--desktop');
+          el.style.cssText = `--x:${g.x}%;--y:${g.y}%` + (g.m ? `;--mx:${g.m[0]}%;--my:${g.m[1]}%` : '');
+          if (g.n) {
+            const n = document.createElement('span');
+            n.textContent = g.n;
+            el.append(n);
+          }
+          const col = document.createElement('span');
+          col.className = 'contact__lines';
+          for (const text of g.lines) {
+            const l = document.createElement('span');
+            l.className = 'contact__line';
+            l.dataset.text = text;
+            l.textContent = reduced ? text : '';
+            col.append(l);
+          }
+          el.append(col);
+          return el;
+        }),
+      );
+      // groups hidden on this screen size are skipped
+      lines = [...box.querySelectorAll<HTMLElement>('.contact__line')].filter((l) => !phone.matches || l.closest('.contact__group:not(.contact__group--desktop)'));
+      queue = [...lines];
+      line = undefined;
+      rest = 0;
+      run();
+    };
+  }
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-contact]')) {
     const embedded = root.dataset.contact === 'embedded';
-    const screens = [...root.querySelectorAll<HTMLElement>('[data-step]')];
-    const value = (id: string) => root.querySelector<HTMLInputElement>(`#contact-${id}`)?.value.trim() ?? '';
-    const clearErrors = () => root.querySelectorAll<HTMLElement>('[data-error]').forEach((el) => (el.textContent = ''));
+    const screens = [...root.querySelectorAll<HTMLElement>('.contact__screen')];
+    const logs: Logs = JSON.parse(root.querySelector('[data-logs]')?.textContent ?? '{}');
+    const write = { a: typewriter(root.querySelector('[data-log=a]')!), b: typewriter(root.querySelector('[data-log=b]')!) };
+    const field = (id: string) => root.querySelector<HTMLInputElement | HTMLTextAreaElement>(`#contact-${id}`)!;
+    const value = (id: string) => field(id)?.value.trim() ?? '';
+    const chosen = () => [...root.querySelectorAll<HTMLInputElement>('input[name=services]:checked')].map((i) => i.value);
 
-    /** Shows screen `step` ("start" for an empty / unknown one) and puts the cursor in its field */
+    /** The log groups of `step`, with what the visitor has typed filled in */
+    const fill = (groups: Group[] = []) => {
+      const data: Record<string, string> = {
+        name: value('name'),
+        email: value('email'),
+        company: value('company'),
+        services: chosen().join(' / '),
+      };
+      return groups.map((g) => ({
+        ...g,
+        lines: g.lines.map((l) => l.replace(/\{(\w+)\}/g, (_, k) => (data[k] || '—').toUpperCase())),
+      }));
+    };
+
+    /** Shows screen `step` (the first one for an empty / unknown step) */
     function show(step: string, focus = true) {
       const target = screens.find((s) => s.dataset.step === step) ?? screens[0];
-      for (const s of screens) s.toggleAttribute('data-active', s === target);
-      if (focus) target.querySelector<HTMLElement>('input:not([type=checkbox]):not(.contact__trap), textarea')?.focus({ preventScroll: true });
+      const id = target.dataset.step!;
+      if (root.dataset.step !== id || !root.dataset.shown) {
+        root.dataset.step = id;
+        root.dataset.shown = 'true';
+        for (const s of screens) {
+          s.toggleAttribute('data-active', s === target);
+          s.inert = s !== target;
+        }
+        write.a(fill(logs[id]?.a));
+        write.b(fill(logs[id]?.b));
+        tuckNav();
+      }
+      if (focus) target.querySelector<HTMLElement>('.contact__input')?.focus({ preventScroll: true });
     }
 
-    /** Goes to `step`: on /contact through the URL hash (so Back works), in a block in place */
+    // On desktop the fixed menu pill would sit over Submit: while a form screen of the
+    // block fills most of the window, the pill (and Get in touch) tuck away
+    let inView = false;
+    let tucked = false;
+    const tuckNav = () => {
+      const want = inView && !phone.matches && !['cover', 'start'].includes(root.dataset.step!);
+      if (want === tucked) return;
+      tucked = want;
+      if (want) document.documentElement.dataset.nav = 'hidden';
+      else delete document.documentElement.dataset.nav;
+    };
+    new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.intersectionRatio >= 0.6;
+        tuckNav();
+      },
+      { threshold: [0, 0.6, 1] },
+    ).observe(root);
+
+    /** Goes to `step`: on /contact through the URL hash (so Back works), in the block in place */
     function go(step: string) {
       if (embedded) return show(step);
       const hash = step === 'start' ? '' : `#${step}`;
@@ -139,167 +427,460 @@ const services = [
     }
 
     if (embedded) {
+      show('cover', false);
+      // other places on the page can open a step: dispatch "contact:show" with its name
       root.addEventListener('contact:show', (e) => show((e as CustomEvent<string>).detail));
     } else {
       show(location.hash.slice(1), false);
       addEventListener('hashchange', () => show(location.hash.slice(1)));
     }
 
-    // Back / Next / Start a project …: href="#step" switches screens
+    // Cover, cards, Go back: data-go switches screens
     root.addEventListener('click', (e) => {
-      const link = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]:not([data-send])');
+      const link = (e.target as Element).closest<HTMLElement>('[data-go]');
       if (!link) return;
       e.preventDefault();
-      go(link.hash.slice(1) || 'start');
+      go(link.dataset.go!);
+    });
+    // Esc steps back
+    root.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const back = root.querySelector<HTMLElement>('.contact__screen[data-active] .contact__back');
+      if (back) go(back.dataset.go!);
+      else if (embedded && root.dataset.step === 'start') go('cover');
     });
 
-    // Enter in a field = Next
-    root.addEventListener('submit', (e) => {
-      e.preventDefault();
-      (e.target as HTMLElement).querySelector<HTMLAnchorElement>('.contact__actions a:last-child')?.click();
-    });
+    // Errors: orange line and message under the field, cleared as soon as they type
+    const setError = (form: HTMLElement, text: string) => {
+      const out = form.querySelector<HTMLElement>('[data-error]');
+      if (out) out.textContent = text;
+      form.classList.toggle('has-error', !!text);
+    };
+    const check: Record<string, () => string> = {
+      name: () => {
+        const v = value('name');
+        if (!v) return 'Please tell us your name';
+        if (/\d/.test(v)) return 'Name can’t contain numbers';
+        return '';
+      },
+      email: () => {
+        const v = value('email');
+        if (!v) return 'Where should we write back?';
+        if (!v.includes('@')) return 'Email is missing an @';
+        if (!EMAIL_RE.test(v)) return 'That email doesn’t look right';
+        return '';
+      },
+      company: () => '',
+      message: () => (value('message') ? '' : 'Write a few words first'),
+    };
+    const nextOf: Record<string, string> = { name: 'email', email: 'company', company: 'mission' };
 
-    /** Shows `text` under the field of screen `step` and opens that screen */
-    function fail(step: string, text: string) {
-      clearErrors();
-      const screen = screens.find((s) => s.dataset.step === step)!;
-      screen.querySelector<HTMLElement>('[data-error]')!.textContent = text;
-      go(step);
+    for (const form of root.querySelectorAll<HTMLFormElement>('form')) {
+      const step = form.dataset.step!;
+      const input = form.querySelector<HTMLInputElement | HTMLTextAreaElement>('.contact__input');
+      // the arrow is dimmed until there is something to send on
+      const sync = () => form.classList.toggle('is-filled', !!input?.value.trim());
+      input?.addEventListener('input', () => {
+        sync();
+        if (form.classList.contains('has-error')) setError(form, '');
+        if (input instanceof HTMLTextAreaElement) {
+          input.style.height = 'auto';
+          input.style.height = `${input.scrollHeight}px`;
+        }
+      });
+      // Enter in the message adds a line; Cmd/Ctrl+Enter sends
+      if (input instanceof HTMLTextAreaElement) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) form.requestSubmit();
+        });
+      }
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (nextOf[step]) {
+          const err = check[step]();
+          setError(form, err);
+          if (err) return input?.focus({ preventScroll: true });
+          go(nextOf[step]);
+        } else {
+          send(form);
+        }
+      });
     }
 
-    // Copy our email
+    // Mission cards: the log picks up the choice
+    root.querySelectorAll<HTMLInputElement>('input[name=services]').forEach((box) =>
+      box.addEventListener('change', () => {
+        root.querySelectorAll<HTMLElement>('[data-log=a] .contact__line[data-text^="SELECTED:"]').forEach(
+          (d) => (d.dataset.text = d.textContent = `SELECTED: ${(chosen().join(' / ') || '—').toUpperCase()}`),
+        );
+      }),
+    );
+
+    // "Just wanna copy email": puts the address on the clipboard and says so for a moment
     root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
-      const label = btn.querySelector<HTMLElement>('.button__label');
+      const label = btn.querySelector<HTMLElement>('[data-copy-label]');
       const text = label?.textContent;
+      let timer = 0;
       btn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(btn.dataset.copy!);
           if (label) label.textContent = 'Email copied';
-          setTimeout(() => label && (label.textContent = text!), 2000);
+          clearTimeout(timer);
+          timer = window.setTimeout(() => label && (label.textContent = text!), 2000);
         } catch {
           location.href = `mailto:${btn.dataset.copy}`;
         }
       });
     });
 
-    root.querySelectorAll<HTMLAnchorElement>('[data-send]').forEach((button) => {
-      button.addEventListener('click', async (e) => {
-        e.preventDefault();
-        if (button.ariaBusy === 'true') return;
-        const type = button.dataset.send as 'project' | 'message';
-        const form = button.closest('form')!;
-        let body: Record<string, unknown>;
-        if (type === 'project') {
-          if (!value('name')) return fail('name', 'Please tell us your name');
-          if (!EMAIL_RE.test(value('email'))) return fail('email', 'That email doesn’t look right');
-          const services = [...root.querySelectorAll<HTMLInputElement>('input[name=services]:checked')].map((i) => i.value);
-          body = { type, name: value('name'), email: value('email'), company: value('company'), services };
-        } else {
-          if (!value('message')) return fail('message', 'Write a few words first');
-          body = { type, message: value('message') };
+    /** Sends the project brief or the quick word; a missing answer opens its step */
+    async function send(form: HTMLFormElement) {
+      const button = form.querySelector<HTMLButtonElement>('[data-send]')!;
+      if (button.ariaBusy === 'true') return;
+      const type = button.dataset.send as 'project' | 'message';
+      let body: Record<string, unknown>;
+      if (type === 'project') {
+        for (const step of ['name', 'email']) {
+          const err = check[step]();
+          if (err) {
+            const target = root.querySelector<HTMLElement>(`form[data-step=${step}]`)!;
+            setError(target, err);
+            return go(step);
+          }
         }
-        body.page = location.pathname;
-        body.website = form.querySelector<HTMLInputElement>('.contact__trap')?.value;
+        body = { type, name: value('name'), email: value('email'), company: value('company'), services: chosen() };
+      } else {
+        const err = check.message();
+        setError(form, err);
+        if (err) return;
+        body = { type, message: value('message') };
+      }
+      body.page = location.pathname;
+      body.website = form.querySelector<HTMLInputElement>('.contact__trap')?.value;
 
-        button.ariaBusy = 'true';
-        try {
-          const res = await fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
-          root.querySelectorAll<HTMLFormElement>('form').forEach((f) => f.reset());
-          clearErrors();
-          go('done');
-        } catch (err) {
-          fail(form.dataset.step!, `Couldn’t send: ${(err as Error).message}. Please try again or email info@hellorobo.co`);
-        } finally {
-          button.ariaBusy = 'false';
-        }
-      });
-    });
+      button.ariaBusy = 'true';
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
+        setError(form, '');
+        go('done');
+        // the done screen's log has used the answers; now the forms can be cleared
+        root.querySelectorAll<HTMLFormElement>('form').forEach((f) => {
+          f.reset();
+          f.classList.remove('is-filled');
+        });
+      } catch (err) {
+        setError(form, `Couldn’t send: ${(err as Error).message}. Please try again or email info@hellorobo.co`);
+      } finally {
+        button.ariaBusy = 'false';
+      }
+    }
   }
 </script>
 
 <style>
-  /* Figma 1728×949; it's the whole page (no menu / footer), so it fills taller windows */
+  /* Figma 1728×949, black. All positions are Figma px (var(--px) = 1/1728 of the width) */
   .contact {
+    --ease-move: cubic-bezier(0.65, 0, 0.35, 1);
     position: relative;
     width: 100%;
     aspect-ratio: 1728 / 949;
-    min-height: 100vh;
-    min-height: 100svh;
-    background: var(--color-grey-350);
+    background: var(--color-black);
     color: var(--color-white);
     overflow: hidden;
+  }
+  /* On /contact it's the whole page */
+  .contact:not(.contact--embedded) {
+    min-height: 100vh;
+    min-height: 100svh;
   }
   .contact__bg {
     position: absolute;
     inset: 0;
-  }
-  /* Printer at x 732 on the contact screens (607 on the pre-footer) */
-  .contact__printer {
-    position: absolute;
-    top: 0;
-    left: calc(732 / 1728 * 100%);
-    width: calc(994 / 1728 * 100%);
-    height: 100%;
-    object-fit: cover;
-    mix-blend-mode: multiply;
-  }
-  .contact__stamp {
-    position: absolute;
-    left: calc(1285 / 1728 * 100%);
-    top: calc(715 / 949 * 100%);
-    width: calc(403 / 1728 * 100%);
-    height: auto;
+    pointer-events: none;
   }
 
-  /* One screen at a time: the one marked data-active (start until another is picked) */
+  /* ── System log: the mono text behind the printers ── */
+  .contact__log {
+    position: absolute;
+    left: calc(var(--lx) * var(--px));
+    top: calc(var(--ly) * var(--px));
+    width: calc(1319 * var(--px));
+    height: calc(771 * var(--px));
+    font-family: var(--font-mono);
+    font-size: calc(15 * var(--px));
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    opacity: 0.4;
+    white-space: nowrap;
+    /* a little out of focus, like the far printer */
+    filter: blur(max(1px, calc(1.6 * var(--px))));
+    transition:
+      left 0.9s var(--ease-move),
+      top 0.9s var(--ease-move),
+      opacity 0.5s ease;
+  }
+  /* cover and start: Figma 338, 376; the form screens: 800, 321 */
+  .contact__log--a {
+    --lx: 338;
+    --ly: 376;
+  }
+  .contact:is([data-step='name'], [data-step='email'], [data-step='company'], [data-step='mission'], [data-step='message'], [data-step='done']) .contact__log--a {
+    --lx: 800;
+    --ly: 321;
+  }
+  /* a second log, bottom left, only once it's sent */
+  .contact__log--b {
+    --lx: -82;
+    --ly: 475;
+    opacity: 0;
+  }
+  .contact[data-step='done'] .contact__log--b {
+    opacity: 0.4;
+  }
+  .contact__log :global(.contact__group) {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    display: flex;
+    gap: 2.2em;
+  }
+  .contact__log :global(.contact__lines) {
+    display: flex;
+    flex-direction: column;
+  }
+  /* each line keeps its height while empty, so groups don't jump as they type */
+  .contact__log :global(.contact__line) {
+    min-height: 1.3em;
+  }
+  .contact__log :global(.contact__line.is-typing)::after {
+    content: '_';
+    animation: contact-blink 0.8s steps(1) infinite;
+  }
+  @keyframes contact-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* ── Printers: the sharp one, a blurred mirrored one far left, and the kiosk with the
+     receipt on the form screens ── */
+  .contact__printer,
+  .contact__kiosk {
+    position: absolute;
+    max-width: none;
+    height: auto;
+    transition:
+      left 0.9s var(--ease-move),
+      top 0.9s var(--ease-move),
+      width 0.9s var(--ease-move),
+      opacity 0.6s ease,
+      translate 0.9s var(--ease-move);
+  }
+  .contact__printer--front {
+    left: calc(642 * var(--px));
+    top: calc(-352 * var(--px));
+    width: calc(1009 * var(--px));
+  }
+  .contact__printer--back {
+    left: calc(-430 * var(--px));
+    top: calc(91 * var(--px));
+    width: calc(796 * var(--px));
+    transform: scaleX(-1);
+    filter: blur(calc(14 * var(--px)));
+  }
+  .contact[data-step='start'] .contact__printer--front {
+    left: calc(900 * var(--px));
+    top: calc(-280 * var(--px));
+    width: calc(796 * var(--px));
+  }
+  .contact[data-step='start'] .contact__printer--back {
+    left: calc(-659 * var(--px));
+    top: calc(67 * var(--px));
+  }
+  .contact__kiosk {
+    left: calc(762 * var(--px));
+    top: calc(-342 * var(--px));
+    width: calc(890 * var(--px));
+    opacity: 0;
+    translate: 0 calc(-80 * var(--px));
+  }
+  /* the form screens swap the printers for the kiosk printing the receipt */
+  .contact:not([data-step='cover'], [data-step='start']) .contact__printer {
+    opacity: 0;
+  }
+  .contact:not([data-step='cover'], [data-step='start']) .contact__printer--front {
+    translate: 0 calc(-80 * var(--px));
+  }
+  .contact:not([data-step='cover'], [data-step='start']) .contact__kiosk {
+    opacity: 1;
+    translate: none;
+  }
+
+  /* ── Screens: one at a time, fading over each other ── */
   .contact__screen {
     position: absolute;
     inset: 0;
-    display: none;
+    z-index: var(--z-raised);
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding: var(--space-40) var(--page-margin) var(--space-60);
+    gap: calc(30 * var(--px));
+    padding: var(--space-40);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.45s ease,
+      visibility 0s linear 0.45s;
   }
   .contact__screen[data-active] {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease 0.15s;
+  }
+  /* the words rise in a little after the screen appears */
+  .contact__screen > * {
+    transition: translate 0.7s var(--ease-move);
+  }
+  .contact__screen:not([data-active]) > :is(.contact__count, .contact__title, .contact__lead, .contact__cards, .contact__field) {
+    translate: 0 calc(24 * var(--px));
   }
 
   .contact__title {
-    width: calc(716 * var(--px));
+    width: calc(844 * var(--px));
     max-width: 100%;
   }
-  .contact__hint {
-    margin-top: calc(20 * var(--px));
+  .contact__lead {
+    width: calc(442 * var(--px));
+    max-width: 100%;
   }
-  /* Fields sit at y 412 on every step (436 for the message), whatever the title length */
+  .contact__screen--start .contact__title {
+    width: calc(1020 * var(--px));
+  }
+  .contact__screen--start .contact__lead {
+    width: calc(402 * var(--px));
+  }
+
+  /* Form screens: [01] at 40, title at 94, lead 30 under it (Figma) */
+  .contact__screen--step,
+  .contact__screen--done {
+    gap: 0;
+  }
+  .contact__screen--step .contact__title,
+  .contact__screen--done .contact__title {
+    width: calc(680 * var(--px));
+    margin-top: calc(30 * var(--px));
+  }
+  .contact__screen--step .contact__lead {
+    width: calc(402 * var(--px));
+    margin-top: calc(30 * var(--px));
+  }
+  .contact__screen--done .contact__title {
+    margin-top: calc(54 * var(--px));
+  }
+  .contact__screen--done .contact__lead {
+    width: calc(378 * var(--px));
+    margin-top: calc(30 * var(--px));
+  }
+
+  /* ── Cards (start screen and mission): 402×140, 10 apart, from y 350 / 288 ── */
+  .contact__cards {
+    position: absolute;
+    left: var(--space-40);
+    top: calc(350 * var(--px));
+    display: grid;
+    gap: calc(10 * var(--px));
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .contact__screen--mission .contact__cards {
+    top: calc(288 * var(--px));
+  }
+  .contact__card {
+    position: relative;
+    display: block;
+    width: calc(402 * var(--px));
+    height: calc(140 * var(--px));
+    padding: calc(20 * var(--px));
+    overflow: hidden;
+    background: rgb(255 255 255 / 0.1);
+    -webkit-backdrop-filter: blur(calc(20 * var(--px)));
+    backdrop-filter: blur(calc(20 * var(--px)));
+    color: var(--color-white);
+    text-align: left;
+    font: inherit;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease;
+  }
+  .contact__card:hover {
+    background: rgb(255 255 255 / 0.18);
+  }
+  .contact__card--light,
+  .contact__card--light:hover,
+  .contact__card--check:has(input:checked) {
+    background: var(--color-white);
+    color: var(--color-black);
+  }
+  .contact__card--light:hover {
+    background: var(--color-grey-100);
+  }
+  .contact__card:focus-visible,
+  .contact__card--check:has(input:focus-visible) {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 2px;
+  }
+  .contact__card--check input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .contact__card-sticker {
+    position: absolute;
+    left: calc(var(--x) * var(--px));
+    top: calc(var(--y) * var(--px));
+    width: calc(var(--w) * var(--px));
+    height: auto;
+    max-width: none;
+    pointer-events: none;
+    transition:
+      filter 0.25s ease,
+      rotate 0.4s var(--ease-move);
+  }
+  .contact__card:hover .contact__card-sticker {
+    rotate: -4deg;
+  }
+  /* white stickers turn black on a selected (white) card */
+  .contact__card--check:has(input:checked) .contact__card-sticker {
+    filter: invert(1);
+  }
+  .contact__smiley {
+    display: inline-block;
+    width: calc(36 * var(--px));
+    height: auto;
+    margin-left: calc(8 * var(--px));
+    vertical-align: middle;
+  }
+
+  /* ── Field: label line at y 450, 680 wide; the arrow under its right end ── */
   .contact__field {
     position: absolute;
-    left: var(--page-margin);
-    top: calc(412 / 949 * 100%);
+    left: var(--space-40);
+    top: calc(450 * var(--px));
     width: calc(680 * var(--px));
-    max-width: calc(100% - 2 * var(--page-margin));
-  }
-  .contact__field--message {
-    top: calc(436 / 949 * 100%);
-  }
-  .contact__error {
-    display: block;
-    margin-top: var(--space-12);
-  }
-  .contact__error:empty {
-    display: none;
-  }
-  .contact__trap {
-    position: absolute;
-    left: -9999px;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
   }
   .contact__input {
     width: 100%;
@@ -311,194 +892,298 @@ const services = [
     color: var(--color-white);
     font-family: inherit;
     outline: none;
+    transition: border-color 0.2s ease;
   }
   .contact__input::placeholder {
     color: var(--color-white);
     opacity: 1;
   }
-  .contact__input:focus-visible {
-    border-bottom-color: var(--color-orange);
+  .contact__input:focus::placeholder {
+    opacity: 0.4;
   }
   .contact__textarea {
     resize: none;
-    padding-bottom: calc(20 * var(--px));
+    max-height: calc(260 * var(--px));
+    overflow-y: auto;
   }
-  .contact__chips {
+  .has-error .contact__input {
+    border-bottom-color: var(--color-orange);
+    color: var(--color-orange);
+  }
+  .contact__error {
+    align-self: flex-start;
+    margin-top: calc(10 * var(--px));
+    color: var(--color-orange);
+    font-size: var(--type-button-size);
+    line-height: 1;
+    letter-spacing: var(--type-button-track);
+  }
+  .contact__error:empty {
+    display: none;
+  }
+  .contact__error--send {
     position: absolute;
-    left: var(--page-margin);
-    top: calc(415 / 949 * 100%);
+    left: var(--space-40);
+    top: calc(748 * var(--px));
+    width: calc(680 * var(--px));
+    line-height: 1.2;
+  }
+  .contact__next {
     display: flex;
-    gap: calc(9 * var(--px));
-    margin: 0;
+    align-items: center;
+    justify-content: center;
+    width: calc(126 * var(--px));
+    height: var(--button-height);
+    margin-top: calc(19 * var(--px));
     padding: 0;
     border: 0;
-  }
-  .contact__chip input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .contact__chip span {
-    display: inline-flex;
-    align-items: center;
-    height: var(--button-height);
-    padding: 0 var(--space-24);
-    border: var(--line-width) solid var(--color-white);
     border-radius: var(--radius-ui);
+    background: var(--color-white);
+    color: var(--color-black);
+    opacity: 0.3;
     cursor: pointer;
+    transition: opacity 0.25s ease;
   }
-  .contact__chip input:checked + span {
+  .is-filled .contact__next {
+    opacity: 1;
+  }
+  .contact__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  /* ── Buttons along the bottom: Go back (left), Submit (x 593) ── */
+  .contact__back,
+  .contact__submit {
+    position: absolute;
+    bottom: calc(60 * var(--px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(190 * var(--px));
+    min-width: 150px;
+    height: var(--button-height);
+    padding: 0 var(--space-16);
+    border: 0;
+    border-radius: var(--radius-ui);
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .contact__back {
+    left: var(--space-40);
+    background: var(--color-grey-800);
+    color: var(--color-white);
+  }
+  .contact__back:hover {
+    background: var(--color-grey-600);
+  }
+  .contact__submit {
+    left: calc(593 * var(--px));
     background: var(--color-white);
     color: var(--color-black);
   }
-  .contact__chip input:focus-visible + span {
-    outline: 2px solid var(--color-orange);
-    outline-offset: 2px;
+  .contact__submit:hover {
+    background: var(--color-grey-100);
   }
-  .contact__actions {
-    display: flex;
-    gap: calc(10 * var(--px));
-    margin-top: auto;
+  .contact__submit[aria-busy='true'] {
+    opacity: 0.5;
+    cursor: progress;
   }
-  .contact__screen :global(.contact__rule) {
-    position: absolute;
-    left: var(--page-margin);
-    right: var(--page-margin);
-    bottom: var(--space-40);
+  .contact__back :global(.icon),
+  .contact__submit :global(.icon),
+  .contact__next :global(.icon) {
+    flex: none;
   }
 
-  .contact__screen--done {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-  .contact__done-text {
-    display: grid;
-    gap: calc(96 * var(--px));
-    width: calc(716 * var(--px));
-    align-content: start;
-  }
-  .contact :global(.contact__receipt) {
+  /* The globe sticker between the buttons (Figma 495, 663 · 276) */
+  .contact__sticker {
     position: absolute;
-    left: calc(888 / 1728 * 100%);
-    top: var(--space-40);
-    width: calc(315 / 1728 * 100%);
+    left: calc(495 * var(--px));
+    top: calc(663 * var(--px));
+    width: calc(277 * var(--px));
+    height: auto;
+    pointer-events: none;
   }
 
-  /* ── Mobile: same rules as the mobile pre-footer — H3 titles, printer at (39, 97),
-     stamp bottom right, full-width buttons above the nav pill ── */
-  @media (max-width: 1023px) {
+  .contact__screen--cover {
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact *,
     .contact {
+      transition-duration: 0.01s !important;
+      transition-delay: 0s !important;
+    }
+  }
+
+  /* ── Mobile (Figma 390×694 for cover and start; the form screens follow them): titles
+     in Mobile/H3, 16 margins, the buttons above the fixed menu bar ── */
+  @media (max-width: 1023px) {
+    .contact,
+    .contact:not(.contact--embedded) {
       aspect-ratio: auto;
+      height: 100vh;
       height: 100svh;
       min-height: 694px;
     }
-    .contact__printer {
-      left: 39px;
-      top: 97px;
-      width: 424px;
-      height: 635px;
-    }
-    .contact__stamp {
-      left: auto;
-      right: var(--page-margin);
-      top: auto;
-      bottom: 180px;
-      width: 224px;
-    }
     .contact__screen {
-      padding: var(--space-20) var(--page-margin) 96px;
+      gap: 20px;
+      padding: 40px var(--page-margin) calc(var(--page-margin) + var(--nav-height) + 16px);
     }
-    .contact__title {
+    .contact__title,
+    .contact__screen--start .contact__title,
+    .contact__screen--step .contact__title,
+    .contact__screen--done .contact__title {
+      width: 100%;
       font-size: var(--type-h3-size);
       line-height: var(--type-h3-line);
       letter-spacing: var(--type-h3-track);
+      text-wrap: balance;
     }
-    .contact__field,
-    .contact__field--message,
-    .contact__chips {
-      top: 36%;
+    .contact__lead,
+    .contact__screen--start .contact__lead,
+    .contact__screen--step .contact__lead,
+    .contact__screen--done .contact__lead {
+      width: 100%;
+      max-width: 340px;
+      text-wrap: balance;
     }
-    .contact__chips {
+    .contact__screen--step .contact__title,
+    .contact__screen--done .contact__title {
+      margin-top: 12px;
+    }
+    .contact__screen--step .contact__lead,
+    .contact__screen--done .contact__lead {
+      margin-top: 16px;
+    }
+
+    /* Log: a box in the lower middle, four groups down the left */
+    .contact__log {
+      left: var(--page-margin);
       right: var(--page-margin);
-      flex-wrap: wrap;
-      gap: 8px;
+      top: 54%;
+      width: auto;
+      height: 32%;
+      font-size: 9px;
+      filter: blur(0.7px);
     }
-    .contact__chip span {
-      height: 44px;
-      padding: 0 var(--space-16);
-      font-size: var(--type-body2-size-mobile);
-    }
-    /* On phones the chips and fields sit on top of the printer photo (beside it on
-       desktop): a dark, blurred backing keeps their white text readable */
-    .contact__chip input:not(:checked) + span {
-      background: rgb(0 0 0 / 0.35);
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
-    }
-    .contact__field {
-      padding: var(--space-12) var(--space-12) 0;
-      margin-inline: calc(-1 * var(--space-12));
-      background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.3));
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
-      border-radius: var(--radius-ui);
-      max-width: calc(100% - 2 * var(--page-margin) + 2 * var(--space-12));
-    }
-    .contact__actions {
-      align-self: stretch;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .contact__actions :global(.button) {
-      min-width: 0;
-      min-height: 52px;
-    }
-    .contact__screen :global(.contact__rule) {
+    .contact__log--b {
       display: none;
     }
-    .contact__screen--done {
-      flex-direction: column;
-      overflow-y: auto;
+    .contact__log :global(.contact__group) {
+      left: var(--mx);
+      top: var(--my);
     }
-    .contact__done-text {
-      width: auto;
-      gap: var(--space-24);
+    .contact__log :global(.contact__group--desktop) {
+      display: none;
     }
-    .contact :global(.contact__receipt) {
-      position: relative;
+
+    /* Printer 510×765 from the top, its centre 76 right of the screen's (Figma mob) */
+    .contact__printer--front,
+    .contact[data-step='start'] .contact__printer--front {
+      left: calc(50% + 76px - 255px);
+      top: 0;
+      width: 510px;
+    }
+    .contact__printer--back,
+    .contact[data-step='start'] .contact__printer--back {
+      left: -300px;
+      top: 40%;
+      width: 360px;
+    }
+    /* the kiosk sits low on the right, its receipt clear of the field */
+    .contact__kiosk {
+      left: auto;
+      right: -96px;
+      top: auto;
+      bottom: -150px;
+      width: 300px;
+    }
+    /* done: the kiosk comes up so its receipt shows above the menu bar */
+    .contact[data-step='done'] .contact__kiosk {
+      right: calc(50% - 190px);
+      bottom: -40px;
+      width: 380px;
+    }
+
+    /* Cards: 358×120, 10 apart, from y 294 */
+    .contact__cards,
+    .contact__screen--mission .contact__cards {
+      position: static;
       left: auto;
       top: auto;
-      width: 220px;
-      flex: none;
-      margin-top: 40px;
-      align-self: center;
+      width: 100%;
+      gap: 10px;
+      margin-top: auto;
     }
-  }
+    .contact__screen--mission .contact__cards {
+      margin-top: 24px;
+    }
+    .contact__card {
+      width: 100%;
+      height: 120px;
+      padding: 16px;
+    }
+    .contact__screen--mission .contact__card {
+      height: 96px;
+    }
+    /* Figma mob: placed from the card's right edge (the cards are as wide as the screen) */
+    .contact__card-sticker {
+      left: auto;
+      right: calc((358 - var(--mx, 0) - var(--mw, var(--w))) * 1px);
+      top: calc(var(--my, 0) * 1px);
+      width: calc(var(--mw, var(--w)) * 1px);
+    }
+    .contact__screen--mission .contact__card-sticker {
+      top: auto;
+      right: 14px;
+      bottom: 12px;
+      width: calc(var(--w) * 0.72px);
+    }
+    .contact__smiley {
+      width: 32px;
+      margin-left: 6px;
+    }
 
-  /* In the pre-footer block: lies over the block's own cover, fades in when opened */
-  .contact.contact--embedded {
-    position: absolute;
-    inset: 0;
-    z-index: calc(var(--z-raised) + 1);
-    aspect-ratio: auto;
-    height: auto;
-    min-height: 0;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity var(--duration-smooth) var(--ease-out),
-      visibility 0s linear var(--duration-smooth);
-  }
-  .contact.contact--embedded:not([inert]) {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity var(--duration-smooth) var(--ease-out);
-  }
-  /* Pages have the fixed menu pill at the bottom on phones: the buttons stand 8 above it,
-     like the block's own buttons */
-  @media (max-width: 1023px) {
-    .contact--embedded .contact__screen {
-      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 8px);
+    .contact__field {
+      position: static;
+      width: 100%;
+      margin-top: 40px;
+    }
+    .contact__next {
+      width: 96px;
+      height: 52px;
+      margin-top: 16px;
+    }
+    .contact__textarea {
+      max-height: 180px;
+    }
+    .contact__error--send {
+      position: static;
+      width: 100%;
+      margin-top: 12px;
+    }
+    .contact__back,
+    .contact__submit {
+      bottom: calc(var(--page-margin) + var(--nav-height) + 8px);
+      width: calc(50% - var(--page-margin) - 4px);
+      min-width: 0;
+      height: 52px;
+    }
+    .contact__back {
+      left: var(--page-margin);
+    }
+    .contact__submit {
+      left: auto;
+      right: var(--page-margin);
+    }
+    .contact__sticker {
+      display: none;
     }
   }
 </style>
