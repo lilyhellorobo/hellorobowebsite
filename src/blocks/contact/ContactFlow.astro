@@ -435,7 +435,6 @@ const first = embedded ? 'cover' : 'start';
         }
         write.a(fill(logs[id]?.a));
         write.b(fill(logs[id]?.b));
-        tuckNav();
         typeCount(target);
         // after "Beep boop" / "thanks for saying hi", the block goes back to its first screen
         clearTimeout(homeTimer);
@@ -443,25 +442,6 @@ const first = embedded ? 'cover' : 'start';
       }
       if (focus) target.querySelector<HTMLElement>('.contact__input')?.focus({ preventScroll: true });
     }
-
-    // On desktop the fixed menu pill would sit over Submit: while a form screen of the
-    // block fills most of the window, the pill (and Get in touch) tuck away
-    let inView = false;
-    let tucked = false;
-    const tuckNav = () => {
-      const want = inView && !phone.matches && !['cover', 'start'].includes(root.dataset.step!);
-      if (want === tucked) return;
-      tucked = want;
-      if (want) document.documentElement.dataset.nav = 'hidden';
-      else delete document.documentElement.dataset.nav;
-    };
-    new IntersectionObserver(
-      ([entry]) => {
-        inView = entry.intersectionRatio >= 0.6;
-        tuckNav();
-      },
-      { threshold: [0, 0.6, 1] },
-    ).observe(root);
 
     /** Goes to `step`: on /contact through the URL hash (so Back works), in the block in place */
     function go(step: string) {
