@@ -14,7 +14,7 @@ import { studio } from '../../data/site';
 const projects = (await getCollection('projects')).slice(0, 6);
 const episodes = (await getCollection('episodes', (e) => e.data.listed !== false))
   .sort((a, b) => b.data.number - a.data.number)
-  .slice(0, 2);
+  .slice(0, 3);
 const positions = (await getCollection('positions')).sort((a, b) => a.data.order - b.data.order).slice(0, 1);
 
 const up = (s: string) => s.toUpperCase();
@@ -50,6 +50,11 @@ const groups: Group[] = [
   { x: 22.5, y: 64, n: '(E)', lines: project(2) },
   { x: 41.5, y: 64, n: '(F)', lines: project(3) },
   { x: 22.5, y: 83, n: '(G)', lines: role() },
+  // right part: the open strip right of the printer's paper and motor (no labels, it's narrow)
+  { x: 88, y: 12, lines: project(4) },
+  { x: 88, y: 29, lines: project(5) },
+  { x: 88, y: 46, lines: episode(2) },
+  { x: 88, y: 60, lines: ['> SERVICES_', 'BRANDING', 'INTERFACE', 'VIDEO PRODUCTION'] },
 ];
 ---
 <section class="prefooter" aria-label="Start a project">
@@ -200,6 +205,8 @@ const groups: Group[] = [
     color: var(--color-white);
     opacity: 0.4;
     white-space: nowrap;
+    /* a little out of focus, like the far printer */
+    filter: blur(max(1px, calc(1.6 * var(--px))));
   }
   .prefooter__group {
     position: absolute;
@@ -279,6 +286,7 @@ const groups: Group[] = [
       width: auto;
       height: 32%;
       font-size: 9px;
+      filter: blur(0.7px);
     }
     /* four groups stacked down the left, clear of the printer's paper */
     .prefooter__group {
