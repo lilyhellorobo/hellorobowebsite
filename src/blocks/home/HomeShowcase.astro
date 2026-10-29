@@ -54,7 +54,7 @@ const slides = [
   <div class="home-showcase__scroller" style={`--slides: ${slides.length}`} data-showcase>
     <div class="home-showcase__stage" data-active="0">
       {slides.map((s, i) => (
-        <div class="home-showcase__bg" data-slide={i}>
+        <div class="home-showcase__bg" data-slide={i} data-slide-state={i === 0 ? 'current' : 'next'} style={`z-index: ${i}`}>
           <Image
             class="home-showcase__photo"
             src={s.image}
@@ -117,6 +117,10 @@ const slides = [
       stage.style.setProperty('--progress', String(progress));
       if (stage.dataset.active !== String(active)) {
         stage.dataset.active = String(active);
+        // pictures up to the active one are in place, later ones wait below the screen
+        stage.querySelectorAll<HTMLElement>('.home-showcase__bg').forEach((bg) => {
+          bg.dataset.slideState = Number(bg.dataset.slide) <= active ? 'current' : 'next';
+        });
         parts.forEach((el) => el.setAttribute('aria-hidden', String(el.dataset.slide !== String(active))));
       }
     };
@@ -159,17 +163,15 @@ const slides = [
     clip-path: inset(0 calc(var(--page-margin) * (1 - var(--enter))));
   }
 
-  /* ── Backgrounds: crossfade to the active slide ── */
+  /* ── Backgrounds: the next picture rises from below the screen over the current one
+     (back: it slides down again) — the same move as the Services and Robo Radio slides ── */
   .home-showcase__bg {
     position: absolute;
     inset: 0;
-    opacity: 0;
-    transition: opacity 0.8s ease;
+    transition: translate var(--slide-duration) var(--slide-ease);
   }
-  .home-showcase__stage[data-active='0'] .home-showcase__bg[data-slide='0'],
-  .home-showcase__stage[data-active='1'] .home-showcase__bg[data-slide='1'],
-  .home-showcase__stage[data-active='2'] .home-showcase__bg[data-slide='2'] {
-    opacity: 1;
+  .home-showcase__bg[data-slide-state='next'] {
+    translate: 0 100%;
   }
   .home-showcase :global(.home-showcase__photo) {
     position: absolute;
@@ -247,6 +249,9 @@ const slides = [
     .home-showcase__title,
     .home-showcase__services {
       transform: none;
+    }
+    .home-showcase__bg {
+      transition-duration: 0.01s;
     }
   }
 
