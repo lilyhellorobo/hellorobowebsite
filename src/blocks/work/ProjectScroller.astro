@@ -589,11 +589,13 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     transform: none;
   }
 
-  /* Services of the front project */
+  /* Services of the front project: sitting on the rule (Figma 515 → 603, rule at 622), so
+     the 19 above the rule stays whatever the window shape or the number of services —
+     the list grows upward */
   .project-wheel__services {
     position: absolute;
     left: calc(1362 / 1728 * 100%);
-    top: calc(515 / 1117 * 100%);
+    bottom: calc((1117 - 622) / 1117 * 100% + 19 * var(--px));
     display: grid;
     gap: calc(8 * var(--px));
     opacity: 0;
