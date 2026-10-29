@@ -213,9 +213,10 @@ function setup(btn: HTMLElement, labelSelector?: string) {
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.outerHTML.replaceAll('currentColor', color))}`;
     if (getComputedStyle(btn).position === 'static') btn.style.position = 'relative';
     const canvas = makeCanvas(box.width, box.height);
+    // inset first: setting it afterwards wiped left / top and misplaced the pixels
+    canvas.style.inset = 'auto';
     canvas.style.left = `${box.left - own.left - btn.clientLeft}px`;
     canvas.style.top = `${box.top - own.top - btn.clientTop}px`;
-    canvas.style.inset = 'auto';
     const shown = icon;
     img.onload = () => {
       shown.style.visibility = 'hidden';
