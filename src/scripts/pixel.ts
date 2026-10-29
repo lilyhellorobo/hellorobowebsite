@@ -55,7 +55,8 @@ export const ICON_STEPS: [number, number][] = [
 
 /** An <svg> or <img> as a drawable image (currentColor resolved), or null */
 export function drawable(el: SVGSVGElement | HTMLImageElement): Promise<CanvasImageSource | null> {
-  if (el instanceof HTMLImageElement) return el.decode().then(() => el, () => null);
+  // a picture not loaded yet (lazy) isn't waited for: it just shows as it is
+  if (el instanceof HTMLImageElement) return el.complete && el.naturalWidth ? el.decode().then(() => el, () => null) : Promise.resolve(null);
   const box = el.getBoundingClientRect();
   const svg = el.cloneNode(true) as SVGSVGElement;
   svg.setAttribute('width', String(box.width));
@@ -86,9 +87,10 @@ export function pixelIn(el: SVGSVGElement | HTMLImageElement, host: HTMLElement,
     const own = host.getBoundingClientRect();
     canvas = makeCanvas(box.width, box.height);
     canvas.style.position = 'absolute';
+    // inset first: setting it afterwards wiped left / top and misplaced the pixels
+    canvas.style.inset = 'auto';
     canvas.style.left = `${box.left - own.left - host.clientLeft}px`;
     canvas.style.top = `${box.top - own.top - host.clientTop}px`;
-    canvas.style.inset = 'auto';
     const c = canvas;
     ICON_STEPS.forEach(([size, holes], i) =>
       timers.push(
