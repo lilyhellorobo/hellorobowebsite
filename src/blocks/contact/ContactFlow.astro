@@ -198,14 +198,14 @@ const first = embedded ? 'cover' : 'start';
 
   <!-- Cover (pre-footer only): the whole block opens the start screen -->
   {embedded && (
-    <a class="contact__screen contact__screen--cover" data-step="cover" href="/contact" data-go="start">
+    <a class="contact__screen contact__screen--cover" data-step="cover" href="/contact" data-go="start" data-active>
       <h2 class="contact__title t-h2">The future is calling. We think it’s you.</h2>
       <p class="contact__lead t-body">Got something brilliant, weird, or impossible in mind? We're listening. Click anywhere to break the ice.</p>
     </a>
   )}
 
   <!-- Start: three ways in -->
-  <div class="contact__screen contact__screen--start" data-step="start">
+  <div class="contact__screen contact__screen--start" data-step="start" data-active={!embedded || undefined}>
     <Title class="contact__title t-h2">Welcome! Okay, we're listening. So, what's on your mind?</Title>
     <p class="contact__lead t-body">Big ideas, tiny questions, weird requests. Our circuits are open.</p>
     <div class="contact__cards">
@@ -1183,16 +1183,29 @@ const first = embedded ? 'cover' : 'start';
 
     /* Printer 510×765 from the top, its centre 76 right of the screen's (Figma mob) */
     .contact__printer--front,
-    .contact[data-step='start'] .contact__printer--front {
+    .contact:is([data-step='start'], [data-step='message']) .contact__printer--front {
       left: calc(50% + 76px - 255px);
       top: 0;
       width: 510px;
     }
     .contact__printer--back,
-    .contact[data-step='start'] .contact__printer--back {
+    .contact:is([data-step='start'], [data-step='message']) .contact__printer--back {
       left: -300px;
       top: 40%;
       width: 360px;
+    }
+    /* Quick word on a phone: the field would sit on the printer's white paper, so it gets
+       the form screens' kiosk instead, low on the right */
+    .contact[data-step='message'] .contact__printer {
+      opacity: 0;
+    }
+    .contact[data-step='message'] .contact__kiosk {
+      opacity: 1;
+      translate: none;
+    }
+    /* error text a step under the 16px field text, as 18 is under 20 on desktop */
+    .contact__error {
+      font-size: 14px;
     }
     /* the kiosk sits low on the right, its receipt clear of the field */
     .contact__kiosk {
@@ -1227,8 +1240,9 @@ const first = embedded ? 'cover' : 'start';
       height: 120px;
       padding: 16px;
     }
+    /* shorter on short phones, so the third card stays clear of Go back / Submit */
     .contact__screen--mission .contact__card {
-      height: 96px;
+      height: clamp(64px, 11svh, 96px);
     }
     /* Figma mob: placed from the card's right edge (the cards are as wide as the screen) */
     .contact__card-sticker {
