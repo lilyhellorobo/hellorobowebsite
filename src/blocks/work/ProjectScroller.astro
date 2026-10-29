@@ -12,14 +12,13 @@
  * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px);
  * the front name is at full opacity and the others fade fast (FADE), for contrast.
  * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
- * into one continuous turn; one project = a screen of scrolling on Home, 70% on Work. A CSS CRT layer (scanlines,
- * aperture mask, vignette, noise, flicker, rolling band — values from the Figma shader)
- * sits on top until the WebGL step.
+ * into one continuous turn; one project = a screen of scrolling on Home, 70% on Work. Figma's CRT screen shader
+ * (CrtScreen overlay, as on the Robo Radio player) sits on top, with the Work frame's values.
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
  * half screen of scrolling widens it to full screen, then the wheel turns.
  * Work page: full screen from the start; quicker follow with magnetic detents (each
  * project sticks at the front, then the drum moves fast to the next and snaps into
- * place), and a 60% black layer over the backgrounds (30% on Home).
+ * place), and a 70% black layer over the backgrounds (30% on Home).
  * Mobile, Home (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
  * slides that pin and change on scroll, like the Home showcase: the photo crossfades,
  * name / services / VIEW swap, and the bright segment of the line shows the progress.
@@ -29,6 +28,7 @@
 import { getCollection } from 'astro:content';
 import Media from '../../components/ui/Media.astro';
 import Button from '../../components/ui/Button.astro';
+import CrtScreen from '../../components/ui/CrtScreen.astro';
 
 interface Props {
   as?: 'section' | 'div';
@@ -67,6 +67,8 @@ const markOf = (p: (typeof projects)[number]) => p.data.micrographics.left ?? '/
 const wheelData = JSON.stringify({ step: STEP, fade: FADE, faces: FACES, items: projects.map((p) => ({ name: p.data.name, href: `/work/${p.id}`, nda: p.data.nda })) });
 // Mobile slides: every project once, in order
 const cards = projects.slice(0, mobileLimit ?? projects.length);
+// CRT shader settings that differ from CrtScreen's defaults (Figma 10100:11974)
+const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
 ---
 {active && (
 <Tag class:list={['project-wheel', 'theme-dark', 'only-desktop', { 'project-wheel--framed': framed, 'project-wheel--infinite': infinite }]} aria-label="Selected work" style={`--count: ${projects.length}`} data-wheel={wheelData} data-infinite={infinite ? '' : undefined}>
@@ -111,11 +113,7 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
           </ul>
         ))}
 
-        <div class="project-wheel__crt" aria-hidden="true">
-          <span class="project-wheel__crt-mask"></span>
-          <span class="project-wheel__crt-noise"></span>
-          <span class="project-wheel__crt-roll"></span>
-        </div>
+        <CrtScreen overlay settings={crt} />
       </div>
     </div>
   </div>
@@ -166,6 +164,16 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
 )}
 
 <script>
+  // NDA projects don't open: a click on one blinks its NDA tag instead — 100% → 30% → 100%,
+  // 4 times in 1s. Covers the desktop wheel, the phone wheel (WorkWheelMobile) and the phone cards.
+  document.addEventListener('click', (e) => {
+    const name = (e.target as HTMLElement).closest('.project-wheel__name, .work-wheel__row, .project-card__title');
+    const tag = name?.querySelector<HTMLElement>('.project-wheel__nda, .work-wheel__nda, .project-card__nda');
+    if (!tag) return;
+    tag.getAnimations().forEach((a) => a.cancel());
+    tag.animate([{ opacity: 1 }, { opacity: 0.3 }, { opacity: 1 }], { duration: 250, iterations: 4, easing: 'ease-in-out' });
+  });
+
   // Turns page scroll into the drum's rotation: one pass through every project while
   // the block is pinned. offset 0 = first project in front, offset N = back to it.
   type Wheel = { step: number; fade: number[]; faces: number; items: { name: string; href: string }[] };
@@ -474,9 +482,9 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     inset: 0;
     background: rgb(0 0 0 / 0.3);
   }
-  /* Work page: a darker layer over the project backgrounds (60%) */
+  /* Work page: a darker layer over the project backgrounds (70%) */
   .project-wheel--infinite .project-wheel__shade {
-    background: rgb(0 0 0 / 0.6);
+    background: rgb(0 0 0 / 0.7);
   }
   .project-wheel :global(.project-wheel__bg-media) {
     width: 100%;
@@ -495,15 +503,16 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
     border-top: var(--line-width) solid var(--line-on-dark);
   }
   /* Globe mark on the same line as the front name: centred on the drum's front row
-     (549 / 1117), nudged up to the middle of the capitals, at any window shape */
+     (549 / 1117), nudged down to the middle of the capitals (0.07em below the line box's
+     middle), at any window shape */
   /* every project's mark is the same height (the globe's 79 in the 1117 frame), any width */
   .project-wheel__mark {
     position: absolute;
-    left: calc(104 / 1728 * 100%);
+    left: calc(40 / 1728 * 100%); /* the rule's left end */
     top: calc(549 / 1117 * 100%);
     width: auto;
     height: calc(79 / 1117 * 100%);
-    translate: 0 calc(-50% - 0.06 * var(--type-h2-size));
+    translate: 0 calc(-50% + 0.07 * var(--type-h2-size));
     opacity: 0;
     transition: opacity 0.4s ease;
   }
@@ -591,72 +600,6 @@ const cards = projects.slice(0, mobileLimit ?? projects.length);
   }
   .project-wheel__services.is-current {
     opacity: 1;
-  }
-
-  /* ── CRT screen (Figma shader: scanlines 38 / size 3, mask 9 / pitch 12, vignette 13,
-     noise 5 / size 1.5, flicker, roll speed 0.93). CSS stand-in until the WebGL step. ── */
-  .project-wheel__crt,
-  .project-wheel__crt > span {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-  .project-wheel__crt {
-    z-index: 2;
-    /* scanlines + vignette */
-    background:
-      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.38) 0 1px, transparent 1px 3px),
-      radial-gradient(ellipse at center, transparent 60%, rgb(0 0 0 / 0.4) 100%);
-    animation: crt-flicker 0.12s steps(2) infinite;
-  }
-  /* aperture grille: thin R / G / B columns, 12px pitch */
-  .project-wheel__crt-mask {
-    background: repeating-linear-gradient(
-      to right,
-      rgb(255 0 0 / 0.09) 0 4px,
-      rgb(0 255 0 / 0.09) 4px 8px,
-      rgb(0 0 255 / 0.09) 8px 12px
-    );
-    mix-blend-mode: multiply;
-    opacity: 0.4;
-  }
-  .project-wheel__crt-noise {
-    inset: -50%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 240px 240px;
-    opacity: 0.05;
-    animation: crt-noise 0.5s steps(5) infinite;
-  }
-  /* slow bright band rolling down the screen */
-  .project-wheel__crt-roll {
-    background: linear-gradient(to bottom, transparent 0%, rgb(255 255 255 / 0.04) 45%, rgb(255 255 255 / 0.06) 50%, transparent 60%);
-    background-size: 100% 300%;
-    animation: crt-roll 8s linear infinite;
-  }
-  @keyframes crt-flicker {
-    50% {
-      opacity: 0.94;
-    }
-  }
-  @keyframes crt-noise {
-    to {
-      transform: translate(10%, -10%);
-    }
-  }
-  @keyframes crt-roll {
-    from {
-      background-position: 0 100%;
-    }
-    to {
-      background-position: 0 -200%;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .project-wheel__crt,
-    .project-wheel__crt-noise,
-    .project-wheel__crt-roll {
-      animation: none;
-    }
   }
 
   /* CRT lines on the mobile cards */
