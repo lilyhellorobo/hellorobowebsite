@@ -126,6 +126,7 @@
   --z-header: 100;
   --z-nav: 200;
   --z-overlay: 300;
+  --z-grain: 1000;
 }
 
 /* ── Mobile (≤ 1023px: phones + portrait tablets) — Figma 390 frames ────────────────────────
