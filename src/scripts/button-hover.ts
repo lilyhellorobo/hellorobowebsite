@@ -1,136 +1,227 @@
 /**
  * Button hover — after exp.fiddle.digital: on hover the label breaks into chunky pixels that
- * get finer, then into random letters that settle on the real word from left to right. The
- * button keeps its own colours throughout. Leaving early puts the word straight back.
- * Mouse only; off for reduced motion.
+ * get finer, then into random letters that settle on the real word from left to right.
+ * Buttons without a label (arrows, play / pause, close, back) pixelate their icon the same
+ * way and snap back. The button keeps its own colours throughout. With a mouse it plays on
+ * hover (leaving early puts everything back); on phones and tablets it plays on press.
+ * Off for reduced motion.
  */
 
 const SELECTOR = [
   '.button',
   '.get-in-touch',
   '.site-menu__talk',
+  '.nav-pill__menu',
+  '.nav-pill__back',
+  '.nav-pill__close',
   '.contact__back',
   '.contact__submit',
   '.contact__next',
+  '.contact__card',
+  '.radio-tv__btn',
+  '.team-card__close',
 ].join(',');
+
+/** where the words are: the first match inside the button wins */
+const LABEL = '[data-copy-label], .button__label, .contact__card > .t-body, .t-button:not(.button)';
 
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=<>/';
 /** pixel size (in CSS px) and share of blocks left out, frame by frame */
-const PIXEL_STEPS: [number, number][] = [
+const TEXT_STEPS: [number, number][] = [
   [9, 0.5],
   [7, 0.4],
   [5, 0.3],
   [4, 0.2],
 ];
-/** a beat before the pixels start */
-const PIXEL_START = 40;
+const ICON_STEPS: [number, number][] = [
+  [6, 0.45],
+  [4, 0.3],
+  [3, 0.2],
+  [2, 0.1],
+];
+const START = 40;
 const PIXEL_MS = 60;
 const SCRAMBLE_MS = 45;
 
-function setup(btn: HTMLElement, reduced: boolean) {
-  btn.classList.add('has-hover-fx');
+/** Draws `draw` (into a w×h context) at 1/size resolution, drops some blocks, scales up */
+function pixelFrame(canvas: HTMLCanvasElement, size: number, holes: number, draw: (c: CanvasRenderingContext2D, w: number, h: number) => void) {
+  const dpr = canvas.width / canvas.clientWidth || 1;
+  const w = Math.max(1, Math.round(canvas.width / dpr / size));
+  const h = Math.max(1, Math.round(canvas.height / dpr / size));
+  const small = document.createElement('canvas');
+  small.width = w;
+  small.height = h;
+  const s = small.getContext('2d')!;
+  draw(s, w, h);
+  const img = s.getImageData(0, 0, w, h);
+  for (let p = 3; p < img.data.length; p += 4) img.data[p] = img.data[p] > 60 && Math.random() > holes ? 255 : 0;
+  s.putImageData(img, 0, 0);
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
+}
 
+function makeCanvas(w: number, h: number) {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'hover-fx__pixels';
+  canvas.setAttribute('aria-hidden', 'true');
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  canvas.width = Math.ceil(w * dpr);
+  canvas.height = Math.ceil(h * dpr);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  return canvas;
+}
+
+function setup(btn: HTMLElement) {
   // the label: its own span (wrapping a bare text node if needed)
-  let label = btn.querySelector<HTMLElement>('.button__label, .t-button:not(.button)');
-  if (!label || label === btn) {
+  let label = btn.querySelector<HTMLElement>(LABEL);
+  if (!label) {
     const text = [...btn.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
     if (text) {
       label = document.createElement('span');
       text.replaceWith(label);
       label.append(text);
-    } else label = null; // icon-only (the contact arrow): nothing to do
+    }
   }
-  if (!label || reduced) return;
-  const lbl: HTMLElement = label;
-  lbl.classList.add('hover-fx__label');
+  label?.classList.add('hover-fx__label');
+  btn.classList.add('has-hover-fx');
 
   let timers: number[] = [];
-  const clear = () => {
-    timers.forEach(clearTimeout);
-    timers = [];
-  };
+  let running = false;
+  let word = '';
+  /** what the effect last wrote, to notice when the button's own script changes the words */
+  let written = '';
+  let icon: SVGSVGElement | null = null;
   const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
 
-  /** the word back as it was */
+  /** stops the effect and puts the label / icon back as they were */
   const settle = () => {
-    clear();
-    lbl.querySelector('.hover-fx__pixels')?.remove();
-    lbl.classList.remove('is-pixel');
-    if (lbl.dataset.word) lbl.textContent = lbl.dataset.word;
-    lbl.style.minWidth = '';
+    timers.forEach(clearTimeout);
+    timers = [];
+    btn.querySelectorAll('.hover-fx__pixels').forEach((c) => c.remove());
+    if (icon) icon.style.visibility = '';
+    if (label) {
+      label.classList.remove('is-pixel');
+      if (running) label.textContent = word;
+      label.style.minWidth = '';
+    }
+    running = false;
   };
 
-  btn.addEventListener('pointerenter', (e) => {
-    if (e.pointerType !== 'mouse') return;
-    settle();
+  /** the button's own script changed the words mid-effect ("Email copied"): leave them be */
+  const interrupted = (lbl: HTMLElement, canvas: HTMLCanvasElement) => {
+    const changed = canvas.isConnected ? false : lbl.classList.contains('is-pixel') || lbl.textContent !== written;
+    if (!changed) return false;
+    timers.forEach(clearTimeout);
+    timers = [];
+    lbl.classList.remove('is-pixel');
+    lbl.style.minWidth = '';
+    running = false;
+    return true;
+  };
 
-    const word = lbl.dataset.word ?? (lbl.dataset.word = lbl.textContent!.trim());
+  /** the label: pixels, then random letters settling on the word */
+  const playText = (lbl: HTMLElement) => {
+    word = lbl.textContent!.trim();
+    written = lbl.textContent!;
     const box = lbl.getBoundingClientRect();
+    if (!word || !box.width) return;
+    running = true;
     // keep the width while letters change, so the button doesn't jitter
     lbl.style.minWidth = `${box.width}px`;
-
-    // 1 · pixels: the word drawn tiny and scaled up without smoothing, some blocks left out
-    const canvas = document.createElement('canvas');
-    canvas.className = 'hover-fx__pixels';
-    const dpr = Math.min(2, devicePixelRatio || 1);
-    canvas.width = Math.ceil(box.width * dpr);
-    canvas.height = Math.ceil(box.height * dpr);
-    const ctx = canvas.getContext('2d')!;
-    const lcs = getComputedStyle(lbl);
-    const ink = lcs.color;
+    const canvas = makeCanvas(box.width, box.height);
+    const cs = getComputedStyle(lbl);
     lbl.classList.add('is-pixel');
     lbl.append(canvas);
-
-    PIXEL_STEPS.forEach(([size, holes], i) =>
-      at(PIXEL_START + i * PIXEL_MS, () => {
-        const w = Math.max(1, Math.round(box.width / size));
-        const h = Math.max(1, Math.round(box.height / size));
-        const small = document.createElement('canvas');
-        small.width = w;
-        small.height = h;
-        const s = small.getContext('2d')!;
-        s.font = `${lcs.fontWeight} ${parseFloat(lcs.fontSize) / size}px ${lcs.fontFamily}`;
-        s.textBaseline = 'middle';
-        s.fillStyle = ink;
-        s.fillText(word, 0, h / 2);
-        const img = s.getImageData(0, 0, w, h);
-        for (let p = 3; p < img.data.length; p += 4) {
-          // solid blocks: each pixel either on or off
-          img.data[p] = img.data[p] > 60 && Math.random() > holes ? 255 : 0;
-        }
-        s.putImageData(img, 0, 0);
-        ctx.imageSmoothingEnabled = false;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
-      }),
+    TEXT_STEPS.forEach(([size, holes], i) =>
+      at(START + i * PIXEL_MS, () =>
+        !interrupted(lbl, canvas) && pixelFrame(canvas, size, holes, (s, _w, h) => {
+          s.font = `${cs.fontWeight} ${parseFloat(cs.fontSize) / size}px ${cs.fontFamily}`;
+          s.textBaseline = 'middle';
+          s.fillStyle = cs.color;
+          s.fillText(word, 0, h / 2);
+        }),
+      ),
     );
-
-    // 2 · letters: random characters settling on the word, left to right
-    const start = PIXEL_START + PIXEL_STEPS.length * PIXEL_MS;
+    const start = START + TEXT_STEPS.length * PIXEL_MS;
     const frames = word.length + 4;
     for (let f = 0; f <= frames; f++) {
       at(start + f * SCRAMBLE_MS, () => {
         if (f === 0) {
+          if (interrupted(lbl, canvas)) return;
           canvas.remove();
           lbl.classList.remove('is-pixel');
+        } else if (lbl.textContent !== written) {
+          // changed by the button's own script between frames
+          timers.forEach(clearTimeout);
+          timers = [];
+          running = false;
+          lbl.style.minWidth = '';
+          return;
         }
         const settled = Math.max(0, f - 4);
         lbl.textContent =
           f === frames
             ? word
-            : [...word]
-                .map((ch, i) => (ch === ' ' || i < settled ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]))
-                .join('');
+            : [...word].map((ch, i) => (ch === ' ' || i < settled ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join('');
+        written = lbl.textContent;
+        if (f === frames) {
+          running = false;
+          lbl.style.minWidth = '';
+        }
       });
     }
-  });
+  };
 
+  /** an icon-only button: the icon pixelates and snaps back */
+  const playIcon = () => {
+    icon = [...btn.querySelectorAll<SVGSVGElement>('svg')].find((s) => s.getBoundingClientRect().width > 0) ?? null;
+    if (!icon) return;
+    const box = icon.getBoundingClientRect();
+    const own = btn.getBoundingClientRect();
+    const color = getComputedStyle(icon).color;
+    const svg = icon.cloneNode(true) as SVGSVGElement;
+    svg.setAttribute('width', String(box.width));
+    svg.setAttribute('height', String(box.height));
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.outerHTML.replaceAll('currentColor', color))}`;
+    if (getComputedStyle(btn).position === 'static') btn.style.position = 'relative';
+    const canvas = makeCanvas(box.width, box.height);
+    canvas.style.left = `${box.left - own.left - btn.clientLeft}px`;
+    canvas.style.top = `${box.top - own.top - btn.clientTop}px`;
+    canvas.style.inset = 'auto';
+    const shown = icon;
+    img.onload = () => {
+      shown.style.visibility = 'hidden';
+      btn.append(canvas);
+      ICON_STEPS.forEach(([size, holes], i) =>
+        at(i * PIXEL_MS, () => pixelFrame(canvas, size, holes, (s, w, h) => s.drawImage(img, 0, 0, w, h))),
+      );
+      at(ICON_STEPS.length * PIXEL_MS, settle);
+    };
+  };
+
+  const play = () => {
+    settle();
+    if (label) playText(label);
+    else playIcon();
+  };
+  // mouse: on hover, back when it leaves
+  btn.addEventListener('pointerenter', (e) => {
+    if (e.pointerType === 'mouse') play();
+  });
   btn.addEventListener('pointerleave', (e) => {
     if (e.pointerType === 'mouse') settle();
   });
+  // phones and tablets: on press (it plays out even after the finger lifts)
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' && !running) play();
+  });
 }
 
-if (matchMedia('(hover: hover)').matches) {
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.querySelectorAll<HTMLElement>(SELECTOR).forEach((btn) => setup(btn, reduced));
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.querySelectorAll<HTMLElement>(SELECTOR).forEach(setup);
 }
