@@ -19,9 +19,10 @@ interface Props {
   /** Adds the back button to the nav pill */
   back?: string;
   footer?: boolean;
-  /** Get in touch + nav pill / menu; false on full-screen flows like Contact (Figma
-      shows neither there) */
+  /** Get in touch + nav pill / menu */
   chrome?: boolean;
+  /** "Close" instead of "Get in touch" (the /contact page) */
+  close?: boolean;
 }
 const {
   title,
@@ -31,6 +32,7 @@ const {
   back,
   footer = true,
   chrome = true,
+  close = false,
 } = Astro.props;
 const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to your robot' : `${title} — Hello Robo`;
 ---
@@ -65,7 +67,7 @@ const pageTitle = title === 'Home' ? 'Hello Robo — Make the world say yes to y
     </script>
   </head>
   <body>
-    {chrome && <GetInTouch variant={headerVariant} />}
+    {chrome && <GetInTouch variant={headerVariant} close={close} />}
     <main>
       <slot />
     </main>

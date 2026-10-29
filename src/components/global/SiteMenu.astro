@@ -66,7 +66,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
         <img class="site-menu__micro" src="/images/menu/menu-micrographic.svg" alt="" width="380" height="224" loading="lazy" />
         <p class="site-menu__hello-title t-body">Say hello</p>
         <ul class="site-menu__socials t-body">
-          {socials.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+          {socials.map((s) => <li><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>)}
         </ul>
       </section>
     </div>
