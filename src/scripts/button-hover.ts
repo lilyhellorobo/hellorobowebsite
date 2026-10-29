@@ -1,7 +1,9 @@
 /**
  * Hover for buttons and text links — after exp.fiddle.digital: on hover the label breaks into
- * chunky pixels that get finer, then into random letters that settle on the real word from
- * left to right; an icon next to it (an arrow, the hexagon) pixelates and snaps back at the
+ * chunky pixels that get finer, then into random characters that settle on the real word.
+ * Every hover varies: the characters (letters, numbers, signs, binary, blocks, katakana,
+ * arrows, shapes — one or two sets mixed), the order they settle in (left, right, from the
+ * middle, random), the pace and the pixel steps; an icon next to it (an arrow, the hexagon) pixelates and snaps back at the
  * same time. Buttons with only an icon (play / pause, close, back) pixelate the icon.
  * Text links: every plain link with a short label (menu, footer, socials, "View →",
  * "Portfolio →", legal pages…), not the ones made of pictures or blocks of text. The button keeps its own colours throughout. With a mouse it plays on
@@ -43,22 +45,54 @@ const isTextLink = (a: HTMLAnchorElement) =>
   a.textContent!.trim().length > 0 &&
   a.textContent!.trim().length <= 40;
 
-const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=<>/';
-/** a random character in the case of `ch` (lower-case words scramble in lower case) */
-const glyph = (ch: string) => {
-  const g = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+/** The characters a scramble can use — every hover mixes one or two of these, so it never
+ *  looks the same twice */
+const GLYPH_SETS = [
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  '0123456789',
+  '#%&*+=<>/\\|_~',
+  '01',
+  '░▒▓█▚▞▖▗▘▝',
+  'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ',
+  '←↑→↓↖↗↘↙',
+  '◐◑◒◓●○◆◇■□',
+];
+/** Which letters settle first */
+const ORDERS = ['left', 'right', 'middle', 'random'] as const;
+
+const pick = <T,>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)];
+
+/** A fresh look for one hover: the glyphs, the settling order, the pace and the pixels */
+function variation(length: number) {
+  const a = pick(GLYPH_SETS);
+  const glyphs = Math.random() < 0.5 ? a : a + pick(GLYPH_SETS);
+  const order = pick(ORDERS);
+  // frame (from the start of the letters) at which each character settles
+  const lead = 2 + Math.floor(Math.random() * 4);
+  const settleAt = Array.from({ length }, (_, i) => {
+    const pos =
+      order === 'left' ? i
+      : order === 'right' ? length - 1 - i
+      : order === 'middle' ? Math.abs(i - (length - 1) / 2) * 2
+      : Math.random() * length;
+    return lead + Math.round(pos + Math.random() * 1.5);
+  });
+  const big = 7 + Math.floor(Math.random() * 5);
+  const steps = 2 + Math.floor(Math.random() * 3);
+  const pixels: [number, number][] = Array.from({ length: steps }, (_, i) => [
+    Math.max(3, Math.round(big - (i * (big - 3)) / Math.max(1, steps - 1))),
+    0.15 + Math.random() * 0.4,
+  ]);
+  return { glyphs, settleAt, pixels, pace: 35 + Math.floor(Math.random() * 25) };
+}
+
+/** a random character from `glyphs`, in the case of `ch` (lower-case words stay lower case) */
+const glyph = (glyphs: string, ch: string) => {
+  const g = pick([...glyphs]);
   return ch === ch.toLowerCase() && ch !== ch.toUpperCase() ? g.toLowerCase() : g;
 };
-/** pixel size (in CSS px) and share of blocks left out, frame by frame */
-const TEXT_STEPS: [number, number][] = [
-  [9, 0.5],
-  [7, 0.4],
-  [5, 0.3],
-  [4, 0.2],
-];
 const START = 40;
 const PIXEL_MS = 60;
-const SCRAMBLE_MS = 45;
 
 function setup(btn: HTMLElement, labelSelector?: string) {
   // the label: its own span (wrapping a bare text node if needed)
@@ -124,7 +158,8 @@ function setup(btn: HTMLElement, labelSelector?: string) {
     const cs = getComputedStyle(lbl);
     lbl.classList.add('is-pixel');
     lbl.append(canvas);
-    TEXT_STEPS.forEach(([size, holes], i) =>
+    const look = variation([...word].length);
+    look.pixels.forEach(([size, holes], i) =>
       at(START + i * PIXEL_MS, () =>
         !interrupted(lbl, canvas) && pixelFrame(canvas, size, holes, (s, _w, h) => {
           s.font = `${cs.fontWeight} ${parseFloat(cs.fontSize) / size}px ${cs.fontFamily}`;
@@ -134,10 +169,10 @@ function setup(btn: HTMLElement, labelSelector?: string) {
         }),
       ),
     );
-    const start = START + TEXT_STEPS.length * PIXEL_MS;
-    const frames = word.length + 4;
+    const start = START + look.pixels.length * PIXEL_MS;
+    const frames = Math.max(...look.settleAt) + 1;
     for (let f = 0; f <= frames; f++) {
-      at(start + f * SCRAMBLE_MS, () => {
+      at(start + f * look.pace, () => {
         if (f === 0) {
           if (interrupted(lbl, canvas)) return;
           canvas.remove();
@@ -150,11 +185,10 @@ function setup(btn: HTMLElement, labelSelector?: string) {
           lbl.style.minWidth = '';
           return;
         }
-        const settled = Math.max(0, f - 4);
         lbl.textContent =
           f === frames
             ? word
-            : [...word].map((ch, i) => (ch === ' ' || i < settled ? ch : glyph(ch))).join('');
+            : [...word].map((ch, i) => (ch === ' ' || f >= look.settleAt[i] ? ch : glyph(look.glyphs, ch))).join('');
         written = lbl.textContent;
         if (f === frames) {
           running = false;
