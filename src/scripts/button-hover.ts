@@ -1,8 +1,8 @@
 /**
  * Hover for buttons and text links — after exp.fiddle.digital: on hover the label breaks into
  * chunky pixels that get finer, then into random characters that settle on the real word.
- * Every hover varies: the characters (letters, numbers, signs, binary, blocks, katakana,
- * arrows, shapes — one or two sets mixed), the order they settle in (left, right, from the
+ * Every hover varies: the characters (letters, numbers, signs, binary, katakana — one or
+ * two sets mixed; no blocks, shapes or arrows), the order they settle in (left, right, from the
  * middle, random), the pace and the pixel steps; an icon next to it (an arrow, the hexagon) pixelates and snaps back at the
  * same time. Buttons with only an icon (play / pause, close, back) pixelate the icon.
  * Text links: every plain link with a short label (menu, footer, socials, "View →",
@@ -52,10 +52,7 @@ const GLYPH_SETS = [
   '0123456789',
   '#%&*+=<>/\\|_~',
   '01',
-  '░▒▓█▚▞▖▗▘▝',
   'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ',
-  '←↑→↓↖↗↘↙',
-  '◐◑◒◓●○◆◇■□',
 ];
 /** Which letters settle first */
 const ORDERS = ['left', 'right', 'middle', 'random'] as const;
@@ -77,11 +74,14 @@ function variation(length: number) {
       : Math.random() * length;
     return lead + Math.round(pos + Math.random() * 1.5);
   });
-  const big = 7 + Math.floor(Math.random() * 5);
+  // pixel blocks per letter height: coarse to fine (so 20px text and 160px headlines both
+  // read as blocky words, never as an empty box)
+  const coarse = 3 + Math.random() * 1.5;
+  const fine = 7 + Math.random() * 2;
   const steps = 2 + Math.floor(Math.random() * 3);
   const pixels: [number, number][] = Array.from({ length: steps }, (_, i) => [
-    Math.max(3, Math.round(big - (i * (big - 3)) / Math.max(1, steps - 1))),
-    0.15 + Math.random() * 0.4,
+    coarse + ((fine - coarse) * i) / Math.max(1, steps - 1),
+    0.1 + Math.random() * 0.25,
   ]);
   return { glyphs, settleAt, pixels, pace: 35 + Math.floor(Math.random() * 25) };
 }
@@ -161,8 +161,8 @@ function setup(btn: HTMLElement, labelSelector?: string) {
     const look = variation([...word].length);
     look.pixels.forEach(([size, holes], i) =>
       at(START + i * PIXEL_MS, () =>
-        !interrupted(lbl, canvas) && pixelFrame(canvas, size, holes, (s, _w, h) => {
-          s.font = `${cs.fontWeight} ${parseFloat(cs.fontSize) / size}px ${cs.fontFamily}`;
+        !interrupted(lbl, canvas) && pixelFrame(canvas, Math.max(2, parseFloat(cs.fontSize) / size), holes, (s, _w, h) => {
+          s.font = `${cs.fontWeight} ${Math.min(parseFloat(cs.fontSize), size)}px ${cs.fontFamily}`;
           s.textBaseline = 'middle';
           s.fillStyle = cs.color;
           s.fillText(word, 0, h / 2);
