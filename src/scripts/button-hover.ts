@@ -1,17 +1,20 @@
 /**
- * Hover for buttons and text links — after exp.fiddle.digital: on hover the label breaks into
- * chunky pixels that get finer, then into random characters that settle on the real word.
- * Every hover varies: the characters (letters, numbers, signs, binary, katakana — one or
- * two sets mixed; no blocks, shapes or arrows), the order they settle in (left, right, from the
- * middle, random), the pace and the pixel steps; an icon next to it (an arrow, the hexagon) pixelates and snaps back at the
- * same time. Buttons with only an icon (play / pause, close, back) pixelate the icon.
+ * Hover for buttons and text links — after exp.fiddle.digital: on hover the label first turns
+ * into chunky pixels — a blocky version of the word for a moment, then sparse blocks of two
+ * sizes flickering where the letters are (~half a second) — and only then random characters
+ * settle into the real word (~a third of a second). An icon next to it (an arrow, the
+ * hexagon) pixelates and flickers with the label and comes back as the letters start;
+ * buttons with only an icon (play / pause, close, back) do just that.
+ * Every hover varies: the flicker, the characters (letters, numbers, signs, binary, katakana —
+ * one or two sets mixed; no blocks, shapes or arrows), the order they settle in (left, right,
+ * from the middle, random) and the pace.
  * Text links: every plain link with a short label (menu, footer, socials, "View →",
- * "Portfolio →", legal pages…), not the ones made of pictures or blocks of text. The button keeps its own colours throughout. With a mouse it plays on
- * hover (leaving early puts everything back); on phones and tablets it plays on press.
- * Off for reduced motion.
+ * "Portfolio →", legal pages…), not the ones made of pictures or blocks of text. The button
+ * keeps its own colours throughout. With a mouse it plays on hover (leaving early puts
+ * everything back); on phones and tablets it plays on press. Off for reduced motion.
  */
 
-import { ICON_STEPS, makeCanvas, pixelFrame } from './pixel';
+import { makeCanvas, pixelFrame } from './pixel';
 
 const SELECTOR = [
   '.button',
@@ -59,31 +62,43 @@ const ORDERS = ['left', 'right', 'middle', 'random'] as const;
 
 const pick = <T,>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)];
 
-/** A fresh look for one hover: the glyphs, the settling order, the pace and the pixels */
+/** One pixel frame: when (ms from the start), block size (share of the font size), share of
+ *  blocks left out */
+type PixelStep = { at: number; block: number; holes: number };
+
+/** A fresh look for one hover: the pixel flicker, the glyphs, the settling order, the pace.
+ *  After the reference (exp.fiddle.digital): first the word turns into chunky blocks — a
+ *  blocky word for a moment, then sparse blocks of two sizes flickering where the letters
+ *  are (~half a second) — then random characters settle into the word (~a third). */
 function variation(length: number) {
+  const pixels: PixelStep[] = [];
+  let at = 0;
+  // the blocky word
+  for (let i = 0; i < 2; i++) {
+    pixels.push({ at, block: 0.3, holes: 0.2 + i * 0.1 });
+    at += 55 + Math.random() * 20;
+  }
+  // flicker: sparse blocks, small and big, scattered again every frame
+  const flickers = 5 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < flickers; i++) {
+    pixels.push({ at, block: Math.random() < 0.55 ? 0.5 : 0.9, holes: 0.38 + Math.random() * 0.2 });
+    at += 50 + Math.random() * 30;
+  }
   const a = pick(GLYPH_SETS);
   const glyphs = Math.random() < 0.5 ? a : a + pick(GLYPH_SETS);
   const order = pick(ORDERS);
-  // frame (from the start of the letters) at which each character settles
-  const lead = 2 + Math.floor(Math.random() * 4);
+  // frame (from the start of the letters) at which each character settles: all within a few
+  // frames, whatever the word's length
+  const span = 4 + Math.floor(Math.random() * 2);
   const settleAt = Array.from({ length }, (_, i) => {
     const pos =
       order === 'left' ? i
       : order === 'right' ? length - 1 - i
       : order === 'middle' ? Math.abs(i - (length - 1) / 2) * 2
       : Math.random() * length;
-    return lead + Math.round(pos + Math.random() * 1.5);
+    return 1 + Math.round((pos / Math.max(1, length - 1)) * span + Math.random());
   });
-  // pixel blocks per letter height: coarse to fine (so 20px text and 160px headlines both
-  // read as blocky words, never as an empty box)
-  const coarse = 3 + Math.random() * 1.5;
-  const fine = 7 + Math.random() * 2;
-  const steps = 2 + Math.floor(Math.random() * 3);
-  const pixels: [number, number][] = Array.from({ length: steps }, (_, i) => [
-    coarse + ((fine - coarse) * i) / Math.max(1, steps - 1),
-    0.1 + Math.random() * 0.25,
-  ]);
-  return { glyphs, settleAt, pixels, pace: 35 + Math.floor(Math.random() * 25) };
+  return { pixels, pixelEnd: at, glyphs, settleAt, pace: 55 + Math.floor(Math.random() * 20) };
 }
 
 /** a random character from `glyphs`, in the case of `ch` (lower-case words stay lower case) */
@@ -91,8 +106,45 @@ const glyph = (glyphs: string, ch: string) => {
   const g = pick([...glyphs]);
   return ch === ch.toLowerCase() && ch !== ch.toUpperCase() ? g.toLowerCase() : g;
 };
-const START = 40;
-const PIXEL_MS = 60;
+const START = 20;
+
+/**
+ * Pixel frame for a label: blocks of `px` on a grid over the word, filled where the grid cell
+ * falls on a letter (measured, never read back from a canvas — see pixel.ts), less a random
+ * share left out. At any text size this gives solid, chunky blocks where the letters are.
+ */
+function blockFrame(canvas: HTMLCanvasElement, cs: CSSStyleDeclaration, color: string, word: string, px: number, holes: number) {
+  const ctx = canvas.getContext('2d')!;
+  const w = canvas.clientWidth || parseFloat(canvas.style.width);
+  const h = canvas.clientHeight || parseFloat(canvas.style.height);
+  const dpr = canvas.width / w;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing;
+  // where each letter is, left to right
+  const spans: [number, number][] = [];
+  const chars = [...word];
+  let x = 0;
+  chars.forEach((ch, i) => {
+    const next = ctx.measureText(chars.slice(0, i + 1).join('')).width;
+    if (ch.trim()) spans.push([x, next]);
+    x = next;
+  });
+  // the letters' height: about the cap height, centred on the line
+  const fs = parseFloat(cs.fontSize);
+  const top = h / 2 - fs * 0.36;
+  const rows = Math.max(1, Math.round((fs * 0.72) / px));
+  const cols = Math.ceil(x / px);
+  ctx.fillStyle = color;
+  for (let c = 0; c < cols; c++) {
+    const a = c * px;
+    const b = a + px;
+    const on = spans.some(([s0, s1]) => Math.min(b, s1) - Math.max(a, s0) > px * 0.35);
+    if (!on) continue;
+    for (let r = 0; r < rows; r++) if (Math.random() >= holes) ctx.fillRect(Math.round(a), Math.round(top + r * px), Math.ceil(px), Math.ceil(px));
+  }
+}
 
 function setup(btn: HTMLElement, labelSelector?: string) {
   // the label: its own span (wrapping a bare text node if needed)
@@ -146,7 +198,7 @@ function setup(btn: HTMLElement, labelSelector?: string) {
   };
 
   /** the label: pixels, then random letters settling on the word */
-  const playText = (lbl: HTMLElement) => {
+  const playText = (lbl: HTMLElement, look: ReturnType<typeof variation>) => {
     word = lbl.textContent!.trim();
     written = lbl.textContent!;
     const box = lbl.getBoundingClientRect();
@@ -156,20 +208,17 @@ function setup(btn: HTMLElement, labelSelector?: string) {
     lbl.style.minWidth = `${box.width}px`;
     const canvas = makeCanvas(box.width, box.height);
     const cs = getComputedStyle(lbl);
+    // the colour now: hiding the words (is-pixel) makes the live one transparent, which drew
+    // every pixel frame invisible
+    const color = cs.color;
     lbl.classList.add('is-pixel');
     lbl.append(canvas);
-    const look = variation([...word].length);
-    look.pixels.forEach(([size, holes], i) =>
-      at(START + i * PIXEL_MS, () =>
-        !interrupted(lbl, canvas) && pixelFrame(canvas, Math.max(2, parseFloat(cs.fontSize) / size), holes, (s, _w, h) => {
-          s.font = `${cs.fontWeight} ${Math.min(parseFloat(cs.fontSize), size)}px ${cs.fontFamily}`;
-          s.textBaseline = 'middle';
-          s.fillStyle = cs.color;
-          s.fillText(word, 0, h / 2);
-        }),
-      ),
-    );
-    const start = START + look.pixels.length * PIXEL_MS;
+    const fontSize = parseFloat(cs.fontSize);
+    for (const { at: t, block, holes } of look.pixels) {
+      const px = Math.max(2, fontSize * block);
+      at(START + t, () => !interrupted(lbl, canvas) && blockFrame(canvas, cs, color, word, px, holes));
+    }
+    const start = START + look.pixelEnd;
     const frames = Math.max(...look.settleAt) + 1;
     for (let f = 0; f <= frames; f++) {
       at(start + f * look.pace, () => {
@@ -198,8 +247,8 @@ function setup(btn: HTMLElement, labelSelector?: string) {
     }
   };
 
-  /** the icon pixelates and snaps back (on its own, or next to the label) */
-  const playIcon = () => {
+  /** the icon pixelates and flickers with the label, then snaps back as the letters start */
+  const playIcon = (look: ReturnType<typeof variation>) => {
     icon = [...btn.querySelectorAll<SVGSVGElement>('svg')].find((s) => !label?.contains(s) && s.getBoundingClientRect().width > 0) ?? null;
     if (!icon) return;
     const box = icon.getBoundingClientRect();
@@ -218,13 +267,18 @@ function setup(btn: HTMLElement, labelSelector?: string) {
     canvas.style.left = `${box.left - own.left - btn.clientLeft}px`;
     canvas.style.top = `${box.top - own.top - btn.clientTop}px`;
     const shown = icon;
+    const begun = performance.now();
     img.onload = () => {
       shown.style.visibility = 'hidden';
       btn.append(canvas);
-      ICON_STEPS.forEach(([size, holes], i) =>
-        at(i * PIXEL_MS, () => pixelFrame(canvas, size, holes, (s, w, h) => s.drawImage(img, 0, 0, w, h))),
-      );
-      at(ICON_STEPS.length * PIXEL_MS, () => {
+      // on the label's timeline (the picture took a moment to load)
+      const late = performance.now() - begun;
+      for (const { at: t, block, holes } of look.pixels) {
+        // the icon's blocks: a little finer than the letters' (it's small)
+        const px = Math.max(2, box.height * block * 0.45);
+        at(Math.max(0, START + t - late), () => pixelFrame(canvas, px, holes * 0.6, (s, w, h) => s.drawImage(img, 0, 0, w, h)));
+      }
+      at(Math.max(0, START + look.pixelEnd - late), () => {
         canvas.remove();
         shown.style.visibility = '';
       });
@@ -233,8 +287,9 @@ function setup(btn: HTMLElement, labelSelector?: string) {
 
   const play = () => {
     settle();
-    if (label) playText(label);
-    playIcon();
+    const look = variation([...(label?.textContent?.trim() ?? '')].length);
+    if (label) playText(label, look);
+    playIcon(look);
   };
   // mouse: on hover, back when it leaves
   btn.addEventListener('pointerenter', (e) => {
