@@ -84,6 +84,11 @@ const stickerH = Math.round((stickerW * sh) / sw);
 
   /* ── Mobile: stamp + title first, illustration below ── */
   @media (max-width: 1023px) {
+    /* a long word ("Development") is wider than a phone at the H1 size and can't wrap:
+       the title shrinks with the screen so the longest word fits */
+    .position-hero__title {
+      font-size: min(var(--type-h1-size), 15vw);
+    }
     .position-hero {
       grid-template-columns: minmax(0, 1fr);
       gap: 64px;
