@@ -9,7 +9,7 @@
  * are foreshortened, keystoned and pulled toward the vanishing point like letters on a
  * turning drum. The block pins to the screen and scrolling turns the drum through every
  * project once; the name at the front is the active project: its background and
- * services show, and hovering its name shows VIEW (Home; on the Work page the name opens it). Row spacing ≈ Figma's (≈ 110px);
+ * services show, and clicking its name opens the project. Row spacing ≈ Figma's (≈ 110px);
  * the front name is at full opacity and the others fade fast (FADE), for contrast.
  * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
  * into one continuous turn; one project = half a screen of scrolling on Home, 70% on Work. Figma's CRT screen shader
@@ -107,8 +107,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
           </ol>
         </div>
 
-        {/* Work page: no VIEW, the name in front opens the project */}
-        {!infinite && <Button href={`/work/${active.id}`} variant="light" size="small" class="project-wheel__view" tabindex="-1">View</Button>}
+        {/* no VIEW button: the name in front opens the project */}
 
         {projects.map((p, i) => (
           <ul class:list={['project-wheel__services', 't-body', { 'is-current': i === 0 }]} data-index={i}>
@@ -188,13 +187,11 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     const data: Wheel = JSON.parse(root.dataset.wheel || '{}');
     const N = data.items.length;
     const stage = root.querySelector<HTMLElement>('.project-wheel__stage');
-    const canvas = root.querySelector<HTMLElement>('.project-wheel__canvas');
     const drum = root.querySelector<HTMLElement>('.project-wheel__drum');
     const rows = [...root.querySelectorAll<HTMLElement>('.project-wheel__name')];
-    const view = root.querySelector<HTMLAnchorElement>('.project-wheel__view');
     const bgs = [...root.querySelectorAll<HTMLElement>('.project-wheel__bg')];
     const lists = [...root.querySelectorAll<HTMLElement>('.project-wheel__services, .project-wheel__mark')];
-    if (!stage || !canvas || !drum || !N) continue;
+    if (!stage || !drum || !N) continue;
     const F = data.faces;
     const last = data.fade.length - 1;
     const mod = (n: number, m: number) => ((n % m) + m) % m;
@@ -248,8 +245,6 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
         const bg = bgs.find((el) => Number(el.dataset.index) === next);
         if (bg) slideSwap(bgs, bg, base - currentBase);
         lists.forEach((el) => el.classList.toggle('is-current', Number(el.dataset.index) === next));
-        if (view) view.href = data.items[next].href;
-        stage.classList.remove('is-hovering');
       }
       currentBase = base;
     };
@@ -355,51 +350,6 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       offset = target;
       place(offset);
     }
-
-    // VIEW: only while the front name (or the button itself) is hovered or focused;
-    // it sits just after the name (128 in Figma)
-    let hideTimer = 0;
-    // VIEW sits at one spot for every project: Figma's x 1051, or — if a project name is
-    // longer than Figma's — 24 after the longest name, so it never covers a name and
-    // never jumps between projects. Measured once per size with an off-screen copy.
-    const placeView = () => {
-      if (!view) return;
-      const probe = document.createElement('span');
-      probe.className = 't-h2';
-      probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0';
-      canvas.appendChild(probe);
-      let widest = 0;
-      for (const item of data.items) {
-        probe.textContent = item.name;
-        widest = Math.max(widest, probe.getBoundingClientRect().width);
-      }
-      probe.remove();
-      const unit = canvas.clientWidth / 1728;
-      const left = Math.max(1051 * unit, 319 * unit + widest + 24 * unit);
-      view.style.left = `${left}px`;
-    };
-    document.fonts.ready.then(placeView);
-    window.addEventListener('resize', placeView);
-    const show = () => {
-      if (!view || data.items[current]?.nda) return; // NDA projects: no VIEW
-      window.clearTimeout(hideTimer);
-      stage.classList.add('is-hovering');
-    };
-    const hide = () => {
-      hideTimer = window.setTimeout(() => stage.classList.remove('is-hovering'), 150);
-    };
-    root.querySelector('.project-wheel__names')?.addEventListener('pointerover', (e) => {
-      if ((e.target as HTMLElement).closest('.is-front')) show();
-    });
-    root.querySelector('.project-wheel__names')?.addEventListener('pointerout', (e) => {
-      if ((e.target as HTMLElement).closest('.is-front')) hide();
-    });
-    view?.addEventListener('pointerenter', show);
-    view?.addEventListener('pointerleave', hide);
-    root.addEventListener('focusin', (e) => {
-      if ((e.target as HTMLElement).closest('.is-front')) show();
-    });
-    root.addEventListener('focusout', hide);
   }
 
   // Mobile: pinned project slides. Progress 0→1 across the block picks the slide and
@@ -603,24 +553,6 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   .project-wheel--infinite .project-wheel__name.is-shown {
     pointer-events: auto;
     cursor: pointer;
-  }
-
-  /* VIEW: hidden until the front name is hovered or focused */
-  .project-wheel :global(.project-wheel__view) {
-    position: absolute;
-    left: calc(1051 / 1728 * 100%);
-    top: calc(573 / 1117 * 100%);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(calc(8 * var(--px)));
-    transition:
-      opacity 0.2s ease,
-      transform 0.3s ease;
-  }
-  .project-wheel__stage.is-hovering :global(.project-wheel__view) {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
   }
 
   /* Services of the front project: sitting on the rule (Figma 515 → 603, rule at 622), so
