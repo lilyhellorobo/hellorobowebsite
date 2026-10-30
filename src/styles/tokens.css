@@ -119,10 +119,7 @@
   --duration-normal: 0.45s;
   --duration-smooth: 0.7s;
   --duration-slow: 1.1s;                            /* image reveals */
-  /* image → image in the slideshows (Home, Services, Robo Radio): the next picture rises
-     from below the screen over the current one, which stays still */
-  --slide-duration: 1.4s;
-  --slide-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  /* image → image in the slideshows: scroll-linked, see src/scripts/slide-scrub.ts */
   --stagger: 0.04s;                                 /* delay between words / lines */
 
   /* ── Z-index ────────────────────────────────────────────────── */

@@ -168,7 +168,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
 )}
 
 <script>
-  import { slideSwap } from '../../scripts/slide-swap';
+  import { slideScrub } from '../../scripts/slide-scrub';
 
   // NDA projects don't open: a click on one blinks its NDA tag instead — 100% → 30% → 100%,
   // 4 times in 1s. Covers the desktop wheel, the phone wheel (WorkWheelMobile) and the phone cards.
@@ -191,7 +191,12 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     const stage = root.querySelector<HTMLElement>('.project-wheel__stage');
     const drum = root.querySelector<HTMLElement>('.project-wheel__drum');
     const rows = [...root.querySelectorAll<HTMLElement>('.project-wheel__name')];
-    const bgs = [...root.querySelectorAll<HTMLElement>('.project-wheel__bg')];
+    // the backgrounds uncover one another as the drum turns, round and round (slide-scrub.ts)
+    const pictures = slideScrub([...root.querySelectorAll<HTMLElement>('.project-wheel__bg')], {
+      frame: root.querySelector<HTMLElement>('.project-wheel__bgs'),
+      wrap: true,
+      smooth: false,
+    });
     const lists = [...root.querySelectorAll<HTMLElement>('.project-wheel__services, .project-wheel__mark')];
     if (!stage || !drum || !N) continue;
     const F = data.faces;
@@ -204,7 +209,6 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       return data.fade[i] + (data.fade[i + 1] - data.fade[i]) * (a - i);
     };
     let current = 0;
-    let currentBase = 0;
     let frame = 0;
 
     // Smooth follow: the drum eases toward `target`, time-based so it feels the same at
@@ -251,16 +255,13 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
         const link = row.firstElementChild as HTMLElement;
         if (link.tagName === 'A') link.tabIndex = front ? 0 : -1;
       });
+      pictures.set(offset);
       const next = mod(base, N);
       if (next !== current) {
         current = next;
         stage.dataset.active = String(next);
-        // the picture slides in: from below going forward, from above going back
-        const bg = bgs.find((el) => Number(el.dataset.index) === next);
-        if (bg) slideSwap(bgs, bg, base - currentBase);
         lists.forEach((el) => el.classList.toggle('is-current', Number(el.dataset.index) === next));
       }
-      currentBase = base;
     };
 
     // hover: how lit / how far each name should be, eased toward it every frame
@@ -422,7 +423,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   // showing / hiding doesn't make slides jump.
   for (const root of document.querySelectorAll<HTMLElement>('[data-project-slides]')) {
     const stage = root.querySelector<HTMLElement>('.project-cards__stage');
-    const bgs = [...root.querySelectorAll<HTMLElement>('.project-cards__bg')];
+    // the photos uncover one another with the scroll, like every slideshow (slide-scrub.ts)
+    const pictures = slideScrub([...root.querySelectorAll<HTMLElement>('.project-cards__bg')]);
     const slides = [...root.querySelectorAll<HTMLElement>('.project-card, .project-card__mark')];
     const count = root.querySelectorAll('.project-card').length;
     if (!stage || !count) continue;
@@ -435,10 +437,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
       const active = String(Math.min(count - 1, Math.floor(progress * count)));
       stage.style.setProperty('--progress', String(progress));
+      pictures.set(Math.min(count - 1, Math.max(0, progress * count - 0.5)));
       if (stage.dataset.active !== active) {
-        // the photo slides in like the other slideshows: from below going down, from above going back
-        const bg = bgs.find((el) => el.dataset.index === active);
-        if (bg) slideSwap(bgs, bg, Number(active) - Number(stage.dataset.active));
         stage.dataset.active = active;
         slides.forEach((el) => {
           const on = el.dataset.index === active;
@@ -520,8 +520,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     height: calc(1555 / 1117 * 100%);
     visibility: hidden;
   }
-  /* shown: the current picture, and the one it's sliding in over (slide-swap.ts) */
-  .project-wheel__bg:is(.is-current, .is-leaving) {
+  /* without JS the first shows; with it, slide-scrub.ts shows the ones in play */
+  .project-wheel__bg.is-current {
     visibility: visible;
   }
   /* 30% black over every background, under the names (also on the mobile cards) */
@@ -662,8 +662,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     background: var(--color-black);
     --progress: 0;
   }
-  /* Photos slide in over each other (slide-swap.ts), in a layer of their own under the
-     cards; same crop as desktop (the still's glowing edges stay outside) */
+  /* Photos uncover one another with the scroll (slide-scrub.ts), in a layer of their own
+     under the cards; same crop as desktop (the still's glowing edges stay outside) */
   .project-cards__bgs {
     position: absolute;
     inset: 0;
@@ -674,7 +674,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     inset: 0;
     visibility: hidden;
   }
-  .project-cards__bg:is(.is-current, .is-leaving) {
+  .project-cards__bg.is-current {
     visibility: visible;
   }
   .project-cards :global(.project-card__bg) {
