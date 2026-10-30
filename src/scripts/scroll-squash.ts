@@ -6,7 +6,12 @@
  * follows the scroll speed. A picture in a wrapper of its own squashes with the wrapper, so
  * a frame never shows an empty edge. Skips the blocks that already move their pictures
  * (same list as the image reveal), edge-to-edge pictures and small icons. Off for reduced motion.
+ *
+ * The same pictures also bend outward at the top and bottom edges of the screen
+ * (scroll-flare.ts).
  */
+
+import { flare, unflare } from './scroll-flare';
 
 const SKIP = [
   '.pt',
@@ -111,10 +116,13 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
           io.unobserve(img);
           continue;
         }
-        if (e.isIntersecting) visible.add(item);
-        else {
+        if (e.isIntersecting) {
+          visible.add(item);
+          flare(item.el);
+        } else {
           visible.delete(item);
           item.el.style.scale = '';
+          unflare(item.el);
         }
       }
     },
@@ -161,6 +169,18 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     };
   }
 
+  // the edge bend follows the scroll position
+  let bendFrame = 0;
+  const bend = () => {
+    bendFrame = 0;
+    for (const { el } of visible) flare(el);
+  };
+  const bendSoon = () => {
+    if (!bendFrame) bendFrame = requestAnimationFrame(bend);
+  };
+
   for (const el of document.querySelectorAll<HTMLElement>('main img, main video')) if (!el.closest(SKIP)) io.observe(el);
   addEventListener('scroll', track(page, () => scrollY), { passive: true });
+  addEventListener('scroll', bendSoon, { passive: true });
+  addEventListener('resize', bendSoon);
 }
