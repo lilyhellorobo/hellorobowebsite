@@ -12,7 +12,7 @@
  * (scroll-flare.ts) — only there: on big pictures it made scrolling heavy.
  */
 
-import { flare, unflare } from './scroll-flare';
+import { flare, flareScale, unflare } from './scroll-flare';
 
 const SKIP = [
   '.pt',
@@ -138,14 +138,14 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     frame = 0;
     let moving = step(page);
     for (const s of rows.values()) moving = step(s) || moving;
-    for (const { el, row } of visible) {
+    for (const { el, row, bends } of visible) {
       const v = page.value;
       const h = row ? rows.get(row)!.value : 0;
       // squash along the motion, bulge across it
-      el.style.scale = `${1 - h + v * BULGE} ${1 - v + h * BULGE}`;
+      el.style.scale = moving ? `${1 - h + v * BULGE} ${1 - v + h * BULGE}` : '';
+      if (bends) flareScale(el);
     }
     if (moving) frame = requestAnimationFrame(tick);
-    else for (const { el } of visible) el.style.scale = '';
   };
   function run() {
     if (!frame) frame = requestAnimationFrame(tick);
