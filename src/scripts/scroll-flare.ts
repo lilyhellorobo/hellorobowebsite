@@ -17,7 +17,16 @@ const EDGE = 0.15;
 const AMOUNT = 0.012;
 const MAX_PX = 10;
 
-type Flare = { img: HTMLImageElement; canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; key: string; on: boolean };
+type Flare = {
+  img: HTMLImageElement;
+  /** the same file without srcset: its size is the real one (an img picked from a srcset
+   *  reports its size divided by the screen density, which drew a zoomed-in corner) */
+  file: HTMLImageElement;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  key: string;
+  on: boolean;
+};
 const flares = new WeakMap<HTMLElement, Flare | null>();
 
 const pictureOf = (el: HTMLElement) => (el instanceof HTMLImageElement ? el : el.querySelector('img'));
@@ -34,13 +43,13 @@ function make(el: HTMLElement): Flare | null {
   img.after(canvas);
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
-  return { img, canvas, ctx, key: '', on: false };
+  return { img, file: new Image(), canvas, ctx, key: '', on: false };
 }
 
-/** the part of the image that object-fit shows in the box (cover, or the whole image) */
-function source(img: HTMLImageElement, w: number, h: number) {
-  const nw = img.naturalWidth;
-  const nh = img.naturalHeight;
+/** the part of the file that object-fit shows in the box (cover, or the whole image) */
+function source(img: HTMLImageElement, file: HTMLImageElement, w: number, h: number) {
+  const nw = file.naturalWidth;
+  const nh = file.naturalHeight;
   const cs = getComputedStyle(img);
   if (cs.objectFit !== 'cover') return { sx: 0, sy: 0, sw: nw, sh: nh };
   const k = Math.max(w / nw, h / nh);
@@ -62,14 +71,21 @@ export function flare(el: HTMLElement) {
   let f = flares.get(el);
   if (f === undefined) flares.set(el, (f = make(el)));
   if (!f) return;
-  const { img, canvas, ctx } = f;
+  const { img, file, canvas, ctx } = f;
+  // keep the plain copy on the file the picture shows (it changes with the window size)
+  const src = img.currentSrc || img.src;
+  if (src && file.src !== src) {
+    file.src = src;
+    f.key = '';
+    file.onload = () => flare(el);
+  }
   const r = img.getBoundingClientRect();
   const vh = innerHeight;
   const band = vh * EDGE;
   const inBand = r.width > 0 && r.bottom > 0 && r.top < vh && (r.top < band || r.bottom > vh - band);
   // still fading / rising in (image-reveal.ts): show the picture itself for that
   const revealing = [el, img].some((n) => n.getAnimations().some((an) => an.playState === 'running' || an.playState === 'paused'));
-  if (!inBand || revealing || !img.complete || !img.naturalWidth) {
+  if (!inBand || revealing || !img.complete || !img.naturalWidth || !file.complete || !file.naturalWidth) {
     if (f.on) hide(f);
     return;
   }
@@ -102,7 +118,7 @@ export function flare(el: HTMLElement) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  const s = source(img, w, h);
+  const s = source(img, file, w, h);
   // how much a row (picture px from its top) bends: 0 in the middle, 1 at the screen edge
   const bend = (y: number) => {
     const sy = r.top + y / k;
@@ -113,7 +129,7 @@ export function flare(el: HTMLElement) {
   const row = (y0: number, y1: number, b: number) => {
     const dw = w + 2 * out * b;
     ctx.drawImage(
-      img,
+      file,
       s.sx, s.sy + (y0 / h) * s.sh, s.sw, ((y1 - y0) / h) * s.sh,
       (pad + (w - dw) / 2) * dpr, y0 * dpr, dw * dpr, (y1 - y0) * dpr,
     );
