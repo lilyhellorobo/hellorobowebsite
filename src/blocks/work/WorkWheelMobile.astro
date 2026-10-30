@@ -9,7 +9,8 @@
  *
  * The wheel is a native scroll-snap list (light on phones, momentum for free): one row
  * per name; the name at the centre is the active one, the others fade and shrink with
- * their distance from it, like names going round the drum. The list is repeated LOOPS
+ * their distance from it, like names going round the drum. The photos slide in over each
+ * other as the active project changes (slide-swap.ts). The list is repeated LOOPS
  * times and quietly re-centred on the middle copy when the scrolling stops, so it turns
  * endlessly in both directions, like the desktop Work wheel.
  * Projects come from the projects collection (CMS), in `order`.
@@ -26,11 +27,13 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
 ---
 {projects.length > 0 && (
 <section class="work-wheel theme-dark only-mobile" aria-label="Selected work" data-work-wheel data-count={projects.length} data-start={start}>
-  {projects.map((p, i) => (
-    <div class:list={['work-wheel__bg', { 'is-current': i === 0 }]} data-index={i}>
-      <Media class="work-wheel__media" media={p.data.reveal} widths={[800, 1600]} sizes="275vw" loading={i === 0 ? 'eager' : 'lazy'} />
-    </div>
-  ))}
+  <div class="work-wheel__bgs">
+    {projects.map((p, i) => (
+      <div class:list={['work-wheel__bg', { 'is-current': i === 0 }]} data-index={i}>
+        <Media class="work-wheel__media" media={p.data.reveal} widths={[800, 1600]} sizes="275vw" loading={i === 0 ? 'eager' : 'lazy'} />
+      </div>
+    ))}
+  </div>
   <div class="work-wheel__shade" aria-hidden="true"></div>
   <div class="work-wheel__lines" aria-hidden="true"></div>
   {projects.map((p, i) => (
@@ -65,6 +68,8 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
 )}
 
 <script>
+  import { slideSwap } from '../../scripts/slide-swap';
+
   for (const root of document.querySelectorAll<HTMLElement>('[data-work-wheel]')) {
     const list = root.querySelector<HTMLElement>('[data-names]');
     if (!list) continue;
@@ -72,7 +77,8 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     const names = rows.map((r) => r.firstElementChild as HTMLElement);
     const count = Number(root.dataset.count);
     const start = Number(root.dataset.start);
-    const layers = [...root.querySelectorAll<HTMLElement>('.work-wheel__bg, .work-wheel__services, .work-wheel__mark')];
+    const bgs = [...root.querySelectorAll<HTMLElement>('.work-wheel__bg')];
+    const layers = [...root.querySelectorAll<HTMLElement>('.work-wheel__services, .work-wheel__mark')];
     // Opacity by distance from the centre, in rows (as on the desktop drum: the front
     // name stands out, the others fall away fast)
     const FADE = [1, 0.25, 0.14, 0.08, 0.05, 0];
@@ -118,8 +124,12 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
         }
         rows[now].removeAttribute('aria-hidden');
         names[now].removeAttribute('tabindex');
-        active = now;
         const index = String(now % count);
+        // the picture slides in: from below going down the list, from above going up
+        // (not on the first render, nor on the invisible re-centring jump between copies)
+        const bg = bgs.find((el) => el.dataset.index === index);
+        if (bg && !bg.classList.contains('is-current')) slideSwap(bgs, bg, now - active);
+        active = now;
         layers.forEach((el) => {
           const on = el.dataset.index === index;
           el.classList.toggle('is-current', on);
@@ -186,15 +196,21 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     background: var(--color-black);
     color: var(--color-white);
   }
-  /* Photos crossfade; the same crop as the Home cards */
+  /* Photos slide in over each other (in a layer of their own, under everything else); the
+     same crop as the Home cards */
+  .work-wheel__bgs {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+  }
   .work-wheel__bg {
     position: absolute;
     inset: 0;
-    opacity: 0;
-    transition: opacity 0.7s ease;
+    visibility: hidden;
   }
-  .work-wheel__bg.is-current {
-    opacity: 1;
+  /* shown: the current picture, and the one it's sliding in over (slide-swap.ts) */
+  .work-wheel__bg:is(.is-current, .is-leaving) {
+    visibility: visible;
   }
   .work-wheel :global(.work-wheel__media) {
     position: absolute;
