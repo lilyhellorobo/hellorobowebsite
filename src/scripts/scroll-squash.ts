@@ -7,8 +7,9 @@
  * a frame never shows an empty edge. Skips the blocks that already move their pictures
  * (same list as the image reveal), edge-to-edge pictures and small icons. Off for reduced motion.
  *
- * The same pictures also bend outward at the top and bottom edges of the screen
- * (scroll-flare.ts).
+ * The pictures of the content blocks (Robo Radio collage and episodes, Home's Robo Radio
+ * posters and news cards) also bend outward at the top and bottom edges of the screen
+ * (scroll-flare.ts) — only there: on big pictures it made scrolling heavy.
  */
 
 import { flare, unflare } from './scroll-flare';
@@ -30,6 +31,9 @@ const SKIP = [
   '.team',
 ].join(',');
 
+/** the blocks whose pictures also bend at the screen edges */
+const FLARE = '.radio-collage, .radio-episodes, .home-radio, .home-news';
+
 /** squash per px/ms of scroll speed, and the most it gets */
 const GAIN = 0.022;
 const MAX = 0.07;
@@ -40,7 +44,7 @@ const PULL = 0.14;
 const KEEP = 0.7;
 
 type Spring = { value: number; speed: number; target: number };
-type Item = { el: HTMLElement; row: HTMLElement | null };
+type Item = { el: HTMLElement; row: HTMLElement | null; bends: boolean };
 
 const spring = (): Spring => ({ value: 0, speed: 0, target: 0 });
 const step = (s: Spring) => {
@@ -100,7 +104,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       rows.set(row, s);
       row.addEventListener('scroll', track(s, () => row.scrollLeft), { passive: true });
     }
-    return { el: target, row };
+    return { el: target, row, bends: !!target.closest(FLARE) };
   };
 
   const io = new IntersectionObserver(
@@ -118,11 +122,11 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         }
         if (e.isIntersecting) {
           visible.add(item);
-          flare(item.el);
+          if (item.bends) flare(item.el);
         } else {
           visible.delete(item);
           item.el.style.scale = '';
-          unflare(item.el);
+          if (item.bends) unflare(item.el);
         }
       }
     },
@@ -173,7 +177,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   let bendFrame = 0;
   const bend = () => {
     bendFrame = 0;
-    for (const { el } of visible) flare(el);
+    for (const { el, bends } of visible) if (bends) flare(el);
   };
   const bendSoon = () => {
     if (!bendFrame) bendFrame = requestAnimationFrame(bend);
