@@ -102,8 +102,11 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
   .careers-positions__meta span {
     white-space: nowrap;
   }
-  .careers-positions__link:hover .t-h2 {
-    color: var(--color-orange);
+  /* hover only with a mouse: on a phone the tapped title stayed orange (also when coming back) */
+  @media (hover: hover) {
+    .careers-positions__link:hover .t-h2 {
+      color: var(--color-orange);
+    }
   }
 
   /* Small laptops: the labels flow and wrap as whole words ("Contract to hire" no longer

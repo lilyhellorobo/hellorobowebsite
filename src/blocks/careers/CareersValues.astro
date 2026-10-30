@@ -233,9 +233,14 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
     color: var(--color-grey-350);
     transition: color var(--duration-normal) var(--ease-out);
   }
-  .careers-values__tab.is-active button,
-  .careers-values__tab button:hover {
+  .careers-values__tab.is-active button {
     color: var(--color-black);
+  }
+  /* hover only with a mouse: on a phone it stays stuck after the tap */
+  @media (hover: hover) {
+    .careers-values__tab button:hover {
+      color: var(--color-black);
+    }
   }
   /* Active tab: the black segment fills with the scroll through that value
      (starts at Figma's 103 / 265) */

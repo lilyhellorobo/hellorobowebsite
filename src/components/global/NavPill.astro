@@ -69,6 +69,11 @@ const { back } = Astro.props;
   menu?.addEventListener('click', (e) => {
     if (e.target === menu || (e.target as HTMLElement).hasAttribute('data-menu-backdrop')) setOpen(false);
   });
+  // Back / forward from the browser cache brings the page back as it was left: with the
+  // menu open if a menu link was tapped. Close it (it's still under the page transition)
+  addEventListener('pageshow', (e) => {
+    if (e.persisted && root.dataset.menu === 'open') setOpen(false);
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && root.dataset.menu === 'open') {
       setOpen(false);
