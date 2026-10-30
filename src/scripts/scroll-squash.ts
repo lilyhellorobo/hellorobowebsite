@@ -35,8 +35,8 @@ const SKIP = [
 const FLARE = '.radio-collage, .radio-episodes, .home-radio, .home-news';
 
 /** squash per px/ms of scroll speed, and the most it gets */
-const GAIN = 0.022;
-const MAX = 0.07;
+const GAIN = 0.013;
+const MAX = 0.04;
 /** the other axis bulges by this share of the squash */
 const BULGE = 0.35;
 /** spring: pull towards the target, and how much of its speed it keeps each frame */
