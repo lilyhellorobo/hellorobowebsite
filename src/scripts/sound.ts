@@ -2,7 +2,8 @@
  * Sound design — after toyfight.co and pensatori-irrazionali.com: short, quiet UI sounds,
  * synthesized in the browser (Web Audio), so there are no audio files to load or license.
  *
- *  hover    a soft double blip as a button / link starts its pixel hover
+ * Every play varies (a few takes of each, pitch / level / timing nudged at random):
+ *  hover    a soft blip (double, up or down, pips, chirp…) as a button / link starts its pixel hover
  *  tick     a tiny digital tick on each frame of the letters settling (very quiet, high)
  *  click    a short bright click on press
  *  error    a low two-note "nope" when the contact form shows an error
@@ -95,28 +96,85 @@ export function sfx(name: Name) {
   if (now - (last[name] ?? -1e9) < GAP[name]) return;
   last[name] = now;
   const t = ctx.currentTime + 0.005;
+  // every play a little different: a few takes of each sound, then pitch, level and timing
+  // nudged at random — so a row of hovers never sounds like the same sample over and over
+  const p = vary(0.08); // pitch
+  const v = vary(0.2); // level
+  const d = vary(0.15); // timing
   switch (name) {
     case 'hover':
-      tone(t, 1500, 1400, 0.012, 0.12, 'triangle');
-      tone(t + 0.022, 1150, 1050, 0.04, 0.22, 'triangle');
+      take(name, [
+        // the double blip, down
+        () => {
+          tone(t, 1500 * p, 1400 * p, 0.012 * d, 0.12 * v, 'triangle');
+          tone(t + 0.022 * d, 1150 * p, 1050 * p, 0.04 * d, 0.22 * v, 'triangle');
+        },
+        // the double blip, up
+        () => {
+          tone(t, 1100 * p, 1050 * p, 0.012 * d, 0.12 * v, 'triangle');
+          tone(t + 0.024 * d, 1450 * p, 1550 * p, 0.035 * d, 0.2 * v, 'triangle');
+        },
+        // three quick pips
+        () => {
+          for (let i = 0; i < 3; i++) tone(t + i * 0.018 * d, (1250 + i * 120) * p, (1200 + i * 120) * p, 0.01, (0.1 + i * 0.04) * v, 'triangle');
+        },
+        // one soft chirp
+        () => tone(t, 950 * p, 1500 * p, 0.045 * d, 0.2 * v, 'sine'),
+        // a blip with a breath of noise
+        () => {
+          burst(t, 3000 * p, 0.01, 0.08 * v);
+          tone(t + 0.012, 1300 * p, 1200 * p, 0.04 * d, 0.2 * v, 'triangle');
+        },
+      ]);
       break;
     case 'tick':
-      burst(t, 4000 + Math.random() * 5000, 0.012, 0.18);
+      take(name, [
+        () => burst(t, 4000 + Math.random() * 5000, 0.012 * d, 0.18 * v),
+        () => burst(t, 6000 + Math.random() * 4000, 0.007, 0.2 * v),
+        () => tone(t, (3500 + Math.random() * 3000) * p, 3000 * p, 0.008, 0.06 * v, 'square'),
+      ]);
       break;
     case 'click':
-      burst(t, 5500, 0.006, 0.35);
-      tone(t, 2600, 1700, 0.05, 0.22);
+      take(name, [
+        () => {
+          burst(t, 5500 * p, 0.006, 0.35 * v);
+          tone(t, 2600 * p, 1700 * p, 0.05 * d, 0.22 * v);
+        },
+        () => {
+          burst(t, 4500 * p, 0.008, 0.32 * v);
+          tone(t, 2200 * p, 1500 * p, 0.04 * d, 0.2 * v, 'triangle');
+        },
+        () => {
+          burst(t, 7000 * p, 0.005, 0.38 * v);
+          tone(t, 3000 * p, 2100 * p, 0.035 * d, 0.18 * v);
+        },
+      ]);
       break;
+    // the form sounds stay recognisable: one shape, only nudged
     case 'error':
-      tone(t, 190, 175, 0.075, 0.3);
-      tone(t + 0.11, 150, 135, 0.13, 0.3);
+      tone(t, 190 * p, 175 * p, 0.075 * d, 0.3 * v);
+      tone(t + 0.11 * d, 150 * p, 135 * p, 0.13 * d, 0.3 * v);
       break;
-    case 'success':
-      tone(t, 660, 680, 0.07, 0.16, 'triangle');
-      tone(t + 0.08, 990, 1010, 0.07, 0.16, 'triangle');
-      tone(t + 0.16, 1320, 1360, 0.22, 0.18, 'triangle');
+    case 'success': {
+      const q = vary(0.04);
+      tone(t, 660 * q, 680 * q, 0.07, 0.16 * v, 'triangle');
+      tone(t + 0.08, 990 * q, 1010 * q, 0.07, 0.16 * v, 'triangle');
+      tone(t + 0.16, 1320 * q, 1360 * q, 0.22, 0.18 * v, 'triangle');
       break;
+    }
   }
+}
+
+/** 1 ± up to `amount`, at random */
+const vary = (amount: number) => 1 + (Math.random() * 2 - 1) * amount;
+
+/** plays one of a sound's takes at random, never the same one twice in a row */
+const lastTake: Partial<Record<Name, number>> = {};
+function take(name: Name, takes: (() => void)[]) {
+  let i = Math.floor(Math.random() * takes.length);
+  if (i === lastTake[name] && takes.length > 1) i = (i + 1) % takes.length;
+  lastTake[name] = i;
+  takes[i]();
 }
 
 // a click on every press of a button or link (the contact block's cards and steps included)
