@@ -428,9 +428,14 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   .radio-tv.is-sound .radio-tv__icon-sound {
     display: inline;
   }
-  .radio-tv__btn:hover,
   .radio-tv__btn:focus-visible {
     color: var(--color-orange);
+  }
+  /* hover only with a mouse: on a phone a tapped button stayed orange */
+  @media (hover: hover) {
+    .radio-tv__btn:hover {
+      color: var(--color-orange);
+    }
   }
   .radio-tv__icon-pause,
   .radio-tv.is-playing .radio-tv__icon-play {

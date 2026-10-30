@@ -52,8 +52,11 @@ import { mainNav, studio } from '../../data/site';
     border: 0;
     border-top: var(--line-width) solid var(--line-on-dark);
   }
-  .footer__row a:hover {
-    color: var(--color-orange);
+  /* hover only with a mouse: on a phone the tapped link stayed orange */
+  @media (hover: hover) {
+    .footer__row a:hover {
+      color: var(--color-orange);
+    }
   }
   /* Figma "footer" frame (1441 high): wordmark at 89, legal row at 1276, 115 below */
   .footer__bottom {
