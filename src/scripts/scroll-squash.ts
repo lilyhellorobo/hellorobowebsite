@@ -5,7 +5,7 @@
  * rows that scroll sideways (Latest news, the Robo Radio posters on phones). The amount
  * follows the scroll speed. A picture in a wrapper of its own squashes with the wrapper, so
  * a frame never shows an empty edge. Skips the blocks that already move their pictures
- * (same list as the image reveal), full-width pictures and small icons. Off for reduced motion.
+ * (same list as the image reveal), edge-to-edge pictures and small icons. Off for reduced motion.
  */
 
 const SKIP = [
@@ -63,16 +63,25 @@ const isRow = (el: Element) => {
 };
 
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const items: Item[] = [];
+  // the page (up / down) and each sideways row have their own spring
+  const page = spring();
+  const rows = new Map<HTMLElement, Spring>();
+
+  // only the pictures on screen are touched; each is sized up the first time it shows
+  // (lazy pictures have no size before they load)
+  const visible = new Set<Item>();
+  const items = new Map<HTMLElement, Item | null>();
   const taken = new Set<HTMLElement>();
-  for (const el of document.querySelectorAll<HTMLElement>('main img, main video')) {
-    if (el.closest(SKIP)) continue;
+
+  /** the picture's squash target, or null if it should stay as it is */
+  const prepare = (el: HTMLElement): Item | null => {
     const r = el.getBoundingClientRect();
-    if (r.width < 120 && r.height < 120) continue;
+    if (r.width < 120 && r.height < 120) return null;
     const target = mover(el);
-    // full-bleed pictures would open a gap at the screen edges
-    if (target.getBoundingClientRect().width >= innerWidth * 0.9) continue;
-    if (taken.has(target) || getComputedStyle(target).scale !== 'none') continue;
+    // full-bleed pictures (edge to edge) would open a gap at the screen edges
+    const t = target.getBoundingClientRect();
+    if (t.left <= 1 && t.right >= innerWidth - 1) return null;
+    if (taken.has(target) || getComputedStyle(target).scale !== 'none') return null;
     taken.add(target);
     let row: HTMLElement | null = null;
     for (let p = target.parentElement; p && p !== document.body; p = p.parentElement) {
@@ -81,16 +90,27 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         break;
       }
     }
-    items.push({ el: target, row });
-  }
+    if (row && !rows.has(row)) {
+      const s = spring();
+      rows.set(row, s);
+      row.addEventListener('scroll', track(s, () => row.scrollLeft), { passive: true });
+    }
+    return { el: target, row };
+  };
 
-  // only the pictures on screen are touched
-  const visible = new Set<Item>();
-  const byEl = new Map(items.map((i) => [i.el, i]));
   const io = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
-        const item = byEl.get(e.target as HTMLElement)!;
+        const img = e.target as HTMLElement;
+        if (!items.has(img)) {
+          if (!e.isIntersecting || !img.getBoundingClientRect().width) continue;
+          items.set(img, prepare(img));
+        }
+        const item = items.get(img);
+        if (!item) {
+          io.unobserve(img);
+          continue;
+        }
         if (e.isIntersecting) visible.add(item);
         else {
           visible.delete(item);
@@ -100,12 +120,6 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     },
     { rootMargin: '10% 0px' },
   );
-  items.forEach((i) => io.observe(i.el));
-
-  // the page (up / down) and each sideways row have their own spring
-  const page = spring();
-  const rows = new Map<HTMLElement, Spring>();
-  for (const i of items) if (i.row && !rows.has(i.row)) rows.set(i.row, spring());
 
   let frame = 0;
   const tick = () => {
@@ -121,12 +135,12 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (moving) frame = requestAnimationFrame(tick);
     else for (const { el } of visible) el.style.scale = '';
   };
-  const run = () => {
+  function run() {
     if (!frame) frame = requestAnimationFrame(tick);
-  };
+  }
 
   /** feeds a spring from a scroll position: speed in px/ms, eased off when it stops */
-  const track = (s: Spring, read: () => number) => {
+  function track(s: Spring, read: () => number) {
     let last = read();
     let lastT = performance.now();
     let idle = 0;
@@ -145,10 +159,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       }, 60);
       run();
     };
-  };
-
-  if (items.length) {
-    addEventListener('scroll', track(page, () => scrollY), { passive: true });
-    for (const [row, s] of rows) row.addEventListener('scroll', track(s, () => row.scrollLeft), { passive: true });
   }
+
+  for (const el of document.querySelectorAll<HTMLElement>('main img, main video')) if (!el.closest(SKIP)) io.observe(el);
+  addEventListener('scroll', track(page, () => scrollY), { passive: true });
 }
