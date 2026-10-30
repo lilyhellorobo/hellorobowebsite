@@ -15,8 +15,8 @@ const NS = 'http://www.w3.org/2000/svg';
 /** share of the screen height the bend takes, at the top and at the bottom */
 const EDGE = 0.15;
 /** how far the corners flare out, as a share of the picture's width (px cap) */
-const AMOUNT = 0.02;
-const MAX_PX = 16;
+const AMOUNT = 0.012;
+const MAX_PX = 10;
 
 const svgUrl = (body: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="${NS}" width="16" height="16" viewBox="0 0 16 16" preserveAspectRatio="none">${body}</svg>`)}`;
 const grey = (v: number) => {
