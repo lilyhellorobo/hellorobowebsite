@@ -8,6 +8,8 @@
  * wheels, Team canvas). Off for reduced motion.
  */
 
+import { uncovered } from './uncovered';
+
 const TEXT = 'main p, main li, main blockquote, main dd';
 const SKIP = [
   'h1', 'h2', 'h3', '.t-h1', '.t-h2', '.t-h3', 'a', 'button', 'label',
@@ -120,19 +122,21 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   paras.forEach((p) => near.observe(p.el));
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', schedule);
-  // first paint: everything starts dim; what's on screen now lights up by itself, what's
-  // already been scrolled past shows lit
-  const start = performance.now() + AUTO_DELAY;
-  for (const p of paras) {
+  // first paint: everything starts dim; what's on screen now lights up by itself (once the
+  // page transition has uncovered the page), what's already been scrolled past shows lit
+  const onScreen = paras.filter((p) => {
     const r = p.el.getBoundingClientRect();
-    if (r.top < innerHeight && r.bottom > 0) {
-      p.auto = start;
-      active.add(p);
-    }
-  }
+    return r.top < innerHeight && r.bottom > 0;
+  });
   paras.forEach((p) => active.add(p));
   update();
   active.clear();
-  paras.filter((p) => p.auto !== undefined).forEach((p) => active.add(p));
-  schedule();
+  uncovered.then(() => {
+    const start = performance.now() + AUTO_DELAY;
+    for (const p of onScreen) {
+      p.auto = start;
+      active.add(p);
+    }
+    schedule();
+  });
 }

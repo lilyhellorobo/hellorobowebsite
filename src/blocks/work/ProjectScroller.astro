@@ -20,7 +20,7 @@
  * project sticks at the front, then the drum moves fast to the next and snaps into
  * place), and a 70% black layer over the backgrounds (30% on Home).
  * Mobile, Home (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
- * slides that pin and change on scroll, like the Home showcase: the photo crossfades,
+ * slides that pin and change on scroll, like the Home showcase: the photo slides in,
  * name / services / VIEW swap, and the bright segment of the line shows the progress.
  * Mobile, Work page (`infinite`): a flat, lighter wheel instead — WorkWheelMobile.
  * Projects come from the projects collection (CMS), in `order`; the first is in front.
@@ -130,11 +130,13 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
 {!infinite && (
 <Tag class="project-cards theme-dark only-mobile" aria-label="Selected work" style={`--count: ${cards.length}`} data-project-slides>
   <div class="project-cards__stage" data-active="0">
-    {cards.map((c, i) => (
-      <div class:list={['project-cards__bg', { 'is-current': i === 0 }]} data-index={i}>
-        <Media class="project-card__bg" media={c.data.reveal} widths={[800, 1600]} sizes="275vw" loading="lazy" />
-      </div>
-    ))}
+    <div class="project-cards__bgs">
+      {cards.map((c, i) => (
+        <div class:list={['project-cards__bg', { 'is-current': i === 0 }]} data-index={i}>
+          <Media class="project-card__bg" media={c.data.reveal} widths={[800, 1600]} sizes="275vw" loading="lazy" />
+        </div>
+      ))}
+    </div>
     <div class="project-wheel__shade" aria-hidden="true"></div>
     <div class="project-scroller__scanlines" aria-hidden="true"></div>
     {cards.map((c, i) => (
@@ -420,7 +422,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   // showing / hiding doesn't make slides jump.
   for (const root of document.querySelectorAll<HTMLElement>('[data-project-slides]')) {
     const stage = root.querySelector<HTMLElement>('.project-cards__stage');
-    const slides = [...root.querySelectorAll<HTMLElement>('.project-cards__bg, .project-card, .project-card__mark')];
+    const bgs = [...root.querySelectorAll<HTMLElement>('.project-cards__bg')];
+    const slides = [...root.querySelectorAll<HTMLElement>('.project-card, .project-card__mark')];
     const count = root.querySelectorAll('.project-card').length;
     if (!stage || !count) continue;
     let frame = 0;
@@ -433,6 +436,9 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       const active = String(Math.min(count - 1, Math.floor(progress * count)));
       stage.style.setProperty('--progress', String(progress));
       if (stage.dataset.active !== active) {
+        // the photo slides in like the other slideshows: from below going down, from above going back
+        const bg = bgs.find((el) => el.dataset.index === active);
+        if (bg) slideSwap(bgs, bg, Number(active) - Number(stage.dataset.active));
         stage.dataset.active = active;
         slides.forEach((el) => {
           const on = el.dataset.index === active;
@@ -656,15 +662,20 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     background: var(--color-black);
     --progress: 0;
   }
-  /* Photos crossfade; same crop as desktop (the still's glowing edges stay outside) */
+  /* Photos slide in over each other (slide-swap.ts), in a layer of their own under the
+     cards; same crop as desktop (the still's glowing edges stay outside) */
+  .project-cards__bgs {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+  }
   .project-cards__bg {
     position: absolute;
     inset: 0;
-    opacity: 0;
-    transition: opacity 0.7s ease;
+    visibility: hidden;
   }
-  .project-cards__bg.is-current {
-    opacity: 1;
+  .project-cards__bg:is(.is-current, .is-leaving) {
+    visibility: visible;
   }
   .project-cards :global(.project-card__bg) {
     position: absolute;

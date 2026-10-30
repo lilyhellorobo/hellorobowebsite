@@ -159,10 +159,10 @@ const STEP = 2;
   .radio-episodes__more[hidden] {
     display: none;
   }
-  /* Newly loaded rows fade up (placeholder for the motion step) */
+  /* Newly loaded rows fade up, with the site's reveal timing */
   .radio-episodes__row.is-revealed,
   .radio-episodes__row.is-revealed ~ .radio-episodes__row {
-    animation: radio-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: radio-reveal var(--duration-smooth) var(--ease-out) both;
   }
   @keyframes radio-reveal {
     from {

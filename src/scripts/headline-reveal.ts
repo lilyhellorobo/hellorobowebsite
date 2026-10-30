@@ -67,6 +67,8 @@ function split(h: HTMLElement) {
   return n;
 }
 
+import { uncovered } from './uncovered';
+
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   // headings, and big statement paragraphs without a heading class
   const big = [...document.querySelectorAll<HTMLElement>('main p')].filter((p) => !p.matches(HEADLINES) && parseFloat(getComputedStyle(p).fontSize) > 26);
@@ -82,7 +84,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     (entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
-        e.target.classList.add('is-in');
+        // not while the page transition still covers the page
+        uncovered.then(() => e.target.classList.add('is-in'));
         seen.unobserve(e.target);
       }
     },
@@ -102,7 +105,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     (entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
-        e.target.closest('.slide-wait')?.classList.remove('slide-wait');
+        uncovered.then(() => e.target.closest('.slide-wait')?.classList.remove('slide-wait'));
         slideSeen.unobserve(e.target);
       }
     },

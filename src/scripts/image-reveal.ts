@@ -9,6 +9,8 @@
  * Off for reduced motion.
  */
 
+import { uncovered } from './uncovered';
+
 const SKIP = [
   '.pt',
   '.site-menu',
@@ -62,7 +64,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         if (!e.isIntersecting) continue;
         const anims = waiting.get(e.target);
         if (anims) {
-          anims.forEach((a) => a.play());
+          // not while the page transition still covers the page
+          uncovered.then(() => anims.forEach((a) => a.play()));
           waiting.delete(e.target);
         }
         seen.unobserve(e.target);
