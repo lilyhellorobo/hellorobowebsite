@@ -8,15 +8,15 @@
  * left-to-right ramp (how far each column moves, outward from the middle) times a top /
  * bottom ramp placed where the screen edges cross the picture (how much each row moves).
  * The ramps are moved as the page scrolls; pictures outside the bands carry no filter.
- * Used by scroll-squash.ts for the same pictures.
+ * Used by scroll-squash.ts for the pictures of the content blocks only (it is heavy).
  */
 
 const NS = 'http://www.w3.org/2000/svg';
 /** share of the screen height the bend takes, at the top and at the bottom */
-const EDGE = 0.2;
+const EDGE = 0.15;
 /** how far the corners flare out, as a share of the picture's width (px cap) */
-const AMOUNT = 0.025;
-const MAX_PX = 32;
+const AMOUNT = 0.02;
+const MAX_PX = 16;
 
 const svgUrl = (body: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="${NS}" width="16" height="16" viewBox="0 0 16 16" preserveAspectRatio="none">${body}</svg>`)}`;
 const grey = (v: number) => {
