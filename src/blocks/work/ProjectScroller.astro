@@ -9,7 +9,7 @@
  * are foreshortened, keystoned and pulled toward the vanishing point like letters on a
  * turning drum. The block pins to the screen and scrolling turns the drum through every
  * project once; the name at the front is the active project: its background and
- * services show, and hovering its name shows VIEW. Row spacing ≈ Figma's (≈ 110px);
+ * services show, and hovering its name shows VIEW (Home; on the Work page the name opens it). Row spacing ≈ Figma's (≈ 110px);
  * the front name is at full opacity and the others fade fast (FADE), for contrast.
  * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
  * into one continuous turn; one project = half a screen of scrolling on Home, 70% on Work. Figma's CRT screen shader
@@ -107,7 +107,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
           </ol>
         </div>
 
-        <Button href={`/work/${active.id}`} variant="light" size="small" class="project-wheel__view" tabindex="-1">View</Button>
+        {/* Work page: no VIEW, the name in front opens the project */}
+        {!infinite && <Button href={`/work/${active.id}`} variant="light" size="small" class="project-wheel__view" tabindex="-1">View</Button>}
 
         {projects.map((p, i) => (
           <ul class:list={['project-wheel__services', 't-body', { 'is-current': i === 0 }]} data-index={i}>
