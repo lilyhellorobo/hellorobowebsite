@@ -9,8 +9,8 @@
  *
  * The wheel is a native scroll-snap list (light on phones, momentum for free): one row
  * per name; the name at the centre is the active one, the others fade and shrink with
- * their distance from it, like names going round the drum. The photos slide in over each
- * other as the active project changes (slide-swap.ts). The list is repeated LOOPS
+ * their distance from it, like names going round the drum. The photos uncover one another
+ * as the list turns, round and round (slide-scrub.ts). The list is repeated LOOPS
  * times and quietly re-centred on the middle copy when the scrolling stops, so it turns
  * endlessly in both directions, like the desktop Work wheel.
  * Projects come from the projects collection (CMS), in `order`.
@@ -68,7 +68,7 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
 )}
 
 <script>
-  import { slideSwap } from '../../scripts/slide-swap';
+  import { slideScrub } from '../../scripts/slide-scrub';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-work-wheel]')) {
     const list = root.querySelector<HTMLElement>('[data-names]');
@@ -77,7 +77,7 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     const names = rows.map((r) => r.firstElementChild as HTMLElement);
     const count = Number(root.dataset.count);
     const start = Number(root.dataset.start);
-    const bgs = [...root.querySelectorAll<HTMLElement>('.work-wheel__bg')];
+    const pictures = slideScrub([...root.querySelectorAll<HTMLElement>('.work-wheel__bg')], { wrap: true });
     const layers = [...root.querySelectorAll<HTMLElement>('.work-wheel__services, .work-wheel__mark')];
     // Opacity by distance from the centre, in rows (as on the desktop drum: the front
     // name stands out, the others fall away fast)
@@ -116,6 +116,7 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
         const s = 1 - Math.min(a, 4) * 0.07;
         row.style.transform = `translateY(${(-d * rowH * (1 - s)) / 2}px) scale(${s * fit[i]})`;
       });
+      pictures.set(pos);
       const now = Math.round(pos);
       if (now !== active && rows[now]) {
         if (active >= 0 && rows[active]) {
@@ -125,10 +126,6 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
         rows[now].removeAttribute('aria-hidden');
         names[now].removeAttribute('tabindex');
         const index = String(now % count);
-        // the picture slides in: from below going down the list, from above going up
-        // (not on the first render, nor on the invisible re-centring jump between copies)
-        const bg = bgs.find((el) => el.dataset.index === index);
-        if (bg && !bg.classList.contains('is-current')) slideSwap(bgs, bg, now - active);
         active = now;
         layers.forEach((el) => {
           const on = el.dataset.index === index;
@@ -208,8 +205,8 @@ const start = projects.length * Math.floor(LOOPS / 2); // first project of the m
     inset: 0;
     visibility: hidden;
   }
-  /* shown: the current picture, and the one it's sliding in over (slide-swap.ts) */
-  .work-wheel__bg:is(.is-current, .is-leaving) {
+  /* without JS the first shows; with it, slide-scrub.ts shows the ones in play */
+  .work-wheel__bg.is-current {
     visibility: visible;
   }
   .work-wheel :global(.work-wheel__media) {

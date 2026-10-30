@@ -100,12 +100,19 @@ const last = topics[topics.length - 1].line / 1648;
 </section>
 
 <script>
+  import { slideScrub } from '../../scripts/slide-scrub';
+
   // Pinned topics: progress 0→1 across the block picks the topic and grows the line.
-  // Each slide gets data-state: "past" (scrolled by), "current", or "next".
+  // Each slide gets data-state: "past" (scrolled by), "current", or "next"; the clips
+  // uncover one another with the scroll, each box on its own (slide-scrub.ts).
   for (const root of document.querySelectorAll<HTMLElement>('[data-clips]')) {
     const stage = root.querySelector<HTMLElement>('.radio-clips__stage');
     const slides = [...root.querySelectorAll<HTMLElement>('.radio-clips__slide')];
     if (!stage || !slides.length) continue;
+    const boxes = Math.max(...slides.map((s) => s.querySelectorAll('.radio-clips__media').length));
+    const pictures = Array.from({ length: boxes }, (_, b) =>
+      slideScrub(slides.map((s) => s.querySelectorAll<HTMLElement>('.radio-clips__media')[b]).filter(Boolean)),
+    );
     let frame = 0;
     const update = () => {
       frame = 0;
@@ -115,6 +122,8 @@ const last = topics[topics.length - 1].line / 1648;
       const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
       const active = Math.min(slides.length - 1, Math.floor(progress * slides.length));
       stage.style.setProperty('--progress', String(progress));
+      const p = Math.min(slides.length - 1, Math.max(0, progress * slides.length - 0.5));
+      pictures.forEach((box) => box.set(p));
       if (stage.dataset.active === String(active)) return;
       stage.dataset.active = String(active);
       slides.forEach((slide, i) => {
@@ -252,23 +261,13 @@ const last = topics[topics.length - 1].line / 1648;
     transition-delay: 0.3s;
   }
 
-  /* ── Clips: the next topic's clips slide in from the bottom over the previous ── */
-  /* The boxes stay put; the next topic's pictures slide up inside them (clipped by them)
-     over the current ones, which stay still — back: they slide down again. Boxes after the
-     first topic are see-through, and each topic's captions show only while it's current. */
+  /* ── Clips: the next topic's clips are uncovered from the bottom over the previous ones
+     as you scroll, their pictures drifting slowly inside (slide-scrub.ts). Boxes after the
+     first topic are see-through, and each topic's captions show only while it's current.
+     Without JS: the first topic's. ── */
   .radio-clips__slide:not([data-index='0']) .radio-clips__media {
     background: none;
-  }
-  /* arriving, the picture also settles from 106% to its size — one soft glide */
-  .radio-clips__media :global(img) {
-    transition:
-      translate var(--slide-duration) var(--slide-ease),
-      scale var(--slide-duration) var(--slide-ease);
-    will-change: translate;
-  }
-  .radio-clips__slide[data-state='next'] .radio-clips__media :global(img) {
-    translate: 0 100%;
-    scale: 1.06;
+    visibility: hidden;
   }
   .radio-clips__clip figcaption {
     transition: opacity 0.35s ease;

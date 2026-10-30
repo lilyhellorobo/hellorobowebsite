@@ -93,11 +93,15 @@ const slides = [
 </section>
 
 <script>
-  // Pinned slides: progress 0→1 across the scroller drives the line and the active slide.
+  import { slideScrub } from '../../scripts/slide-scrub';
+
+  // Pinned slides: progress 0→1 across the scroller drives the line, the active slide and
+  // the pictures, which uncover one another with the scroll (slide-scrub.ts).
   for (const scroller of document.querySelectorAll<HTMLElement>('[data-showcase]')) {
     const stage = scroller.querySelector<HTMLElement>('.home-showcase__stage');
     const count = Number(getComputedStyle(scroller).getPropertyValue('--slides')) || 3;
     const parts = scroller.querySelectorAll<HTMLElement>('.home-showcase__title, .home-showcase__services');
+    const pictures = slideScrub([...scroller.querySelectorAll<HTMLElement>('.home-showcase__bg')]);
     let frame = 0;
 
     const update = () => {
@@ -115,12 +119,9 @@ const slides = [
       stage.style.setProperty('--enter', String(enter));
       const active = Math.min(count - 1, Math.floor(progress * count));
       stage.style.setProperty('--progress', String(progress));
+      pictures.set(Math.min(count - 1, Math.max(0, progress * count - 0.5)));
       if (stage.dataset.active !== String(active)) {
         stage.dataset.active = String(active);
-        // pictures up to the active one are in place, later ones wait below the screen
-        stage.querySelectorAll<HTMLElement>('.home-showcase__bg').forEach((bg) => {
-          bg.dataset.slideState = Number(bg.dataset.slide) <= active ? 'current' : 'next';
-        });
         parts.forEach((el) => el.setAttribute('aria-hidden', String(el.dataset.slide !== String(active))));
       }
     };
@@ -163,16 +164,16 @@ const slides = [
     clip-path: inset(0 calc(var(--page-margin) * (1 - var(--enter))));
   }
 
-  /* ── Backgrounds: the next picture rises from below the screen over the current one
-     (back: it slides down again) — the same move as the Services and Robo Radio slides ── */
+  /* ── Backgrounds: the next picture is uncovered from the bottom over the current one as
+     you scroll, drifting slowly inside the frame (slide-scrub.ts; same as every slideshow).
+     Without JS: only the first shows ── */
   .home-showcase__bg {
     position: absolute;
     inset: 0;
-    transition: translate var(--slide-duration) var(--slide-ease);
-    will-change: translate;
+    overflow: hidden;
   }
   .home-showcase__bg[data-slide-state='next'] {
-    translate: 0 100%;
+    visibility: hidden;
   }
   .home-showcase :global(.home-showcase__photo) {
     position: absolute;
@@ -252,9 +253,6 @@ const slides = [
     .home-showcase__title,
     .home-showcase__services {
       transform: none;
-    }
-    .home-showcase__bg {
-      transition-duration: 0.01s;
     }
   }
 
