@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci",
+  "buildCommand": "node scripts/fetch-fonts.mjs && npm run build && rm -rf dist/client/styleguide dist/client/blocks dist/client/fonts/README.md",
+  "outputDirectory": "dist/client"
+}
