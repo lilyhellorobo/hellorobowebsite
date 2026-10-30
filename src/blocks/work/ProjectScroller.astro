@@ -221,6 +221,17 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     let running = 0;
     let lastT = 0;
 
+    // Hover (after the reference recording): the name under the cursor lights up and drifts
+    // a little toward the cursor, sideways; the names next to it follow a touch. `fades` is
+    // each name's opacity on the drum, `lit` / `shift` the eased hover on top of it.
+    const HOVER_LIGHT = 0.6; // share of the way to full white a hovered name goes
+    const fades = rows.map(() => 0);
+    const lit = rows.map(() => 0);
+    const shift = rows.map(() => 0);
+    const paint = (i: number) => {
+      rows[i].style.opacity = String(fades[i] + lit[i] * (1 - fades[i]) * HOVER_LIGHT);
+    };
+
     const place = (offset: number) => {
       drum.style.setProperty('--rot', `${offset * data.step}deg`);
       const base = Math.round(offset);
@@ -230,7 +241,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
         let d = mod(i - offset, F);
         if (d > F / 2) d -= F;
         const o = fade(Math.abs(d));
-        row.style.opacity = String(o);
+        fades[i] = o;
+        paint(i);
         row.classList.toggle('is-shown', o > 0.04);
         const front = i === frontFace;
         row.classList.toggle('is-front', front);
@@ -248,6 +260,56 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       }
       currentBase = base;
     };
+
+    // hover: how lit / how far each name should be, eased toward it every frame
+    const HOVER_PULL = 0.12; // share of the cursor's sideways distance a name drifts
+    const HOVER_MAX = 48; // px, the most it drifts
+    const litTo = rows.map(() => 0);
+    const shiftTo = rows.map(() => 0);
+    let hoverFrame = 0;
+    const hoverTick = () => {
+      hoverFrame = 0;
+      let moving = false;
+      rows.forEach((row, i) => {
+        const l = lit[i] + (litTo[i] - lit[i]) * 0.14;
+        const x = shift[i] + (shiftTo[i] - shift[i]) * 0.1;
+        const settled = Math.abs(l - litTo[i]) < 0.002 && Math.abs(x - shiftTo[i]) < 0.1;
+        lit[i] = settled ? litTo[i] : l;
+        shift[i] = settled ? shiftTo[i] : x;
+        if (!settled) moving = true;
+        if (lit[i] || shift[i] || !settled) {
+          paint(i);
+          row.style.translate = shift[i] ? `${shift[i].toFixed(1)}px 0` : '';
+        }
+      });
+      if (moving) hoverFrame = requestAnimationFrame(hoverTick);
+    };
+    const hoverRun = () => {
+      if (!hoverFrame) hoverFrame = requestAnimationFrame(hoverTick);
+    };
+    if (!reduceMotion && matchMedia('(hover: hover)').matches) {
+      stage.addEventListener('pointermove', (e) => {
+        rows.forEach((row, i) => {
+          litTo[i] = 0;
+          shiftTo[i] = 0;
+          if (fades[i] <= 0.04) return;
+          const r = row.getBoundingClientRect();
+          // 1 on the name, falling to 0 a row away
+          const near = Math.max(0, 1 - Math.abs(e.clientY - (r.top + r.height / 2)) / r.height);
+          const over = e.clientX >= r.left - 40 && e.clientX <= r.right + 40;
+          if (!near || !over) return;
+          litTo[i] = near;
+          const dx = e.clientX - (r.left + r.width / 2);
+          shiftTo[i] = near * Math.max(-HOVER_MAX, Math.min(HOVER_MAX, dx * HOVER_PULL));
+        });
+        hoverRun();
+      });
+      stage.addEventListener('pointerleave', () => {
+        litTo.fill(0);
+        shiftTo.fill(0);
+        hoverRun();
+      });
+    }
 
     // ── Work page: endless wheel ─────────────────────────────────
     // Wheel / trackpad / touch / keys turn the drum directly; the offset never stops,
