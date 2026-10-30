@@ -305,6 +305,8 @@ const first = embedded ? 'cover' : 'start';
 </section>
 
 <script>
+  import { sfx } from '../../scripts/sound';
+
   type Group = { x: number; y: number; n?: string; lines: string[]; m?: [number, number] };
   type Logs = Record<string, { a: Group[]; b?: Group[] }>;
 
@@ -591,6 +593,7 @@ const first = embedded ? 'cover' : 'start';
     const setError = (form: HTMLElement, text: string) => {
       const out = form.querySelector<HTMLElement>('[data-error]');
       if (out) out.textContent = text;
+      if (text) sfx('error');
       form.classList.toggle('has-error', !!text);
     };
     const check: Record<string, () => string> = {
@@ -718,6 +721,7 @@ const first = embedded ? 'cover' : 'start';
         if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? 'Something went wrong');
         setError(form, '');
         go(type === 'message' ? 'sent' : 'done');
+        sfx('success');
         // the done screen's log and receipt have used the answers; the forms are cleared
         // once the block has gone back to its first screen
         setTimeout(() => {
