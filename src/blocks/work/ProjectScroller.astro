@@ -222,7 +222,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     let lastT = 0;
 
     // Hover (after the reference recording): the name under the cursor lights up and drifts
-    // a little toward the cursor, sideways; the names next to it follow a touch. `fades` is
+    // a little away from the cursor, sideways; the names next to it follow a touch. `fades` is
     // each name's opacity on the drum, `lit` / `shift` the eased hover on top of it.
     const HOVER_LIGHT = 0.6; // share of the way to full white a hovered name goes
     const fades = rows.map(() => 0);
@@ -262,7 +262,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     };
 
     // hover: how lit / how far each name should be, eased toward it every frame
-    const HOVER_PULL = 0.12; // share of the cursor's sideways distance a name drifts
+    const HOVER_PUSH = 0.12; // share of the cursor's sideways distance a name drifts away
     const HOVER_MAX = 48; // px, the most it drifts
     const litTo = rows.map(() => 0);
     const shiftTo = rows.map(() => 0);
@@ -300,7 +300,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
           if (!near || !over) return;
           litTo[i] = near;
           const dx = e.clientX - (r.left + r.width / 2);
-          shiftTo[i] = near * Math.max(-HOVER_MAX, Math.min(HOVER_MAX, dx * HOVER_PULL));
+          // away from the cursor: cursor on the right pushes the name left, and back
+          shiftTo[i] = near * Math.max(-HOVER_MAX, Math.min(HOVER_MAX, -dx * HOVER_PUSH));
         });
         hoverRun();
       });
