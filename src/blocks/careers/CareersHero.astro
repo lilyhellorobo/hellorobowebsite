@@ -3,10 +3,16 @@
  * Careers — Hero
  * Figma: "Frame 2147232979" (10100:14718), 1728×1026, black
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-14718
+ * The photo strip comes from the CMS (Careers › Careers page › Photo strip): the photos side
+ * by side at one height, each as wide as its own proportions make it.
  */
 import { Image } from 'astro:assets';
-import strip from '../../assets/careers/team-strip.png';
+import { getCollection } from 'astro:content';
 import CrtScreen from '../../components/ui/CrtScreen.astro';
+
+const photos = ((await getCollection('careers-page'))[0]?.data.strip ?? []).map((s) => s.photo);
+// the strip's proportions (all photos at one height), and each photo's share of its width
+const ratio = photos.reduce((sum, p) => sum + p.width / p.height, 0);
 ---
 <section class="careers-hero theme-dark">
   <h1 class="careers-hero__title t-h1 container">Careers</h1>
@@ -15,10 +21,24 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
   <p class="careers-hero__text t-body">
     We design for robots, yet we show up as humans first — for each other and the community. Because in the end it was always the humans who made the world say yes to your robot.
   </p>
-  <div class="careers-hero__strip" data-careers-strip>
-    <Image src={strip} alt="Hello Robo team at work and at events" widths={[2204, 4408]} sizes="128vw" loading="eager" />
-    <CrtScreen />
-  </div>
+  {photos.length > 0 && (
+    <div class="careers-hero__strip" style={`--ratio: ${ratio.toFixed(4)}`} data-careers-strip role="img" aria-label="Hello Robo team at work and at events">
+      {photos.map((p) => {
+        const share = p.width / p.height / ratio;
+        return (
+          <Image
+            src={p}
+            alt=""
+            widths={[600, 1200]}
+            sizes={`${Math.ceil(share * 177)}vw`}
+            style={`width: ${(share * 100).toFixed(4)}%`}
+            loading="eager"
+          />
+        );
+      })}
+      <CrtScreen mosaic />
+    </div>
+  )}
 </section>
 
 <script>
@@ -77,14 +97,17 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
     bottom: calc((1026 - 746) / 1026 * 100%);
     width: calc(680 * var(--px));
   }
-  /* 8 photos, 2204 wide, starting calc(236 * var(--px)) off the left edge. As the page
-     scrolls from the hero to the next block, the strip glides left (--shift 0 → 1) until
-     the photos hidden past the right edge come in: --travel = 240 / 2204 of its width */
+  /* The photos, from 786 down to the bottom of the hero (240 tall, so no black shows under
+     them), as wide as that makes them all side by side (--ratio), starting calc(236 * var(--px))
+     off the left edge. As the page scrolls from the hero to the next block, the strip glides
+     left (--shift 0 → 1) until the photos hidden past the right edge come in */
   .careers-hero__strip {
     position: absolute;
     left: calc(-236 / 1728 * 100%);
     top: calc(786 / 1026 * 100%);
-    width: calc(2204 / 1728 * 100%);
+    height: calc(240 / 1026 * 100%);
+    aspect-ratio: var(--ratio);
+    display: flex;
     --shift: 0;
     --travel: 10.9%;
     transform: translate3d(calc(var(--shift) * var(--travel) * -1), 0, 0);
@@ -93,9 +116,10 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
   }
   .careers-hero__strip :global(img) {
     display: block;
-    width: 100%;
-    height: auto;
+    flex: none;
+    height: 100%;
     max-width: none;
+    object-fit: cover;
   }
 
   /* ── Mobile: everything in flow — title, stamps, text, then the photo strip ── */
@@ -159,6 +183,7 @@ import CrtScreen from '../../components/ui/CrtScreen.astro';
       position: relative;
       top: auto;
       left: auto;
+      height: auto;
       width: 1470px;
       margin: 64px 0 0 -120px;
       --travel: 40%;

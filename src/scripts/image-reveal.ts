@@ -34,8 +34,10 @@ const RISE = 'clamp(32px, 5vw, 72px)';
 /** the element that moves: the picture, or the wrapper it fills */
 function mover(el: HTMLElement) {
   let target: HTMLElement = el;
-  // only wrappers that hold nothing but the picture (never a block with text in it)
-  for (let p = el.parentElement; p && p.childElementCount === 1 && !p.matches('main, section, article, a, button'); p = p.parentElement) {
+  // only wrappers that hold nothing but the picture (never a block with text in it; the
+  // canvas bottom-bend.ts puts next to a picture doesn't count)
+  const only = (p: Element) => p.childElementCount - p.querySelectorAll(':scope > canvas.bottom-bend').length === 1;
+  for (let p = el.parentElement; p && only(p) && !p.matches('main, section, article, a, button'); p = p.parentElement) {
     const a = target.getBoundingClientRect();
     const b = p.getBoundingClientRect();
     if (Math.abs(a.width - b.width) > 2 || Math.abs(a.height - b.height) > 2) break;

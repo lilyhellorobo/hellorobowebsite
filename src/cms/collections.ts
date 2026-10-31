@@ -32,6 +32,23 @@ export type Field =
       optionsFrom?: string;
       hint?: string;
     }
+  /**
+   * A checkbox for every entry of another CMS section (`optionsFrom`), e.g. "Featured" next
+   * to each project. Saved as the ids of the ticked entries, in that section's order; the
+   * options are filled in when the form is shown (resolveOptions in store.ts). `min`: at
+   * least this many must be ticked.
+   */
+  | {
+      kind: 'checklist';
+      key: string;
+      label: string;
+      optionsFrom: string;
+      options?: { value: string; label: string }[];
+      /** The checkbox's label on every row */
+      check: string;
+      min?: number;
+      hint?: string;
+    }
   /** `limit`: at most this many entries in the collection can have it switched on */
   | { kind: 'boolean'; key: string; label: string; default?: boolean; limit?: number; hint?: string }
   /** A hex color like #FF6B03; empty means the default */
@@ -54,8 +71,9 @@ export type Field =
   | { kind: 'strings'; key: string; label: string; item: string; multiline?: boolean; omitEmpty?: boolean; hint?: string }
   /** A nested object; `optional` adds an on/off switch and omits it when off */
   | { kind: 'group'; key: string; label: string; fields: Field[]; optional?: boolean; hint?: string }
-  /** A repeatable list of objects */
-  | { kind: 'list'; key: string; label: string; item: string; fields: Field[]; hint?: string }
+  /** A repeatable list of objects; `max`: at most this many items; `sortable`: items can be
+   *  dragged into order by their ⠿ handle, like page sections */
+  | { kind: 'list'; key: string; label: string; item: string; fields: Field[]; max?: number; sortable?: boolean; hint?: string }
   /** A repeatable list of typed blocks, stored with a `type` key */
   | {
       kind: 'blocks';
@@ -69,7 +87,7 @@ export interface CmsCollection {
   /** URL segment under /admin */
   slug: string;
   /** Folder name in src/content/ and src/assets/ */
-  collection: 'team' | 'studio' | 'news' | 'projects' | 'episodes' | 'positions';
+  collection: 'home' | 'careers-page' | 'team' | 'studio' | 'news' | 'projects' | 'episodes' | 'positions';
   label: string;
   singular: string;
   /** Field used as the list title and to suggest the file name of a new entry */
@@ -117,6 +135,52 @@ const TEAM_OBJECTS = [
 ];
 
 export const CMS_COLLECTIONS: CmsCollection[] = [
+  // The home page's own settings: one fixed entry (src/content/home/home-page.json)
+  {
+    slug: 'home',
+    collection: 'home',
+    label: 'Home page',
+    singular: 'home page',
+    titleField: 'title',
+    siteUrl: () => '/',
+    fixed: true,
+    fields: [
+      {
+        kind: 'checklist',
+        key: 'featured',
+        label: 'Featured works',
+        optionsFrom: 'projects',
+        check: 'Featured',
+        min: 1,
+        hint: 'The projects in the Works wheel on the home page, in the order of the Projects list. The Work page always shows every project.',
+      },
+      {
+        kind: 'list',
+        key: 'clients',
+        label: 'Client logos',
+        item: 'logo',
+        max: 8,
+        hint: 'The logos in the Clients block, in its 8 places (top right to bottom left). On phones they fill two rows of four.',
+        fields: [
+          { kind: 'text', key: 'name', label: 'Client name', required: true },
+          {
+            kind: 'graphic',
+            key: 'logo',
+            label: 'Logo',
+            required: true,
+            hint: 'An SVG tile (264 × 355, with its own light background), or a PNG / WebP logo, which is placed on a light tile.',
+          },
+          {
+            kind: 'number',
+            key: 'mobileScale',
+            label: 'Logo size on phones',
+            default: 1,
+            hint: '1 = as it is; lower (e.g. 0.6) for a logo that fills more of its tile than the others.',
+          },
+        ],
+      },
+    ],
+  },
   {
     slug: 'team',
     collection: 'team',
@@ -346,6 +410,29 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
       { kind: 'strings', key: 'howWeWork', label: 'How we work', item: 'paragraph', multiline: true, omitEmpty: true },
       { kind: 'strings', key: 'applySteps', label: 'To apply, send', item: 'step', multiline: true, omitEmpty: true },
       { kind: 'textarea', key: 'outro', label: 'Closing line' },
+    ],
+  },
+  // The Careers page's own settings, shown at the top of Careers (like the studio card in Team)
+  {
+    slug: 'careers-page',
+    collection: 'careers-page',
+    label: 'Careers page',
+    singular: 'careers page',
+    titleField: 'title',
+    siteUrl: () => '/careers',
+    parent: 'careers',
+    fixed: true,
+    fields: [
+      {
+        kind: 'list',
+        key: 'strip',
+        label: 'Photo strip',
+        item: 'photo',
+        max: 12,
+        sortable: true,
+        hint: 'The photos across the bottom of the Careers hero, left to right, all at the same height (any width). The first starts a little off the left edge; the last ones slide in as the page scrolls.',
+        fields: [{ kind: 'image', key: 'photo', label: 'Photo', required: true }],
+      },
     ],
   },
   {

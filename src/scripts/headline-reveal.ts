@@ -99,7 +99,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
   // first slides of the slide blocks: in when they come into view
   const firsts = document.querySelectorAll<HTMLElement>(
-    ':is(.services-scroller__slide, .radio-clips__slide, .careers-values__kanji, .careers-values__copy)[data-index="0"][data-state="current"]',
+    ':is(.services-scroller__slide, .radio-clips__slide, .careers-values__copy, .home-showcase__title, .home-showcase__services, .home-showcase__stamp, .project-wheel__services, .project-wheel__mark)[data-index="0"][data-state="current"]',
   );
   const slideSeen = new IntersectionObserver(
     (entries) => {

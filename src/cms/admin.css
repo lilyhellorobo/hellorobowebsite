@@ -711,6 +711,22 @@
 .cms-optional__add {
   width: 100%;
 }
+/* Checklist: one row per entry of another section, its checkbox on the right */
+.cms-checklist {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--c-line);
+}
+.cms-checklist__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--c-line);
+}
 .cms-switch {
   display: inline-flex;
   align-items: center;

@@ -5,11 +5,11 @@
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-1889
  * Cards come from the news collection (CMS "Updates"). The row runs off the right
  * edge and scrolls sideways: trackpad / shift + wheel, arrow keys when focused, and
- * click-and-drag with a mouse. Cards snap to the page margin.
+ * click-and-drag with a mouse. Cards snap to the page margin. Every card is the same size
+ * (the narrow one, 537 × 610 in Figma), whatever size the CMS gives it; no View links.
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import ArrowLink from '../../components/ui/ArrowLink.astro';
 
 const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.order);
 ---
@@ -21,18 +21,11 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
 
   <ul class="home-news__row" tabindex="0" aria-label="Latest news — scroll sideways" data-drag-scroll>
     {news.map((item) => (
-      <li class:list={['home-news__card', `home-news__card--${item.data.size}`]}>
+      <li class="home-news__card">
         <div class="home-news__media">
-          <Image
-            src={item.data.image}
-            alt=""
-            widths={item.data.size === 'wide' ? [815, 1630] : [537, 1074]}
-            sizes={item.data.size === 'wide' ? '815px' : '537px'}
-            loading="lazy"
-          />
+          <Image src={item.data.image} alt="" widths={[537, 1074]} sizes="537px" loading="lazy" />
         </div>
         <p class="home-news__text t-body t-body2-mobile">{item.data.text}</p>
-        <ArrowLink href={item.data.href}>View</ArrowLink>
       </li>
     ))}
   </ul>
@@ -121,24 +114,14 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
     flex: none;
     display: grid;
     justify-items: start;
-    scroll-snap-align: start;
-  }
-  .home-news__card--wide {
-    width: calc(815 * var(--px));
-  }
-  .home-news__card--narrow {
     width: calc(537 * var(--px));
+    scroll-snap-align: start;
   }
   .home-news__media {
     width: 100%;
+    aspect-ratio: 537 / 610;
     background: var(--color-ink);
     overflow: hidden;
-  }
-  .home-news__card--wide .home-news__media {
-    aspect-ratio: 815 / 853;
-  }
-  .home-news__card--narrow .home-news__media {
-    aspect-ratio: 537 / 610;
   }
   .home-news__media :global(img) {
     width: 100%;
@@ -148,9 +131,6 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
   .home-news__text {
     margin-top: var(--space-20);
     max-width: calc(465 * var(--px));
-  }
-  .home-news__card :global(.arrow-link) {
-    margin-top: var(--space-40);
   }
 
   /* ── Mobile: Figma 10098:1661 — stamp above the title; cards 276 / 184 wide in a sideways row ── */
@@ -167,31 +147,18 @@ const news = (await getCollection('news')).sort((a, b) => a.data.order - b.data.
       width: 120px;
       height: auto;
     }
-    /* room for the View links' tap area (12 below the text), which would otherwise
-       stick out and let the row scroll up and down; taken off the section's 187 */
     .home-news__row {
       margin-top: 64px;
-      padding-bottom: 12px;
     }
-    /* 15% over Figma's 276 / 184, which read too small on a phone */
-    .home-news__card--wide {
-      width: 318px;
-    }
-    .home-news__card--narrow {
+    /* 15% over Figma's 184, which read too small on a phone */
+    .home-news__card {
       width: 212px;
     }
-    .home-news__card--wide .home-news__media {
-      aspect-ratio: 276 / 312;
-    }
-    .home-news__card--narrow .home-news__media {
+    .home-news__media {
       aspect-ratio: 184 / 208;
     }
     .home-news__text {
       margin-top: var(--space-12);
-    }
-    .home-news__card :global(.arrow-link) {
-      margin-top: var(--space-32);
-      font-size: var(--type-body-size);
     }
   }
 </style>

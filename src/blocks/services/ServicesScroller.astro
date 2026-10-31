@@ -6,8 +6,9 @@
  *
  * Desktop + tablet: the block pins to the screen; one screen of scrolling per service.
  * - Progress line on top: the bright segment grows as you move through the services.
- * - Left (label, title, stamp, services): words and lines slide up out of a mask and
- *   the next service's slide up in (style reference: telhaclarke.com.au/studio).
+ * - Left (label, title, stamp, services): words, lines and the stamp slide out of their
+ *   masks and the next service's slide in, in the direction you scroll (style reference:
+ *   telhaclarke.com.au/studio).
  * - Right: the next image slides in from the bottom over the previous one.
  * Motion uses the tokens in tokens.css (--ease-out, --duration-*, --stagger).
  * Mobile: the three services stacked, as before (no pin).
@@ -50,15 +51,9 @@ const { items } = Astro.props;
                   <><span class="mask"><span style={`--d: ${wi + 1}`}>{w}</span></span>{wi < words.length - 1 && ' '}</>
                 ))}
               </h2>
-              <img
-                class="services-scroller__stamp"
-                src={item.stamp.src}
-                alt=""
-                width={item.stamp.w}
-                height={item.stamp.h}
-                style={`--w: ${item.stamp.w}; left:calc(${item.stamp.x} * var(--px));top:calc(${item.stamp.y} * var(--px))`}
-                loading="lazy"
-              />
+              <span class="services-scroller__stamp" style={`left:calc(${item.stamp.x} * var(--px));top:calc(${item.stamp.y} * var(--px))`}>
+                <img src={item.stamp.src} alt="" width={item.stamp.w} height={item.stamp.h} style={`--w: ${item.stamp.w}`} loading="lazy" />
+              </span>
               <ul class="services-scroller__list t-body">
                 {item.services.map((s, si) => (
                   <li><span class="mask"><span style={`--d: ${si + 2}`}>{s}</span></span></li>
@@ -163,8 +158,13 @@ const { items } = Astro.props;
     width: calc(818 * var(--px));
     max-width: 100%;
   }
+  /* the stamp's mask: the stamp slides through it, like the words */
   .services-scroller__stamp {
     position: absolute;
+    overflow: hidden;
+  }
+  .services-scroller__stamp img {
+    display: block;
     height: auto;
   }
   .services-scroller__list {
@@ -201,16 +201,18 @@ const { items } = Astro.props;
   .services-scroller__slide[data-state='current'] .mask > span {
     transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
   }
-  .services-scroller__stamp {
-    opacity: 0;
-    transform: translateY(calc(16 * var(--px)));
-    transition:
-      opacity var(--duration-normal) var(--ease-out),
-      transform var(--duration-smooth) var(--ease-out);
+  .services-scroller__stamp img {
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
   }
-  .services-scroller__slide[data-state='current'] .services-scroller__stamp {
-    opacity: 1;
-    transform: none;
+  .services-scroller__slide[data-state='next'] .services-scroller__stamp img {
+    --y: 110%;
+  }
+  .services-scroller__slide[data-state='past'] .services-scroller__stamp img {
+    --y: -110%;
+  }
+  /* incoming: a beat after the words */
+  .services-scroller__slide[data-state='current'] .services-scroller__stamp img {
     transition-delay: 0.3s;
   }
 
@@ -244,7 +246,7 @@ const { items } = Astro.props;
 
   @media (prefers-reduced-motion: reduce) {
     .mask > span,
-    .services-scroller__stamp,
+    .services-scroller__stamp img,
     .services-scroller__media :global(img) {
       transition-duration: 0.01s !important;
       transition-delay: 0s !important;
@@ -287,8 +289,11 @@ const { items } = Astro.props;
       left: auto !important;
       right: 0;
       top: 49px !important;
-      width: auto;
       height: 64px;
+    }
+    .services-scroller__stamp img {
+      width: auto;
+      height: 100%;
     }
     /* services in two columns at Body2 (12), so the image gets the height to be vertical */
     .services-scroller__list {

@@ -5,15 +5,19 @@
  * (9457:5217 Care, 9457:5246 Craft), each 1728×1107.
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10100-14871
  *
- * The value part pins to the screen; one screen of scrolling per value (like the
- * Services block): the kanji, label and description slide up out of a mask and the
- * next value's slide in, word by word. The tabs show the progress — the active tab is
- * black and its underline fills as you scroll through it — and jump to a value on click.
- * The robot is the same for every value (marked "3d web gl"), so it stays.
+ * The value part pins to the screen; one screen of scrolling per value. Laid out, typed and
+ * moving exactly like the Services block: the progress line on top (its bright segment
+ * grows through the values), the kanji as the orange label (H3), the value's name as the
+ * title (H1) 20 below it, and the description anchored to the bottom of the column, on
+ * the robot's bottom edge. The label and title slide out of their masks and the next
+ * value's slide in, in the direction you scroll; the description has the site's body-copy
+ * fade instead (its words light up from dim, one after another, as text-reveal.ts). The robot is the same for every value (marked
+ * "3d web gl"), so it stays; it fills the right column like the Services pictures.
  * Motion: tokens in tokens.css (--ease-out, --duration-*, --stagger).
  */
 import { Image } from 'astro:assets';
 import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+import Divider from '../../components/ui/Divider.astro';
 import robot from '../../assets/careers/values-robot.png';
 
 const values = [
@@ -35,7 +39,12 @@ const values = [
 ];
 const pad = (i: number) => String(i + 1).padStart(2, '0');
 // Words of a sentence, each in its own mask; later words wait a little longer (capped)
-const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d: Math.min(from + i, from + 10) }));
+/** The description's words, each with when it lights up (s): the site's body-copy fade
+ *  (text-reveal.ts) — word i starts at i / n of 70% of 1.4s and takes 0.42s */
+const lit = (text: string) => {
+  const all = text.split(' ');
+  return all.map((w, i) => ({ w, t: ((i / all.length) * 0.7 * 1.4).toFixed(3) }));
+};
 ---
 <section class="careers-values">
   <header class="careers-values__intro container">
@@ -48,49 +57,39 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
 
   <div class="careers-values__scroller" style={`--count: ${values.length}`} data-values>
     <div class="careers-values__stage container" data-active="0">
+      <Divider accent class="careers-values__rule" />
+      <div class="careers-values__grid">
       <div class="careers-values__text">
-        <div class="careers-values__stack">
-          {values.map((v, i) => (
-            <p class="careers-values__kanji t-h1" lang="ja" data-index={i} data-state={i === 0 ? 'current' : 'next'} aria-hidden={i > 0 ? 'true' : undefined}>
-              <span class="mask"><span style="--d: 0">{v.kanji}</span></span>
-            </p>
-          ))}
-        </div>
         <div class="careers-values__stack careers-values__copies">
           {values.map((v, i) => (
             <div class="careers-values__copy" data-index={i} data-state={i === 0 ? 'current' : 'next'} aria-hidden={i > 0 ? 'true' : undefined}>
-              <p class="t-body"><span class="mask"><span style="--d: 1">{v.name}</span></span></p>
-              <p class="t-body">
-                {words(v.text, 2).map((w, wi, all) => (
-                  <><span class="mask"><span style={`--d: ${w.d}`}>{w.w}</span></span>{wi < all.length - 1 && ' '}</>
+              <p class="careers-values__kanji t-h3" lang="ja"><span class="mask"><span style="--d: 0">{v.kanji}</span></span></p>
+              <h3 class="careers-values__name t-h1"><span class="mask"><span style="--d: 1">{v.name}</span></span></h3>
+              <p class="careers-values__desc t-body">
+                {lit(v.text).map((w, wi, all) => (
+                  <><span class="careers-values__word" style={`--t: ${w.t}s`}>{w.w}</span>{wi < all.length - 1 && ' '}</>
                 ))}
               </p>
             </div>
           ))}
         </div>
-        <ol class="careers-values__tabs t-body" aria-label="Values">
-          {values.map((v, i) => (
-            <li class:list={['careers-values__tab', { 'is-active': i === 0 }]} data-index={i} aria-current={i === 0 ? 'true' : undefined}>
-              <button type="button" aria-label={`${pad(i)} ${v.name}`}>{pad(i)}</button>
-            </li>
-          ))}
-        </ol>
       </div>
       <WebGLSlot name="careers-robot" class="careers-values__media">
         <Image src={robot} alt="Hello Robo robot in front of floating receipts" widths={[816, 1632]} sizes="(min-width: 1728px) 816px, 48vw" loading="lazy" />
       </WebGLSlot>
+      </div>
     </div>
   </div>
 </section>
 
 <script>
-  // Pinned values: progress 0→1 across the block picks the value; the active tab's
-  // underline shows the progress through that value (--local). Tabs jump to a value.
+  // Pinned values, as the Services block: progress 0→1 across the block picks the value
+  // and fills the line on top (--progress); each value gets data-state "past" (scrolled
+  // by), "current" or "next".
   for (const root of document.querySelectorAll<HTMLElement>('[data-values]')) {
     const stage = root.querySelector<HTMLElement>('.careers-values__stage');
-    const parts = [...root.querySelectorAll<HTMLElement>('.careers-values__kanji, .careers-values__copy')];
-    const tabs = [...root.querySelectorAll<HTMLElement>('.careers-values__tab')];
-    const count = tabs.length;
+    const parts = [...root.querySelectorAll<HTMLElement>('.careers-values__copy')];
+    const count = parts.length;
     if (!stage || !count) continue;
     let frame = 0;
     const update = () => {
@@ -99,18 +98,13 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
       const travel = rect.height - stage.offsetHeight;
       const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
       const active = Math.min(count - 1, Math.floor(progress * count));
-      stage.style.setProperty('--local', String(Math.min(1, progress * count - active)));
+      stage.style.setProperty('--progress', String(progress));
       if (stage.dataset.active === String(active)) return;
       stage.dataset.active = String(active);
       parts.forEach((el) => {
         const i = Number(el.dataset.index);
         el.dataset.state = i < active ? 'past' : i === active ? 'current' : 'next';
         el.setAttribute('aria-hidden', String(i !== active));
-      });
-      tabs.forEach((tab, i) => {
-        tab.classList.toggle('is-active', i === active);
-        if (i === active) tab.setAttribute('aria-current', 'true');
-        else tab.removeAttribute('aria-current');
       });
     };
     const request = () => {
@@ -119,14 +113,6 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
     window.addEventListener('scroll', request, { passive: true });
     window.addEventListener('resize', request);
     update();
-    // Tab click: scroll to the start of that value (just inside it)
-    tabs.forEach((tab, i) => {
-      tab.querySelector('button')?.addEventListener('click', () => {
-        const top = root.getBoundingClientRect().top + window.scrollY;
-        const travel = root.offsetHeight - stage.offsetHeight;
-        window.scrollTo({ top: top + travel * ((i + 0.02) / count), behavior: 'smooth' });
-      });
-    });
   }
 </script>
 
@@ -150,26 +136,32 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
   .careers-values__scroller {
     position: relative;
     height: calc(var(--count) * 100vh);
-    margin-top: calc(241 * var(--px)); /* 308 in Figma, minus the stage's 67 top padding */
+    margin-top: calc(268 * var(--px)); /* 308 in Figma, minus the stage's 40 top padding */
   }
-  /* Figma value frame 1728×1107: kanji / robot at 67, tabs line on the robot's bottom edge */
+  /* As the Services stage: the progress line 40 from the top, the text and the robot 36
+     below it */
   .careers-values__stage {
     position: sticky;
     top: 0;
     height: 100vh;
     overflow: hidden;
+    padding-top: var(--space-40);
+    --progress: 0;
+  }
+  /* Progress on top: a share per value, growing smoothly with the scroll (as on Services) */
+  .careers-values :global(.careers-values__rule.divider--accent)::before {
+    width: calc((1 + var(--progress) * (var(--count) - 1)) / var(--count) * 100%);
+    transition: width var(--duration-normal) var(--ease-out);
+  }
+  .careers-values__grid {
     display: grid;
     grid-template-columns: 1fr calc(816 * var(--px));
-    align-items: start;
-    align-content: start; /* the row is as tall as the robot, so the tabs sit on its bottom edge */
     column-gap: var(--gutter);
-    padding-top: calc(67 * var(--px));
-    --local: 0;
+    margin-top: calc(36 * var(--px));
   }
   .careers-values__text {
     display: flex;
     flex-direction: column;
-    align-self: stretch;
     min-height: 0;
   }
   /* All values share one cell; only the current one shows */
@@ -179,17 +171,57 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
   .careers-values__stack > * {
     grid-area: 1 / 1;
   }
+  /* Type and places as on Services: the kanji as the orange label (H3), the name as the
+     title (H1) 20 below, the description anchored to the bottom of the column */
+  .careers-values__copies {
+    flex: 1;
+  }
+  .careers-values__copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+  }
   .careers-values__kanji {
     color: var(--color-orange);
   }
-  .careers-values__copies {
-    margin-top: auto;
-  }
-  .careers-values__copy {
-    display: grid;
-    gap: calc(30 * var(--px));
-    width: calc(680 * var(--px));
+  .careers-values__name {
+    margin-top: var(--space-20);
+    width: calc(818 * var(--px));
     max-width: 100%;
+  }
+  /* a short measure, well clear of the menu bar centred at the bottom of the screen */
+  .careers-values__desc {
+    margin-top: auto;
+    width: calc(440 * var(--px));
+    max-width: 100%;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  /* ── The description: the site's body-copy fade (text-reveal.ts) — its words light up
+     from dim to full one after another, after the title; the outgoing one just fades ── */
+  .careers-values__copy[data-state='current'] .careers-values__desc {
+    opacity: 1;
+    transition-delay: 0.12s;
+  }
+  .careers-values__word {
+    opacity: 0.15;
+  }
+  .careers-values__copy[data-state='current'] .careers-values__word {
+    animation: light-up 0.42s linear both;
+    animation-delay: calc(0.3s + var(--t));
+  }
+  /* the first value waits, dim, until the block scrolls into view (headline-reveal.ts) */
+  .careers-values__copy:global(.slide-wait) .careers-values__word {
+    animation: none;
+  }
+  @keyframes light-up {
+    from {
+      opacity: 0.15;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   /* ── Text reveal: words slide up through a mask (same as Services) ── */
@@ -197,8 +229,10 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
     display: inline-block;
     overflow: hidden;
     vertical-align: top;
-    padding-bottom: 0.12em;
-    margin-bottom: -0.12em;
+    /* room on every side so no letter is clipped (as on Services): the big titles' last
+       letters ("y", "e") reach past their box on the right */
+    padding: 0.1em 0.06em 0.14em;
+    margin: -0.1em -0.06em -0.14em;
   }
   .mask > span {
     display: inline-block;
@@ -206,64 +240,20 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
     transition: transform var(--duration-smooth) var(--ease-out);
     transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
   }
-  /* 130%: full-height kanji need to clear the mask's descender room completely */
+  /* far enough that no part of a waiting word shows in the mask's extra room */
   [data-state='next'] .mask > span {
-    --y: 130%;
+    --y: 135%;
   }
   [data-state='past'] .mask > span {
-    --y: -130%;
+    --y: -135%;
     transition-delay: 0s;
   }
 
-  /* ── Tabs: the progress line ── */
-  .careers-values__tabs {
-    display: grid;
-    grid-template-columns: repeat(3, calc(265 * var(--px)));
-    gap: var(--gutter);
-    margin-top: calc(120 * var(--px));
-  }
-  .careers-values__tab {
-    position: relative;
-    border-bottom: var(--line-width) solid var(--line-on-light);
-  }
-  .careers-values__tab button {
-    width: 100%;
-    padding-bottom: calc(10 * var(--px));
-    text-align: center;
-    color: var(--color-grey-350);
-    transition: color var(--duration-normal) var(--ease-out);
-  }
-  .careers-values__tab.is-active button {
-    color: var(--color-black);
-  }
-  /* hover only with a mouse: on a phone it stays stuck after the tap */
-  @media (hover: hover) {
-    .careers-values__tab button:hover {
-      color: var(--color-black);
-    }
-  }
-  /* Active tab: the black segment fills with the scroll through that value
-     (starts at Figma's 103 / 265) */
-  .careers-values__tab::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: calc(var(--line-width) * -1);
-    width: 0;
-    border-bottom: var(--line-width) solid var(--line-strong-on-light);
-    transition: width var(--duration-normal) var(--ease-out);
-  }
-  .careers-values__tab.is-active::after {
-    width: calc(max(103 / 265, var(--local)) * 100%);
-  }
-
-  /* ── Robot: full right column, cropped (not shrunk) on short windows ── */
+  /* ── Robot: the full right column, down to the page margin at the bottom of the screen,
+     like the Services pictures; cropped (cover) to fill it ── */
   .careers-values :global(.careers-values__media) {
     width: 100%;
-    aspect-ratio: 816 / 973;
-    /* down to the menu bar's top (40 + bar + a gap), so the tabs on its bottom edge never
-       sit behind the bar */
-    max-height: calc(100vh - calc(67 * var(--px)) - var(--space-40) - var(--nav-height) - var(--space-24));
+    height: calc(100vh - var(--space-40) - var(--line-width) - calc(36 * var(--px)) - var(--page-margin));
     background: var(--color-grey-100);
   }
   .careers-values :global(.careers-values__media img) {
@@ -273,8 +263,11 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mask > span,
-    .careers-values__tab::after {
+    .careers-values__copy[data-state='current'] .careers-values__word {
+      animation: none;
+      opacity: 1;
+    }
+    .mask > span {
       transition-duration: 0.01s !important;
       transition-delay: 0s !important;
     }
@@ -297,37 +290,33 @@ const words = (text: string, from = 0) => text.split(' ').map((w, i) => ({ w, d:
       height: calc(var(--count) * 100svh);
       margin-top: 164px;
     }
+    /* As the Services stage on phones: the line, the label, title and description, then
+       the robot filling the rest of the screen above the menu bar */
     .careers-values__stage {
+      display: flex;
+      flex-direction: column;
       height: 100svh;
+      padding-top: var(--page-margin);
+      padding-bottom: calc(var(--page-margin) + var(--nav-height) + 16px);
+    }
+    .careers-values__grid {
+      flex: 1;
+      min-height: 0;
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: auto minmax(0, 1fr);
       row-gap: var(--space-24);
-      padding-top: var(--space-20);
-      padding-bottom: calc(20px + var(--nav-height) + 20px);
+      margin-top: var(--space-20);
     }
-    .careers-values__text {
-      align-self: start;
-    }
-    .careers-values__copies {
-      margin-top: var(--space-24);
-    }
-    .careers-values__copy {
-      gap: var(--space-12);
+    .careers-values__name {
       width: auto;
+      margin-top: var(--space-12);
     }
-    .careers-values__tabs {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .careers-values__desc {
+      width: auto;
       margin-top: var(--space-24);
-    }
-    /* a 44px-tall tap area; the numbers and the line stay where they are */
-    .careers-values__tab button {
-      padding-top: 15px;
-      margin-top: -15px;
     }
     .careers-values :global(.careers-values__media) {
       height: 100%;
-      aspect-ratio: auto;
-      max-height: none;
     }
   }
 </style>
