@@ -289,7 +289,9 @@ button {
 .contact__next .hover-fx__label {
   white-space: nowrap;
 }
-.hover-fx__label.is-pixel {
+/* strong enough to win over a label's own colour (e.g. the Team object labels), so only
+   the pixels show */
+.has-hover-fx .hover-fx__label.is-pixel {
   color: transparent;
 }
 .hover-fx__pixels {
@@ -323,18 +325,23 @@ button {
   transition-delay: calc(var(--d) * 55ms);
 }
 
-/* First slide of the slide blocks (Services, Robo Radio clips, Careers values) waits below
-   its masks until it scrolls into view (headline-reveal.ts); then the block's own
-   transition slides it up */
+/* First slide of the slide blocks (Services, Home showcase, project wheel, Robo Radio clips,
+   Careers values) waits below its masks until it scrolls into view (headline-reveal.ts);
+   then the block's own transition slides it up */
 .slide-wait .mask > span {
   transform: translateY(135%) !important;
   transition: none !important;
 }
-.slide-wait :is(.services-scroller__stamp, .radio-clips__stamp) {
+.slide-wait:is(.home-showcase__stamp, .project-wheel__mark) > img,
+.slide-wait .services-scroller__stamp > img {
+  transform: translateY(110%) !important;
+  transition: none !important;
+}
+.slide-wait .radio-clips__stamp {
   opacity: 0 !important;
 }
 
-/* ── Reading text reveal (src/scripts/text-reveal.ts): each word's opacity follows scroll ── */
+/* ── Reading text reveal (src/scripts/text-reveal.ts): words light up in turn once in view ── */
 .tr-word {
   transition: opacity 0.18s linear;
 }

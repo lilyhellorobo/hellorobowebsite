@@ -112,6 +112,12 @@ async function writeJson(file: string, data: Data) {
 export async function resolveOptions(fields: Field[], selfId?: string): Promise<Field[]> {
   return Promise.all(
     fields.map(async (f) => {
+      // a checklist lists every entry of its section, NDA ones included, in their order
+      if (f.kind === 'checklist') {
+        const from = getCmsCollection(f.optionsFrom);
+        const entries = from ? await listEntries(from) : [];
+        return { ...f, options: entries.map((e) => ({ value: e.id, label: String(e.data[from!.titleField] ?? e.id) })) };
+      }
       const from = f.kind === 'select' && f.optionsFrom ? getCmsCollection(f.optionsFrom) : undefined;
       if (f.kind !== 'select' || !from) return f;
       const entries = (await listEntries(from)).filter((e) => e.id !== selfId && !e.data.nda);
@@ -227,6 +233,14 @@ function validateFields(fields: Field[], input: unknown, where: string, errors: 
         out[f.key] = typeof v === 'boolean' ? v : (f.default ?? false);
         break;
       }
+      case 'checklist': {
+        const ticked = new Set(Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : []);
+        // in the section's order; ids that no longer exist drop out
+        const list = (f.options ?? []).map((o) => o.value).filter((id) => ticked.has(id));
+        if (f.min && list.length < f.min) errors.push(`${at}: tick at least ${f.min}`);
+        out[f.key] = list;
+        break;
+      }
       case 'color': {
         const s = typeof v === 'string' ? v.trim() : '';
         if (!s) break;
@@ -297,6 +311,7 @@ function validateFields(fields: Field[], input: unknown, where: string, errors: 
       }
       case 'list': {
         const list = Array.isArray(v) ? v : [];
+        if (f.max && list.length > f.max) errors.push(`${at}: at most ${f.max} ${f.item}s`);
         out[f.key] = list.map((item, i) => validateFields(f.fields, item, `${at} ${i + 1}`, errors));
         break;
       }

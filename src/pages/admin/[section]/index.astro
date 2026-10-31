@@ -11,6 +11,8 @@ if (!c) return new Response('Not found', { status: 404 });
 if (c.parent) return Astro.redirect(`/admin/${c.parent}`);
 
 const entries = await listEntries(c);
+// A section of fixed settings with one entry (Home page) opens straight in its editor
+if (c.fixed && entries.length === 1) return Astro.redirect(`/admin/${c.slug}/${entries[0].id}`);
 // Sections shown inside this one, pinned above its list (the studio card in Team)
 const pinned = (
   await Promise.all(
@@ -40,7 +42,7 @@ const deleted = Astro.url.searchParams.get('deleted');
       {pinned.map(({ s, id, data }) => (
         <li class="cms-row">
           <a class="cms-row__main" href={`/admin/${s.slug}/${id}`}>
-            <p class="cms-row__title">{text(data[s.titleField]) || id}</p>
+            <p class="cms-row__title">{text(data[s.titleField]) || (s.fixed ? s.label : id)}</p>
             {s.subtitleField && <p class="cms-row__sub cms-muted">{text(data[s.subtitleField])}</p>}
           </a>
           {s.metaFields && (

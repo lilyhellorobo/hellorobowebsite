@@ -11,19 +11,23 @@
  * project once; the name at the front is the active project: its background and
  * services show, and clicking its name opens the project. Row spacing ≈ Figma's (≈ 110px);
  * the front name is at full opacity and the others fade fast (FADE), for contrast.
- * The drum follows the scroll with time-based easing (SMOOTH), so wheel steps blend
- * into one continuous turn; one project = half a screen of scrolling on Home, 70% on Work. Figma's CRT screen shader
- * (CrtScreen overlay, as on the Robo Radio player) sits on top, with the Work frame's values.
+ * The drum follows its input with time-based easing (SMOOTH) and magnetic detents (each
+ * project sticks at the front, then the drum moves fast to the next and snaps into place);
+ * one project = 70% of a screen of scrolling. A 70% black layer sits over the backgrounds.
+ * Figma's CRT screen shader (CrtScreen overlay, as on the Robo Radio player) sits on top,
+ * with the Work frame's values. Home and the Work page behave the same, except:
  * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
- * half screen of scrolling widens it to full screen, then the wheel turns.
- * Work page: full screen from the start; quicker follow with magnetic detents (each
- * project sticks at the front, then the drum moves fast to the next and snaps into
- * place), and a 70% black layer over the backgrounds (30% on Home).
+ * half screen of scrolling widens it to full screen, then the wheel turns with the page.
+ * `infinite` (Work page): full screen, and the wheel takes the scroll input itself.
+ * Services and the project's mark change as on the Services page: the lines slide out of
+ * their masks one after another and the mark slides through its own a beat later, in the
+ * direction the wheel turns (the outgoing ones leave the way it's going). Hovering a name lights it up.
  * Mobile, Home (Figma Home 10101:9021, 390×694 card): no wheel — the projects are full-screen
  * slides that pin and change on scroll, like the Home showcase: the photo slides in,
  * name / services / VIEW swap, and the bright segment of the line shows the progress.
  * Mobile, Work page (`infinite`): a flat, lighter wheel instead — WorkWheelMobile.
- * Projects come from the projects collection (CMS), in `order`; the first is in front.
+ * Projects come from the projects collection (CMS), in `order`; the first is in front. Home
+ * shows only the ones ticked "Featured" in the CMS Home page section; the Work page all.
  */
 import { getCollection } from 'astro:content';
 import Media from '../../components/ui/Media.astro';
@@ -41,7 +45,10 @@ interface Props {
 }
 const { as: Tag = 'section', framed = false, infinite = false, mobileLimit } = Astro.props;
 
-const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+// Home: the projects ticked "Featured" in the CMS (Home page), still in the Projects order
+const featured = (await getCollection('home'))[0]?.data.featured ?? [];
+const projects = framed && featured.length ? all.filter((p) => featured.includes(p.id)) : all;
 const active = projects[0];
 
 // 3D drum: the names go all the way round a cylinder. The number of faces is a whole
@@ -86,7 +93,9 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
 
         <hr class="project-wheel__rule" />
         {projects.map((p, i) => (
-          <img class:list={['project-wheel__mark', { 'is-current': i === 0 }]} data-index={i} src={markOf(p)} alt="" height="79" loading="lazy" />
+          <span class:list={['project-wheel__mark', { 'is-current': i === 0 }]} data-index={i} data-state={i === 0 ? 'current' : 'next'}>
+            <img src={markOf(p)} alt="" height="79" loading="lazy" />
+          </span>
         ))}
 
         <div class="project-wheel__names" aria-hidden="true" style={`--radius: ${RADIUS}`}>
@@ -110,8 +119,8 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
         {/* no VIEW button: the name in front opens the project */}
 
         {projects.map((p, i) => (
-          <ul class:list={['project-wheel__services', 't-body', { 'is-current': i === 0 }]} data-index={i}>
-            {p.data.services.map((s) => <li>{s}</li>)}
+          <ul class:list={['project-wheel__services', 't-body', { 'is-current': i === 0 }]} data-index={i} data-state={i === 0 ? 'current' : 'next'}>
+            {p.data.services.map((s, si) => <li><span class="mask"><span style={`--d: ${si + 1}`}>{s}</span></span></li>)}
           </ul>
         ))}
 
@@ -213,27 +222,24 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
 
     // Smooth follow: the drum eases toward `target`, time-based so it feels the same at
     // any frame rate. SMOOTH = seconds to cover ~63% of the remaining turn.
-    // Home (scroll-driven) is softer than the Work page, where input drives the drum directly
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const SMOOTH = reduceMotion ? 0.001 : root.hasAttribute('data-infinite') ? 0.16 : 0.3;
-    // Work page: magnetic detents. The drum sticks a little to the project at the front,
-    // then moves quickly to the next one, as if each name were pulled into place.
+    const SMOOTH = reduceMotion ? 0.001 : 0.16;
+    // Magnetic detents: the drum sticks a little to the project at the front, then moves
+    // quickly to the next one, as if each name were pulled into place.
     // magnet(x) keeps every whole project where it is and is steepest halfway between
     // two projects (MAGNET 0 = no pull, toward 1 = stickier).
-    const MAGNET = root.hasAttribute('data-infinite') && !reduceMotion ? 0.65 : 0;
+    const MAGNET = reduceMotion ? 0 : 0.65;
     const magnet = (x: number) => x - (MAGNET * Math.sin(2 * Math.PI * x)) / (2 * Math.PI);
     let offset = 0;
     let target = 0;
     let running = 0;
     let lastT = 0;
 
-    // Hover (after the reference recording): the name under the cursor lights up and drifts
-    // a little away from the cursor, sideways; the names next to it follow a touch. `fades` is
-    // each name's opacity on the drum, `lit` / `shift` the eased hover on top of it.
+    // Hover: the name under the cursor lights up (the names next to it a touch). `fades` is
+    // each name's opacity on the drum, `lit` the eased hover on top of it.
     const HOVER_LIGHT = 0.6; // share of the way to full white a hovered name goes
     const fades = rows.map(() => 0);
     const lit = rows.map(() => 0);
-    const shift = rows.map(() => 0);
     const paint = (i: number) => {
       rows[i].style.opacity = String(fades[i] + lit[i] * (1 - fades[i]) * HOVER_LIGHT);
     };
@@ -258,32 +264,44 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       pictures.set(offset);
       const next = mod(base, N);
       if (next !== current) {
+        // which way the drum turned (the short way round), so the outgoing services leave
+        // the way they came and the incoming ones arrive from the other side
+        let dir = mod(next - current, N);
+        if (dir > N / 2) dir -= N;
+        const forward = dir >= 0;
+        const prev = current;
         current = next;
         stage.dataset.active = String(next);
-        lists.forEach((el) => el.classList.toggle('is-current', Number(el.dataset.index) === next));
+        lists.forEach((el) => {
+          const i = Number(el.dataset.index);
+          el.classList.toggle('is-current', i === next);
+          if (i === next) {
+            // start from the side it comes in from, then slide in
+            const from = forward ? 'next' : 'past';
+            if (el.dataset.state !== from) {
+              el.dataset.state = from;
+              el.classList.add('is-instant');
+              void el.offsetWidth;
+              el.classList.remove('is-instant');
+            }
+            el.dataset.state = 'current';
+          } else if (i === prev) el.dataset.state = forward ? 'past' : 'next';
+        });
       }
     };
 
-    // hover: how lit / how far each name should be, eased toward it every frame
-    const HOVER_PUSH = 0.12; // share of the cursor's sideways distance a name drifts away
-    const HOVER_MAX = 48; // px, the most it drifts
+    // hover: how lit each name should be, eased toward it every frame
     const litTo = rows.map(() => 0);
-    const shiftTo = rows.map(() => 0);
     let hoverFrame = 0;
     const hoverTick = () => {
       hoverFrame = 0;
       let moving = false;
       rows.forEach((row, i) => {
         const l = lit[i] + (litTo[i] - lit[i]) * 0.14;
-        const x = shift[i] + (shiftTo[i] - shift[i]) * 0.1;
-        const settled = Math.abs(l - litTo[i]) < 0.002 && Math.abs(x - shiftTo[i]) < 0.1;
+        const settled = Math.abs(l - litTo[i]) < 0.002;
         lit[i] = settled ? litTo[i] : l;
-        shift[i] = settled ? shiftTo[i] : x;
         if (!settled) moving = true;
-        if (lit[i] || shift[i] || !settled) {
-          paint(i);
-          row.style.translate = shift[i] ? `${shift[i].toFixed(1)}px 0` : '';
-        }
+        if (lit[i] || !settled) paint(i);
       });
       if (moving) hoverFrame = requestAnimationFrame(hoverTick);
     };
@@ -294,7 +312,6 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
       stage.addEventListener('pointermove', (e) => {
         rows.forEach((row, i) => {
           litTo[i] = 0;
-          shiftTo[i] = 0;
           if (fades[i] <= 0.04) return;
           const r = row.getBoundingClientRect();
           // 1 on the name, falling to 0 a row away
@@ -302,15 +319,11 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
           const over = e.clientX >= r.left - 40 && e.clientX <= r.right + 40;
           if (!near || !over) return;
           litTo[i] = near;
-          const dx = e.clientX - (r.left + r.width / 2);
-          // away from the cursor: cursor on the right pushes the name left, and back
-          shiftTo[i] = near * Math.max(-HOVER_MAX, Math.min(HOVER_MAX, -dx * HOVER_PUSH));
         });
         hoverRun();
       });
       stage.addEventListener('pointerleave', () => {
         litTo.fill(0);
-        shiftTo.fill(0);
         hoverRun();
       });
     }
@@ -470,7 +483,7 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   .project-wheel {
     position: relative;
     --expand: 0;
-    --per-project: 0.5; /* screens of scrolling per project (Home) */
+    --per-project: 0.7; /* screens of scrolling per project (Home) */
     height: calc(100vh + (var(--expand) + var(--count) * var(--per-project)) * 100vh);
   }
   .project-wheel__stage {
@@ -524,14 +537,14 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   .project-wheel__bg.is-current {
     visibility: visible;
   }
-  /* 30% black over every background, under the names (also on the mobile cards) */
+  /* 30% black over every background, under the names (the mobile cards) */
   .project-wheel__shade {
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 0.3);
   }
-  /* Work page: a darker layer over the project backgrounds (70%) */
-  .project-wheel--infinite .project-wheel__shade {
+  /* the desktop wheel (Home and Work): a darker layer over the backgrounds (70%) */
+  .project-wheel .project-wheel__shade {
     background: rgb(0 0 0 / 0.7);
   }
   .project-wheel :global(.project-wheel__bg-media) {
@@ -556,17 +569,34 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
   /* every project's mark is the same height (the globe's 79 in the 1117 frame), any width */
   .project-wheel__mark {
     position: absolute;
-    filter: brightness(0) invert(1); /* every mark white on the wheel */
     left: calc(40 / 1728 * 100%); /* the rule's left end */
     top: calc(549 / 1117 * 100%);
-    width: auto;
     height: calc(79 / 1117 * 100%);
     translate: 0 calc(-50% + 0.07 * var(--type-h2-size));
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    /* the mask: the mark slides through it, like the services' lines */
+    overflow: hidden;
   }
-  .project-wheel__mark.is-current {
-    opacity: 1;
+  .project-wheel__mark img {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-width: none;
+    filter: brightness(0) invert(1); /* every mark white on the wheel */
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
+  }
+  .project-wheel__mark[data-state='next'] img {
+    --y: 110%;
+  }
+  .project-wheel__mark[data-state='past'] img {
+    --y: -110%;
+  }
+  /* incoming: a beat after the services, as the Services stamp */
+  .project-wheel__mark[data-state='current'] img {
+    transition-delay: 0.3s;
+  }
+  .project-wheel__mark.is-instant img {
+    transition: none;
   }
 
   /* ── The 3D drum ──────────────────────────────────────────────
@@ -633,11 +663,42 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     bottom: calc((1117 - 622) / 1117 * 100% + 19 * var(--px));
     display: grid;
     gap: calc(8 * var(--px));
-    opacity: 0;
-    transition: opacity 0.4s ease;
   }
-  .project-wheel__services.is-current {
-    opacity: 1;
+  /* ── Services: as on the Services page, each line sits in a mask and slides up through
+     it, one after another; the outgoing project's go up and away first ── */
+  .project-wheel__services .mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    /* room on every side so no letter is clipped */
+    padding: 0.1em 0.06em 0.14em;
+    margin: -0.1em -0.06em -0.14em;
+  }
+  .project-wheel__services .mask > span {
+    display: inline-block;
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
+    transition-delay: calc(var(--d, 0) * var(--stagger));
+  }
+  .project-wheel__services[data-state='next'] .mask > span {
+    --y: 135%;
+  }
+  .project-wheel__services[data-state='past'] .mask > span {
+    --y: -135%;
+    transition-delay: 0s;
+  }
+  /* incoming lines wait a beat so the outgoing ones clear first */
+  .project-wheel__services[data-state='current'] .mask > span {
+    transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
+  }
+  .project-wheel__services.is-instant .mask > span {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-wheel__services .mask > span,
+    .project-wheel__mark img {
+      transition: none;
+    }
   }
 
   /* CRT lines on the mobile cards */

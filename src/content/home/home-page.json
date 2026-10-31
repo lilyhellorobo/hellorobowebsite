@@ -1,0 +1,50 @@
+{
+  "featured": [
+    "bedrock-robotics",
+    "cosmic-robotics",
+    "transitive-robotics",
+    "weekly-robotics"
+  ],
+  "clients": [
+    {
+      "name": "NYSE",
+      "logo": "/images/home/logo-nyse.svg",
+      "mobileScale": 0.6
+    },
+    {
+      "name": "Cisco",
+      "logo": "/images/home/logo-cisco.svg",
+      "mobileScale": 0.65
+    },
+    {
+      "name": "Pubco",
+      "logo": "/images/home/logo-pubco.svg",
+      "mobileScale": 1
+    },
+    {
+      "name": "Surf Air",
+      "logo": "/images/home/logo-surfair.svg",
+      "mobileScale": 1
+    },
+    {
+      "name": "Palantir",
+      "logo": "/images/home/logo-palantir.svg",
+      "mobileScale": 1
+    },
+    {
+      "name": "Bedrock",
+      "logo": "/images/home/logo-bedrock.png",
+      "mobileScale": 1
+    },
+    {
+      "name": "Weekly Robotics",
+      "logo": "/images/home/logo-weekly-robotics.svg",
+      "mobileScale": 1
+    },
+    {
+      "name": "Geolava",
+      "logo": "/images/home/logo-geolava.svg",
+      "mobileScale": 1
+    }
+  ]
+}

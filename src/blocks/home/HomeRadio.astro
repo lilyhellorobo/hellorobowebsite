@@ -28,9 +28,11 @@ for (let i = 0; posters.length; i++) {
 ---
 <section class="home-radio container">
   <div class="home-radio__head">
-    <h2 class="home-radio__title t-h1">Robo Radio</h2>
+    <div class="home-radio__heading">
+      <p class="home-radio__label t-body">Community webinar</p>
+      <h2 class="home-radio__title t-h1">Robo Radio</h2>
+    </div>
     <div class="home-radio__intro">
-      <p class="t-body">Community webinar</p>
       <p class="home-radio__text t-body">
         We design the human side of robotics. Robo Radio is where that belief becomes a conversation — through intimate discussions with the people shaping the field.
       </p>
@@ -78,8 +80,9 @@ for (let i = 0; posters.length; i++) {
     grid-template-columns: calc(968 / 1648 * 100%) calc(553 * var(--px));
     align-items: start;
   }
+  /* Label above the title, spaced as in Clients */
   .home-radio__title {
-    margin-top: calc(60 * var(--px));
+    margin-top: calc(32 * var(--px));
   }
   .home-radio__intro {
     display: grid;
@@ -129,7 +132,7 @@ for (let i = 0; posters.length; i++) {
       grid-template-columns: minmax(0, 1fr);
     }
     .home-radio__title {
-      margin-top: 0;
+      margin-top: var(--space-24);
     }
     .home-radio__intro {
       margin-top: 64px;

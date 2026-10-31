@@ -1,0 +1,28 @@
+{
+  "strip": [
+    {
+      "photo": "../../assets/careers-page/team-01.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-02.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-03.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-04.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-05.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-06.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-07.png"
+    },
+    {
+      "photo": "../../assets/careers-page/team-08.png"
+    }
+  ]
+}

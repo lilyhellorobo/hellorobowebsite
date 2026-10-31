@@ -149,4 +149,28 @@ const news = defineCollection({
   }),
 });
 
-export const collections = { projects, team, studio, positions, episodes, news };
+/** The home page's own settings (CMS "Home page"): one entry, home-page.json */
+const home = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/home' }),
+  schema: z.object({
+    /** Projects (ids) in the Works wheel on Home, shown in the Projects order */
+    featured: z.array(z.string()).default([]),
+    /** The Clients block's logos, in its 8 places: an SVG tile (264×355 with its own
+        background) or a PNG / WebP logo placed on a light tile; public paths */
+    clients: z
+      .array(z.object({ name: z.string(), logo: z.string(), mobileScale: z.number().default(1) }))
+      .default([]),
+  }),
+});
+
+/** The Careers page's own settings (CMS "Careers page"): one entry, careers-page.json */
+const careersPage = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/careers-page' }),
+  schema: ({ image }) =>
+    z.object({
+      /** The hero's photo strip, left to right, all shown at the same height */
+      strip: z.array(z.object({ photo: image() })).default([]),
+    }),
+});
+
+export const collections = { home, 'careers-page': careersPage, projects, team, studio, positions, episodes, news };

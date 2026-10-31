@@ -7,21 +7,32 @@
  * from the 1728 frame and expressed as % so they scale with the page.
  * Mobile: two rows of logo tiles at 1.5× Figma's 123×69, bleeding off both edges; while
  * the block crosses the screen the rows drift sideways in opposite directions.
+ * The logos come from the CMS (Home page › Client logos) and fill the 8 places in order:
+ * an SVG is a whole tile with its own background, a PNG / WebP logo sits on a light tile.
  */
+import { getCollection } from 'astro:content';
 
-// x, y, w, h in the 1728×1481 frame
-const tiles = [
-  // mobileScale: these two fill more of the tile than the rest, so they're drawn smaller
-  // in the cropped phone tiles to match the others
-  { name: 'NYSE', src: '/images/home/logo-nyse.svg', x: 1286, y: -10, mobileScale: 0.6 },
-  { name: 'Cisco', src: '/images/home/logo-cisco.svg', x: 1563, y: 168, mobileScale: 0.65 },
-  { name: 'Pubco', src: '/images/home/logo-pubco.svg', x: 1287, y: 357 },
-  { name: 'Surf Air', src: '/images/home/logo-surfair.svg', x: 1011, y: 535 },
-  { name: 'Palantir', src: '/images/home/logo-palantir.svg', x: 732, y: 724 },
-  { name: 'Bedrock', src: '/images/home/logo-bedrock.png', x: 1287, y: 724, raster: true },
-  { name: 'Weekly Robotics', src: '/images/home/logo-weekly-robotics.svg', x: 1011, y: 902 },
-  { name: 'Geolava', src: '/images/home/logo-geolava.svg', x: 732, y: 1091 },
+// The 8 places for logo tiles: x, y in the 1728×1481 frame
+const places = [
+  { x: 1286, y: -10 },
+  { x: 1563, y: 168 },
+  { x: 1287, y: 357 },
+  { x: 1011, y: 535 },
+  { x: 732, y: 724 },
+  { x: 1287, y: 724 },
+  { x: 1011, y: 902 },
+  { x: 732, y: 1091 },
 ];
+// mobileScale: logos that fill more of their tile than the rest are drawn smaller in the
+// cropped phone tiles, to match the others
+const clients = (await getCollection('home'))[0]?.data.clients ?? [];
+const tiles = clients.slice(0, places.length).map((c, i) => ({
+  name: c.name,
+  src: c.logo,
+  ...places[i],
+  mobileScale: c.mobileScale !== 1 ? c.mobileScale : undefined,
+  raster: !/\.svg$/i.test(c.logo),
+}));
 const stamps = [
   { src: '/images/home/stamp-human-department.svg', x: 1003, y: 226, w: 292, h: 292 },
   { src: '/images/home/stamp-human-approved.svg', x: 1526, y: 525, w: 388, h: 651 },

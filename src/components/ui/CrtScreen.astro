@@ -4,7 +4,8 @@
  * v584), ported from its WGSL source to WebGL so the browser runs the same maths as Figma.
  * Put it inside a positioned box (overflow hidden) that holds the image: the canvas covers
  * the box and draws that image through the effect, animated. If the box holds several
- * images, the one with `.is-current` (else the first) is used.
+ * images, the one with `.is-current` (else the first) is used; with `mosaic`, all of them,
+ * each where it sits in the box (a row of photos, e.g. the Careers strip).
  *
  * Settings default to the values on the menu photo (Figma 10194:1895): curvature 0
  * (flat glass — no rounded corners), scanlines 38 / size 3, shadow mask 9 / pitch 12,
@@ -23,6 +24,8 @@ interface Props {
   /** Override any Figma property by its name (mask, scanlines, curvature, …) */
   settings?: Record<string, number | boolean>;
   overlay?: boolean;
+  /** Draw every image in the box where it sits (instead of the current one filling it) */
+  mosaic?: boolean;
 }
 const figma = {
   mask: 9,
@@ -44,9 +47,9 @@ const figma = {
   speed: 1.01,
 };
 const settings = { ...figma, ...Astro.props.settings };
-const { overlay = false } = Astro.props;
+const { overlay = false, mosaic = false } = Astro.props;
 ---
-<canvas class:list={['crt', { 'crt--overlay': overlay }]} aria-hidden="true" data-crt={JSON.stringify(settings)} data-overlay={overlay ? '' : undefined}></canvas>
+<canvas class:list={['crt', { 'crt--overlay': overlay }]} aria-hidden="true" data-crt={JSON.stringify(settings)} data-overlay={overlay ? '' : undefined} data-mosaic={mosaic ? '' : undefined}></canvas>
 
 <script>
   // Fragment shader: Figma's fs_main, line for line (WGSL → GLSL ES 1.0)
@@ -324,8 +327,33 @@ void main() { vUv = aUv; gl_Position = vec4(aPos, 0.0, 1.0); }`;
     const ctx = paint.getContext('2d')!;
     let sourceKey = '';
     const current = () => box.querySelector<HTMLImageElement>('img.is-current') ?? box.querySelector('img');
+    const mosaic = canvas.hasAttribute('data-mosaic');
+    /** mosaic: every image, cover-fitted into its own box, where it sits in the box */
+    const uploadMosaic = () => {
+      const imgs = [...box.querySelectorAll('img')];
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!imgs.length || !w || !h || imgs.some((i) => !i.complete || !i.naturalWidth)) return false;
+      const k = w / (box.offsetWidth || 1);
+      const key = `${imgs.map((i) => `${i.currentSrc}@${i.offsetLeft},${i.offsetWidth}`).join('|')}|${w}x${h}`;
+      if (key === sourceKey) return true;
+      paint.width = w;
+      paint.height = h;
+      for (const img of imgs) {
+        const bw = img.offsetWidth * k;
+        const bh = img.offsetHeight * k;
+        const s = Math.max(bw / img.naturalWidth, bh / img.naturalHeight);
+        const sw = bw / s;
+        const sh = bh / s;
+        ctx.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, img.offsetLeft * k, img.offsetTop * k, bw, bh);
+      }
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paint);
+      sourceKey = key;
+      return true;
+    };
     const upload = () => {
       if (overlay) return true; // no picture to read: the white signal is the input
+      if (mosaic) return uploadMosaic();
       const img = current();
       const w = canvas.width;
       const h = canvas.height;

@@ -464,6 +464,48 @@ function control(f: Field, value: Value, path: string): Control {
         get: () => select.value,
       };
     }
+    case 'checklist': {
+      // one row per entry of the other section, each with its own checkbox
+      const ticked = new Set(Array.isArray(value) ? (value as string[]) : []);
+      const count = h('p', { class: 'cms-hint' });
+      const boxes = (f.options ?? []).map((o) => ({
+        value: o.value,
+        input: h('input', { id: nextId('f'), type: 'checkbox', checked: ticked.has(o.value) }),
+        label: o.label,
+      }));
+      const update = () => {
+        const n = boxes.filter((b) => b.input.checked).length;
+        count.textContent = `${n} of ${boxes.length} ${f.check.toLowerCase()}`;
+      };
+      boxes.forEach((b) => b.input.addEventListener('change', update));
+      update();
+      return {
+        el: h(
+          'fieldset',
+          { class: 'cms-fieldset' },
+          h('legend', { text: f.label }),
+          hint(f.hint),
+          h(
+            'ul',
+            { class: 'cms-checklist' },
+            ...boxes.map((b) =>
+              h(
+                'li',
+                { class: 'cms-checklist__row' },
+                h('span', { class: 'cms-checklist__name', text: b.label }),
+                h('label', { class: 'cms-switch', for: b.input.id }, b.input, f.check),
+              ),
+            ),
+          ),
+          count,
+        ),
+        get: () => boxes.filter((b) => b.input.checked).map((b) => b.value),
+        check: () => {
+          const n = boxes.filter((b) => b.input.checked).length;
+          return f.min && n < f.min ? [`${f.label}: tick at least ${f.min}`] : [];
+        },
+      };
+    }
     case 'boolean': {
       const input = h('input', { id, type: 'checkbox', checked: typeof value === 'boolean' ? value : !!f.default });
       return {
@@ -827,6 +869,12 @@ function control(f: Field, value: Value, path: string): Control {
 function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, path: string): Control {
   const items = h('div', { class: 'cms-items' });
   const entries: { el: HTMLElement; type?: string; inner: ReturnType<typeof fieldsControl> }[] = [];
+  // a list with a `max`: no more adding once it's full
+  let addButtons: HTMLButtonElement[] = [];
+  const limit = () => {
+    const full = f.kind === 'list' && !!f.max && entries.length >= f.max;
+    addButtons.forEach((b) => (b.disabled = full));
+  };
 
   const renumber = () => {
     entries.forEach((e, i) => {
@@ -857,14 +905,15 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
       return true;
     };
 
-    // Page sections are dragged by their ⠿ handle (or ↑ / ↓ on the focused handle),
-    // like the list pages; list items (lines, credits) only get ×
+    // Page sections (and sortable lists, e.g. the Careers photo strip) are dragged by their
+    // ⠿ handle (or ↑ / ↓ on the focused handle), like the list pages; other list items
+    // (lines, credits) only get ×
     let handle: HTMLButtonElement | null = null;
-    if (f.kind === 'blocks') {
+    if (f.kind === 'blocks' || f.sortable) {
       handle = h('button', {
         type: 'button',
         class: 'cms-drag',
-        'aria-label': 'Move section. Drag, or use the up and down arrow keys.',
+        'aria-label': `Move ${f.kind === 'blocks' ? 'section' : f.item}. Drag, or use the up and down arrow keys.`,
         title: 'Drag to reorder',
         text: '⠿',
       });
@@ -988,6 +1037,7 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
             entries.splice(entries.indexOf(entry), 1);
             entry.el.remove();
             renumber();
+            limit();
             changed();
           }, true),
         ),
@@ -997,6 +1047,7 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
     entries.push(entry);
     items.append(entry.el);
     renumber();
+    limit();
     return entry;
   };
 
@@ -1004,7 +1055,7 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
     add(item, f.kind === 'blocks' ? String(item.type) : undefined);
   }
 
-  const addButtons =
+  addButtons =
     f.kind === 'blocks'
       ? f.variants.map((v) =>
           h('button', {
@@ -1022,6 +1073,7 @@ function repeater(f: Extract<Field, { kind: 'list' | 'blocks' }>, value: Value, 
             onclick: () => add({}).el.scrollIntoView({ block: 'nearest' }),
           }),
         ];
+  limit();
 
   return {
     el: h(

@@ -8,7 +8,9 @@
  * overlay mode, the screen's Figma settings: scanlines 59 / 3, shadow mask 9 / 12, static
  * 18, vignette 24, flicker 62, roll 0.93; flat glass, so no masked corners).
  * Controls (Figma "player nav", 504×80): previous · play / pause · next, the progress
- * line (seekable) and a sound button at the end (the video plays muted until it's on).
+ * line (seekable) and a sound button at the end (the video plays with sound; it mutes it).
+ * Play is a click, so browsers let it start with sound; if one still refuses (it can when
+ * the player took a while to load), it plays muted and the sound button shows that.
  * They play the episodes that have a video, newest first: the hero starts with the
  * newest, an episode page with its own; previous / next load the next one straight into
  * the same screen (no transition), and the next one starts when an episode ends.
@@ -50,7 +52,7 @@ const bar = variant === 'hero' ? { x: 105, y: 843 } : { x: 110, y: 759 };
 const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter: 3 };
 ---
 <section
-  class:list={['radio-tv', `radio-tv--${variant}`]}
+  class:list={['radio-tv', `radio-tv--${variant}`, 'is-sound']}
   aria-label="Robo Radio player"
   data-tv
   data-playlist={JSON.stringify(playlist)}
@@ -95,7 +97,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
         <svg viewBox="124 24 32 32" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M141.05 40.97l-11.53 6.96-1.97-1.13V32.83l1.89-1.15 11.61 6.9zm.5-9.42h5.5v16.5h-5.5z" /></svg>
       </button>
       <input class="radio-tv__seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Position in the episode" data-seek />
-      <button type="button" class="radio-tv__btn radio-tv__btn--sound" aria-label="Sound on" aria-pressed="false" data-sound>
+      <button type="button" class="radio-tv__btn radio-tv__btn--sound" aria-label="Mute" aria-pressed="true" data-sound>
         <svg viewBox="2.5 2.5 27 27" fill="none" aria-hidden="true">
           <path stroke="currentColor" stroke-width="1.27" d="M7 13h4l6-5v16l-6-5H7z" />
           <path class="radio-tv__icon-muted" stroke="currentColor" stroke-width="1.27" d="m20.5 12.5 7 7m0-7-7 7" />
@@ -124,7 +126,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   };
   type YTNamespace = {
     Player: new (el: HTMLElement, opts: Record<string, unknown>) => YTPlayer;
-    PlayerState: { ENDED: number; PLAYING: number; PAUSED: number };
+    PlayerState: { ENDED: number; PLAYING: number; PAUSED: number; BUFFERING: number };
   };
   const w = window as unknown as { YT?: YTNamespace; onYouTubeIframeAPIReady?: () => void };
 
@@ -155,7 +157,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     const soundBtn = root.querySelector<HTMLButtonElement>('[data-sound]')!;
     let player: YTPlayer | null = null;
     let playing = false;
-    let sound = false; // muted until the visitor turns the sound on
+    let sound = true; // plays with sound until the visitor mutes it
     let seeking = false;
     let pendingSeek: number | null = null; // a spot picked on the line before the video had started
     let frame = 0;
@@ -213,7 +215,7 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
         const p = new YT.Player(mount, {
           host: 'https://www.youtube-nocookie.com',
           videoId: list[index].id,
-          playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, iv_load_policy: 3, cc_load_policy: 0, disablekb: 1, fs: 0 },
+          playerVars: { autoplay: 1, mute: sound ? 0 : 1, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, iv_load_policy: 3, cc_load_policy: 0, disablekb: 1, fs: 0 },
           events: {
             onReady: () => {
               player = p;
@@ -223,6 +225,14 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
               p.playVideo();
               announce();
               resolve(p);
+              // the browser refused to start it with sound: play muted instead
+              setTimeout(() => {
+                const state = p.getPlayerState();
+                if (sound && state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.BUFFERING) {
+                  setSound(false);
+                  p.playVideo();
+                }
+              }, 1500);
             },
             onStateChange: (e: { data: number }) => {
               if (e.data === YT.PlayerState.PLAYING) {
@@ -258,14 +268,15 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     });
     root.querySelector('[data-prev]')!.addEventListener('click', () => go(-1));
     root.querySelector('[data-next]')!.addEventListener('click', () => go(1));
-    soundBtn.addEventListener('click', () => {
-      sound = !sound;
-      root.classList.toggle('is-sound', sound);
-      soundBtn.setAttribute('aria-pressed', String(sound));
-      soundBtn.setAttribute('aria-label', sound ? 'Mute' : 'Sound on');
-      if (sound) player?.unMute();
+    function setSound(on: boolean) {
+      sound = on;
+      root.classList.toggle('is-sound', on);
+      soundBtn.setAttribute('aria-pressed', String(on));
+      soundBtn.setAttribute('aria-label', on ? 'Mute' : 'Sound on');
+      if (on) player?.unMute();
       else player?.mute();
-    });
+    }
+    soundBtn.addEventListener('click', () => setSound(!sound));
     // Dragging along the line moves the picture with it (YouTube's quick, nearby seek, at
     // most ~6 times a second); letting go seeks exactly and plays from there. Before the
     // video has started, the line starts it at the spot picked.

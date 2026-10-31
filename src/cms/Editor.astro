@@ -15,7 +15,9 @@ const { c, entry } = Astro.props;
 const isNew = !entry;
 // A section shown inside another one (the studio card in Team) goes back to that one
 const back = (c.parent && getCmsCollection(c.parent)) || c;
-const title = entry ? String(entry.data[c.titleField] ?? entry.id) : `New ${c.singular}`;
+// a section of fixed settings (Home page) is its own page: no way back to a list
+const crumb = !(c.fixed && !c.parent);
+const title = entry ? String(entry.data[c.titleField] ?? (c.fixed ? c.label : entry.id)) : `New ${c.singular}`;
 const saved = Astro.url.searchParams.get('saved') != null;
 const config = JSON.stringify({
   section: c.slug,
@@ -28,7 +30,7 @@ const config = JSON.stringify({
 <AdminLayout title={title} active={c.parent ?? c.slug}>
   <header class="cms-head">
     <div>
-      <a class="cms-crumb" href={`/admin/${back.slug}`}>← {back.label}</a>
+      {crumb && <a class="cms-crumb" href={`/admin/${back.slug}`}>← {back.label}</a>}
       <h1 data-title>{title}</h1>
     </div>
   </header>

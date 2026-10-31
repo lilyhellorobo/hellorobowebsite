@@ -14,7 +14,11 @@
  * through the slides: the background crossfades, the title and services list swap,
  * and the bright segment of the line grows with the progress through all slides.
  * Mobile: already full width (Figma), so it skips the widening.
- * Transitions are placeholders for the motion step.
+ * Text motion as in the Services scroller: the title's words and then the services, line by
+ * line, slide out of their masks and the next slide's slide in, in the direction you scroll;
+ * each slide has its service's stamp (as on Services, in white here), sliding through its
+ * own mask a beat later. The first slide waits below its masks until the block scrolls
+ * into view (headline-reveal.ts).
  */
 import { Image } from 'astro:assets';
 import Divider from '../../components/ui/Divider.astro';
@@ -30,6 +34,7 @@ const slides = [
     alt: 'A person holding a tablet showing a robotics product interface',
     // Slide 1's photo has no shade baked in; slides 2–3 were exported with Figma's 30% shade
     shade: true,
+    stamp: { src: '/images/services/stamp-branding.svg', w: 134, h: 137 },
     services: ['Robot Brand Identity', 'Brand Strategy & Positioning', 'Robot Naming & Nomenclature', 'Motion Identity', 'Tone of Voice'],
   },
   {
@@ -37,6 +42,7 @@ const slides = [
     image: operators,
     alt: 'Aerial view of a solar field with a module installation chart',
     shade: false,
+    stamp: { src: '/images/services/stamp-interface.svg', w: 120, h: 107 },
     services: ['HRI Design', 'Robot Management UI', 'Fleet Management UI', 'Operator Dashboard', 'Observability Interface'],
   },
   {
@@ -44,6 +50,7 @@ const slides = [
     image: market,
     alt: 'Close-up of a solar panel corner on black',
     shade: false,
+    stamp: { src: '/images/services/stamp-video.svg', w: 121, h: 72 },
     services: ['Robot Cinematic Videos', 'Product Launch Films', 'Brand Films', 'Product Demos', 'Founder Stories', 'Pilot Case Studies'],
   },
 ];
@@ -71,18 +78,34 @@ const slides = [
         <Divider tone="dark" accent class="home-showcase__rule" />
         <div class="home-showcase__row">
           <div class="home-showcase__marks" aria-hidden="true">
-            <img src="/images/home/showcase-globe.svg" alt="" width="68" style="--w: 68" height="72" />
-            <img class="home-showcase__y2k" src="/images/home/showcase-y2k.svg" alt="" width="62" style="--w: 62" height="14" />
+            {slides.map((s, i) => (
+              <span class="home-showcase__stamp" data-slide={i} data-index={i} data-state={i === 0 ? 'current' : 'next'}>
+                <img src={s.stamp.src} alt="" width={s.stamp.w} height={s.stamp.h} style={`--w: ${s.stamp.w}`} />
+              </span>
+            ))}
           </div>
           <div class="home-showcase__titles">
-            {slides.map((s, i) => (
-              <p class="home-showcase__title t-h2" data-slide={i} aria-hidden={i > 0 ? 'true' : undefined}>Make the<br class="only-mobile" /> {s.word}<br class="only-desktop" /> say yes</p>
-            ))}
+            {slides.map((s, i) => {
+              // words in masks, broken as in Figma: after "Make the" on mobile, before "say yes" on desktop
+              const words = ['Make', 'the', 'mobile', s.word, 'desktop', 'say', 'yes'];
+              let d = 0;
+              return (
+                <p class="home-showcase__title t-h2" data-slide={i} data-index={i} data-state={i === 0 ? 'current' : 'next'} aria-hidden={i > 0 ? 'true' : undefined}>
+                  {words.map((w, wi) =>
+                    w === 'mobile' || w === 'desktop' ? (
+                      <><br class={`only-${w}`} />{' '}</>
+                    ) : (
+                      <><span class="mask"><span style={`--d: ${d++}`}>{w}</span></span>{wi < words.length - 1 && words[wi + 1] !== 'mobile' && words[wi + 1] !== 'desktop' && ' '}</>
+                    ),
+                  )}
+                </p>
+              );
+            })}
           </div>
           <div class="home-showcase__lists">
             {slides.map((s, i) => (
-              <ul class="home-showcase__services t-body t-body2-mobile" data-slide={i} aria-hidden={i > 0 ? 'true' : undefined}>
-                {s.services.map((item) => <li>{item}</li>)}
+              <ul class="home-showcase__services t-body t-body2-mobile" data-slide={i} data-index={i} data-state={i === 0 ? 'current' : 'next'} aria-hidden={i > 0 ? 'true' : undefined}>
+                {s.services.map((item, si) => <li><span class="mask"><span style={`--d: ${si + 2}`}>{item}</span></span></li>)}
               </ul>
             ))}
           </div>
@@ -100,7 +123,7 @@ const slides = [
   for (const scroller of document.querySelectorAll<HTMLElement>('[data-showcase]')) {
     const stage = scroller.querySelector<HTMLElement>('.home-showcase__stage');
     const count = Number(getComputedStyle(scroller).getPropertyValue('--slides')) || 3;
-    const parts = scroller.querySelectorAll<HTMLElement>('.home-showcase__title, .home-showcase__services');
+    const parts = scroller.querySelectorAll<HTMLElement>('.home-showcase__title, .home-showcase__services, .home-showcase__stamp');
     const pictures = slideScrub([...scroller.querySelectorAll<HTMLElement>('.home-showcase__bg')]);
     let frame = 0;
 
@@ -122,7 +145,11 @@ const slides = [
       pictures.set(Math.min(count - 1, Math.max(0, progress * count - 0.5)));
       if (stage.dataset.active !== String(active)) {
         stage.dataset.active = String(active);
-        parts.forEach((el) => el.setAttribute('aria-hidden', String(el.dataset.slide !== String(active))));
+        parts.forEach((el) => {
+          const i = Number(el.dataset.slide);
+          el.dataset.state = i < active ? 'past' : i === active ? 'current' : 'next';
+          if (!el.matches('.home-showcase__stamp')) el.setAttribute('aria-hidden', String(i !== active));
+        });
       }
     };
     const request = () => {
@@ -208,13 +235,21 @@ const slides = [
     grid-template-columns: calc(128 / 1648 * 100%) calc(979 / 1648 * 100%) calc(403 / 1648 * 100%) 1fr;
     margin-top: calc(31 * var(--px));
   }
+  /* The service's stamp, in white (the Services files are orange), all slides in one cell */
   .home-showcase__marks {
-    position: relative;
+    display: grid;
+    align-items: start;
   }
-  .home-showcase__y2k {
-    position: absolute;
-    left: calc(5 * var(--px));
-    top: calc(62 * var(--px));
+  /* each stamp in a mask of its own, sliding through it like the words */
+  .home-showcase__stamp {
+    grid-area: 1 / 1;
+    overflow: hidden;
+  }
+  .home-showcase__stamp img {
+    display: block;
+    width: calc(var(--w) * 0.62 * var(--px));
+    height: auto;
+    filter: brightness(0) invert(1);
   }
 
   /* ── Titles and service lists: all slides share one cell, only the active one shows ── */
@@ -225,18 +260,48 @@ const slides = [
   .home-showcase__title,
   .home-showcase__services {
     grid-area: 1 / 1;
-    opacity: 0;
-    transform: translateY(calc(16 * var(--px)));
-    transition:
-      opacity 0.4s ease,
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .home-showcase__stage[data-active='0'] [data-slide='0']:is(.home-showcase__title, .home-showcase__services),
-  .home-showcase__stage[data-active='1'] [data-slide='1']:is(.home-showcase__title, .home-showcase__services),
-  .home-showcase__stage[data-active='2'] [data-slide='2']:is(.home-showcase__title, .home-showcase__services) {
-    opacity: 1;
-    transform: none;
-    transition-delay: 0.15s;
+
+  /* ── Text motion, as in the Services scroller: each word / line sits in a mask and slides
+     up through it; the outgoing slide's go up and out, the incoming slide's come up after ── */
+  .mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    /* room on every side so no letter is clipped */
+    padding: 0.1em 0.06em 0.14em;
+    margin: -0.1em -0.06em -0.14em;
+  }
+  .mask > span {
+    display: inline-block;
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
+    transition-delay: calc(var(--d, 0) * var(--stagger));
+  }
+  [data-state='next'] .mask > span {
+    --y: 135%;
+  }
+  [data-state='past'] .mask > span {
+    --y: -135%;
+    transition-delay: 0s;
+  }
+  /* incoming words wait a beat so the outgoing ones clear first */
+  [data-state='current'] .mask > span {
+    transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
+  }
+  .home-showcase__stamp img {
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
+  }
+  .home-showcase__stamp[data-state='next'] img {
+    --y: 110%;
+  }
+  .home-showcase__stamp[data-state='past'] img {
+    --y: -110%;
+  }
+  /* incoming: a beat after the words */
+  .home-showcase__stamp[data-state='current'] img {
+    transition-delay: 0.3s;
   }
   .home-showcase__title {
     width: calc(680 * var(--px));
@@ -250,9 +315,9 @@ const slides = [
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .home-showcase__title,
-    .home-showcase__services {
-      transform: none;
+    .mask > span,
+    .home-showcase__stamp img {
+      transition: none;
     }
   }
 
@@ -294,15 +359,8 @@ const slides = [
       top: 20px;
       left: 0;
     }
-    .home-showcase__marks img:first-child {
-      width: 51px;
-      height: auto;
-    }
-    .home-showcase__y2k {
-      left: 0;
-      top: 54px;
-      width: 51px;
-      height: auto;
+    .home-showcase__stamp img {
+      width: calc(var(--w) * 0.45px);
     }
     .home-showcase__titles {
       margin-top: var(--space-24);
