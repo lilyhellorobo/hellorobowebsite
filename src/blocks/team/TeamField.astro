@@ -12,8 +12,7 @@
  *   2 × 2 copies of the tile (3 × 3 if it were smaller than a screen) are drawn and the
  *   world wraps as you drag.
  *   The page opens on the Figma frame (on phones: centred on the robot).
- * - Blur grows smoothly toward the screen corners (none in the middle). Hover an object:
- *   it's sharp, nearby objects barely blur, and the blur and fade grow with distance from
+ * - Every object stays sharp (no blur). Hover an object: the fade grows with distance from
  *   it and toward the corners, with a lens distortion toward the screen edges.
  * - Click: the canvas glides so the object lands in the middle of the left half (beside
  *   the card), the rest stays out of focus, and the card fades in on the right. The robot
@@ -400,9 +399,14 @@ const config = JSON.stringify({
 
     // ── Cards
     let lastPerson = '';
+    /** cards whose contents are fading out: they fly off once that's done */
+    const closing = new Map<HTMLElement, number>();
     const openCard = (id: string) => {
       cards.forEach((c, cid) => {
         const on = cid === id;
+        window.clearTimeout(closing.get(c));
+        closing.delete(c);
+        c.classList.remove('is-closing');
         c.classList.toggle('is-open', on);
         c.setAttribute('aria-hidden', String(!on));
       });
@@ -412,8 +416,21 @@ const config = JSON.stringify({
     const closeAll = () => {
       delete document.documentElement.dataset.nav;
       cards.forEach((c) => {
-        c.classList.remove('is-open');
         c.setAttribute('aria-hidden', 'true');
+        if (!c.classList.contains('is-open') || closing.has(c)) return;
+        if (reduce) {
+          c.classList.remove('is-open');
+          return;
+        }
+        // contents fade out first, then the card flies off
+        c.classList.add('is-closing');
+        closing.set(
+          c,
+          window.setTimeout(() => {
+            c.classList.remove('is-open', 'is-closing');
+            closing.delete(c);
+          }, 160),
+        );
       });
       history.replaceState(null, '', location.pathname + location.search);
     };
@@ -646,14 +663,13 @@ const config = JSON.stringify({
     padding: 0;
     cursor: pointer;
     opacity: var(--fade, 1);
-    filter: blur(calc(var(--blur, 0) * 1px));
+    /* no blur: the objects stay sharp, only the fade marks distance. The script still sets
+       --blur; restore with filter: blur(calc(var(--blur) * 1px)) */
     /* the white render background disappears into the canvas grey (on the button, because
        its filter / opacity make it a group of its own) */
     mix-blend-mode: multiply;
-    /* short: the blur follows the object as you drag; hover easing is done in JS */
-    transition:
-      opacity var(--duration-fast) var(--ease-out),
-      filter var(--duration-fast) var(--ease-out);
+    /* short: the fade follows the object as you drag; hover easing is done in JS */
+    transition: opacity var(--duration-fast) var(--ease-out);
   }
   .team.is-wrapping .team-obj,
   .team.is-wrapping .team-obj *,
@@ -723,7 +739,8 @@ const config = JSON.stringify({
 
   /* ── Card: 819×1037 white panel, 40 from the top and right. Flies in from beyond the
      right edge of the screen and settles; its contents fade in one after another once it
-     has landed. Closing: the contents fade, the card speeds back out to the right. ── */
+     has landed. Closing: the contents fade (is-closing, names too), then the card speeds
+     back out to the right. ── */
   .team-card {
     display: grid;
     position: fixed;
@@ -770,6 +787,10 @@ const config = JSON.stringify({
   .team-card.is-open > :nth-child(3) { transition-delay: 0.42s; }
   .team-card.is-open > :nth-child(4) { transition-delay: 0.48s; }
   .team-card.is-open > :nth-child(n + 5) { transition-delay: 0.54s; }
+  .team-card.is-open.is-closing > * {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
   /* The names don't fade: they slide up through their masks once the card has landed
      (as the Services titles); a closed card's wait below them */
   .team-card > .team-card__names {

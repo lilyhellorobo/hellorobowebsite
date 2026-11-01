@@ -2,8 +2,8 @@
  * Bottom bend — after raggededge.com: pictures and videos bend outward as they pass the
  * bottom of the screen, as if the screen's lower edge were a curved lens. Their curve, one
  * to one: each row of the screen at height v (0 at the bottom, 1 at the top) is stretched
- * sideways from the middle of the screen by 1 / (1 − 0.05 · (1 − v)^34) — about 11% at the
- * very bottom, nothing a sixth of the way up. Text and the rest of the page stay as they are.
+ * sideways from the middle of the screen by 1 / (1 − 0.05 · (1 − v)^58) — about 11% at the
+ * very bottom, nothing a tenth of the way up (theirs reaches a sixth: too tall here). Text and the rest of the page stay as they are.
  *
  * Each picture that reaches the bottom band of the screen (BAND) gets a canvas of its own,
  * placed right after it in the page (after the frame that crops it, when the frame is the
@@ -11,32 +11,35 @@
  * the picture stays on top, and the canvas scrolls with the page, never a frame behind.
  * One shared WebGL context draws the bent band part of the picture, which is copied into
  * that canvas. The picture's own band part is cut off with a clip-path; the two overlap by
- * FADE px where the bend is still zero and cross-fade there, so no seam shows. The copy
+ * FADE px where the bend is still zero and cross-fade there, so no seam shows (while a
+ * picture is see-through, fading in, a mask takes it out as the copy comes in, so that strip
+ * is no denser than the rest). The copy
  * follows the picture's box (moves and reveal included), its opacity, the frame
  * that crops it and its rounded corners.
  *
- * Skips the menu and page chrome, the home page's full-screen sections and contact block,
+ * Skips the menu and page chrome, the home page's contact block and footer,
  * pictures turned in 3D or rotated (their box isn't where they show), pictures with a
  * clip-path of their own, and small icons. Videos from another site only bend if that site
  * allows it (CORS). Desktop with a mouse only (theirs is off on phones too); off for
  * reduced motion.
  */
 
-/** the curve (their uniforms: distance 34, strength 1) */
-const DISTANCE = 34;
+/** the curve (their uniforms: distance 34, strength 1; tighter here, so the band is shorter) */
+const DISTANCE = 58;
 const STRENGTH = 1;
 /** share of the screen height that bends: above it the bend is under 0.3px */
-const BAND = 0.15;
-/** where the bent copy and the picture cross-fade, at the top of the band (px) */
-const FADE = 40;
+const BAND = 0.09;
+/** where the bent copy and the picture cross-fade, above the band (px): long, because the
+ *  screen shows a video and a canvas in slightly different colours (Mac, wide-gamut
+ *  displays), and a short fade leaves that as a visible edge */
+const FADE = 160;
 /** the canvas reaches this far below the screen, so a fast scroll never shows its edge (px) */
 const BELOW = 160;
 /** the widest the corners flare out, as a share of the screen width */
 const FLARE = 0.05 * STRENGTH;
 
-/** on the home page, the full-screen sections that open up (Showreel, Showcase, the work
- *  wheel) and the contact block stay flat too */
-const HOME = '.home-showreel, .home-showcase, .project-wheel, .work-wheel, .contact';
+/** on the home page, the contact block and the footer stay flat too */
+const HOME = '.contact, .footer';
 const SKIP = ['.pt, .site-menu, .nav-pill, .get-in-touch', location.pathname === '/' && HOME].filter(Boolean).join(', ');
 
 const VERTEX = `#version 300 es
@@ -79,6 +82,8 @@ void main() {
 
   vec2 t = (src - uContent.xy) / uContent.zw;
   if (t.x < 0.0 || t.y < 0.0 || t.x > 1.0 || t.y > 1.0) discard;
+  // comes in over the picture; while the picture is see-through, its mask (cut) takes it
+  // out as much, so the two add up to its opacity, no more
   float fade = clamp((px.y - uFade) / ${FADE.toFixed(1)}, 0.0, 1.0);
   color = texture(uTex, t, -0.5) * (uOpacity * edge * fade);
 }`;
@@ -90,8 +95,9 @@ type Item = {
   anchor: Element;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  /** the clip-path it had inline before the band cut it (null: not cut) */
+  /** the clip-path and mask it had inline before the band cut it (null: not cut) */
   clip: string | null;
+  mask: string;
   /** where the canvas is now: its css box and the scale it's drawn at */
   placed: { left: number; top: number; width: number; height: number } | null;
   /** what was drawn last: drawn again only when it changes */
@@ -233,6 +239,7 @@ function start() {
     const r = el.getBoundingClientRect();
     if (r.width < 48 || r.height < 48) return null;
     if (getComputedStyle(el).clipPath !== 'none' && !el.style.clipPath) return null;
+    if (getComputedStyle(el).maskImage !== 'none' && !el.style.maskImage) return null;
     if (turned(el)) return null;
     const anchor = anchorOf(el);
     const canvas = document.createElement('canvas');
@@ -244,7 +251,7 @@ function start() {
     anchor.after(canvas);
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
-    return { el, anchor, canvas, ctx, clip: null, placed: null, key: '' };
+    return { el, anchor, canvas, ctx, clip: null, mask: '', placed: null, key: '' };
   };
   const io = new IntersectionObserver(
     (entries) => {
@@ -268,7 +275,7 @@ function start() {
       run();
     },
     // the band and the cross-fade above it, and the strip below the screen
-    { rootMargin: `-${(1 - BAND) * 100 - 5}% 0px ${BELOW}px 0px` },
+    { rootMargin: `-${(1 - BAND) * 100 - 25}% 0px ${BELOW}px 0px` },
   );
   const watch = (root: ParentNode) => {
     for (const el of root.querySelectorAll<Media>('img, video')) {
@@ -281,14 +288,32 @@ function start() {
     for (const m of list) for (const n of m.addedNodes) if (n instanceof Element && !n.matches('canvas.bottom-bend')) watch(n.parentNode ?? n);
   }).observe(document.body, { childList: true, subtree: true });
 
-  const cut = (item: Item, px: number) => {
+  /** cut off its band part (px, its own px). The copy comes in over the fade px above the
+   *  cut at a · f (a: the picture's opacity, f: 0 → 1 down the fade); opaque, the picture
+   *  stays whole under it, see-through, it's masked to (1 − f) / (1 − a · f) so the two
+   *  together are a · f + a · (1 − f) = a */
+  const cut = (item: Item, px: number, fade: number, a: number) => {
     const s = item.el.style;
-    if (item.clip === null) item.clip = s.clipPath;
+    if (item.clip === null) {
+      item.clip = s.clipPath;
+      item.mask = s.maskImage;
+    }
     s.clipPath = `inset(0 0 ${px}px 0)`;
+    if (a > 0.995) {
+      s.maskImage = item.mask;
+      return;
+    }
+    const stops = [];
+    for (let i = 0; i <= 8; i++) {
+      const f = 1 - i / 8;
+      stops.push(`rgba(0,0,0,${((1 - f) / (1 - a * f)).toFixed(3)}) ${(px + (1 - f) * fade).toFixed(1)}px`);
+    }
+    s.maskImage = `linear-gradient(to top, ${stops.join(', ')})`;
   };
   function off(item: Item) {
     if (item.clip !== null) {
       item.el.style.clipPath = item.clip;
+      item.el.style.maskImage = item.mask;
       item.clip = null;
     }
     if (item.placed) {
@@ -471,9 +496,9 @@ function start() {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       ctx.drawImage(glCanvas, 0, 0, cw, ch, 0, 0, cw, ch);
 
-      // the picture's own part below the cross-fade goes; the copy shows there
+      // the picture's own part below the cross-fade goes, fading out across it; the copy shows there
       const r = job.r!;
-      cut(item, Math.max(0, (r.bottom - (fadeTop + FADE)) * job.k!));
+      cut(item, Math.max(0, (r.bottom - (fadeTop + FADE)) * job.k!), FADE * job.k!, opacity);
     }
     if (near.size) run();
   }
