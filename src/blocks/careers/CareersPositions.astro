@@ -102,9 +102,11 @@ const positions = (await getCollection('positions')).sort((a, b) => a.data.order
   .careers-positions__meta span {
     white-space: nowrap;
   }
-  /* hover only with a mouse: on a phone the tapped title stayed orange (also when coming back) */
+  /* hover only with a mouse: on a phone the tapped title stayed orange (also when coming back).
+     Not while the hover effect shows its pixels (is-pixel hides the words, as on links):
+     this rule outranks that one, so the orange words showed under the blocks */
   @media (hover: hover) {
-    .careers-positions__link:hover .t-h2 {
+    .careers-positions__link:hover .t-h2:not(.is-pixel) {
       color: var(--color-orange);
     }
   }

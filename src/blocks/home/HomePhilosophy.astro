@@ -1,77 +1,328 @@
 ---
 /**
- * Home — Philosophy
- * Figma: "4 philosophy" (10093:185), 1728×1110
- * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-185
- * The three bars are marked "3d web gl" — the SVG is the static poster.
+ * Home — Philosophy: three chapters, 1728×1110 each
+ *   1 "In the last two years…"      — 10093:185  (light, the bars)
+ *   2 "Most of them look like…"     — 10093:2455 (black, the arrows)
+ *   3 "Building the robot was…"     — 10093:2393 (white, the robot)
+ * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10093-2455
+ * The bars are marked "3d web gl" — the SVG is the static poster.
+ *
+ * Scroll magnet: the block pins when it reaches the top and holds for one screen of
+ * scrolling per chapter. A little scroll is enough to move on: once you are a short way
+ * towards the next chapter it switches, and when the scrolling stops the page is pulled
+ * to that chapter's resting point (also from just above the block). Leaving the last
+ * chapter lets the page go on.
+ * The switch: the next chapter's background and picture are uncovered from the bottom
+ * over the current one, as in every slideshow (slide-scrub.ts, without the drift); the
+ * text swaps with the Home showcase motion — the words slide up out of their masks and
+ * the next chapter's slide in. The first chapter's words wait below their masks until
+ * the block scrolls into view (headline-reveal.ts). The stamp stays.
  */
+import { Image } from 'astro:assets';
 import WebGLSlot from '../../components/ui/WebGLSlot.astro';
+import robot from '../../assets/home/philosophy-robot.png';
+
+const chapters = [
+  { text: 'In the last two years over 300 robotics companies launched in the U.S.', tone: 'light' },
+  { text: 'Most of them look like they were built for engineers. Only a few founders remembered they were building for humans.', tone: 'dark' },
+  { text: 'Building the robot was never the hard part. The hard part was building for humans, so the world says yes to your robot. We design for that moment.', tone: 'light' },
+];
 ---
-<section class="home-philosophy">
-  <img
-    class="home-philosophy__stamp"
-    src="/images/home/stamp-philosophy.svg"
-    alt=""
-    width="257" style="--w: 257"
-    height="150"
-    loading="lazy"
-  />
-  <p class="home-philosophy__text t-h3">
-    In the last two years over 300 robotics companies launched in the U.S.
-  </p>
-  <WebGLSlot name="home-bars" class="home-philosophy__bars">
-    <img src="/images/home/philosophy-bars.svg" alt="" width="681" style="--w: 681" height="368" loading="lazy" />
-  </WebGLSlot>
+<section class="home-philosophy" style={`--chapters: ${chapters.length}`} data-philosophy>
+  <div class="home-philosophy__stage" data-active="0">
+    <div class="home-philosophy__layer home-philosophy__layer--bars" data-chapter="0">
+      <WebGLSlot name="home-bars" class="home-philosophy__bars">
+        <img src="/images/home/philosophy-bars.svg" alt="" width="681" height="368" loading="lazy" />
+      </WebGLSlot>
+    </div>
+    <div class="home-philosophy__layer home-philosophy__layer--arrows" data-chapter="1">
+      <img class="home-philosophy__arrows" src="/images/home/philosophy-arrows.svg" alt="" width="600" height="324" loading="lazy" />
+    </div>
+    <div class="home-philosophy__layer home-philosophy__layer--robot" data-chapter="2">
+      <Image class="home-philosophy__robot" src={robot} alt="" widths={[600, 1024]} sizes="(max-width: 1023px) 100vw, 896px" loading="lazy" />
+    </div>
+
+    <img
+      class="home-philosophy__stamp"
+      src="/images/home/stamp-philosophy.svg"
+      alt=""
+      width="257"
+      height="150"
+      loading="lazy"
+    />
+    <div class="home-philosophy__texts">
+      {chapters.map((c, i) => (
+        <p
+          class={`home-philosophy__text home-philosophy__text--${c.tone} t-h3`}
+          data-chapter={i}
+          data-index={i}
+          data-state={i === 0 ? 'current' : 'next'}
+          aria-hidden={i > 0 ? 'true' : undefined}
+        >
+          {c.text.split(' ').map((w, wi, all) => (
+            <><span class="mask"><span style={`--d: ${wi}`}>{w}</span></span>{wi < all.length - 1 && ' '}</>
+          ))}
+        </p>
+      ))}
+    </div>
+  </div>
 </section>
 
+<script>
+  import { slideScrub } from '../../scripts/slide-scrub';
+
+  /** how far towards the next chapter (share of a chapter's scroll) before it switches */
+  const PULL = 0.12;
+  /** how close above the block (share of a screen) the magnet still pulls it in */
+  const REACH = 0.15;
+  /** ms without scrolling before the page settles on a chapter */
+  const IDLE = 140;
+  /** ms the pull to a chapter takes */
+  const GLIDE = 650;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /** fast start, soft landing */
+  const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-philosophy]')) {
+    const stage = root.querySelector<HTMLElement>('.home-philosophy__stage');
+    if (!stage) continue;
+    const count = Number(getComputedStyle(root).getPropertyValue('--chapters')) || 3;
+    const texts = root.querySelectorAll<HTMLElement>('.home-philosophy__text');
+    const pictures = slideScrub([...root.querySelectorAll<HTMLElement>('.home-philosophy__layer')], { drift: false });
+    let active = 0;
+    let last = 0;
+    let frame = 0;
+    let idle = 0;
+    let glide = 0;
+
+    // scroll distance from the block's top to where it unpins (the stage's own height,
+    // not innerHeight, which phone toolbars change while scrolling)
+    const travel = () => root.offsetHeight - stage.offsetHeight;
+    const chapterTop = (i: number) => window.scrollY + root.getBoundingClientRect().top + (travel() * i) / (count - 1);
+
+    const show = (i: number) => {
+      if (i === active) return;
+      active = i;
+      stage.dataset.active = String(i);
+      pictures.set(i);
+      texts.forEach((el) => {
+        const j = Number(el.dataset.chapter);
+        el.dataset.state = j < i ? 'past' : j === i ? 'current' : 'next';
+        el.setAttribute('aria-hidden', String(j !== i));
+      });
+    };
+
+    const update = () => {
+      frame = 0;
+      const span = travel();
+      if (span <= 0) return;
+      // position in chapters: 0 = pinned on the first, count - 1 = the last
+      const p = Math.min(count - 1, Math.max(0, (-root.getBoundingClientRect().top / span) * (count - 1)));
+      // a short way past the current chapter, in the direction you scroll, is enough to
+      // switch; going on towards a chapter you already switched to keeps it
+      if (p > last && p >= active + PULL) show(Math.min(count - 1, Math.floor(p - PULL) + 1));
+      else if (p < last && p <= active - PULL) show(Math.max(0, Math.ceil(p + PULL) - 1));
+      last = p;
+    };
+
+    // the pull: our own glide rather than smooth scrollTo, so it lasts the same everywhere;
+    // any input of the reader's stops it
+    const stop = () => {
+      cancelAnimationFrame(glide);
+      glide = 0;
+    };
+    const glideTo = (to: number) => {
+      stop();
+      const from = window.scrollY;
+      if (reduced) return window.scrollTo(0, to);
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / GLIDE);
+        window.scrollTo(0, from + (to - from) * easeOut(t));
+        glide = t < 1 ? requestAnimationFrame(step) : 0;
+      };
+      glide = requestAnimationFrame(step);
+    };
+
+    // the magnet: when the scrolling stops inside the block (or just above it), settle on
+    // the active chapter
+    const settle = () => {
+      idle = 0;
+      if (glide) return;
+      const top = -root.getBoundingClientRect().top;
+      const near = top > -stage.offsetHeight * REACH && top < travel() - 1;
+      if (!near) return;
+      const target = chapterTop(top < 0 ? 0 : active);
+      if (Math.abs(target - window.scrollY) >= 2) glideTo(target);
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+      clearTimeout(idle);
+      idle = window.setTimeout(settle, IDLE);
+    };
+    pictures.set(0);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) window.addEventListener(type, stop, { passive: true });
+    update();
+  }
+</script>
+
 <style>
+  /* One screen of scrolling per chapter after the first; the stage stays pinned meanwhile */
   .home-philosophy {
+    position: relative;
+    height: calc(var(--chapters) * 100vh);
+  }
+  .home-philosophy__stage {
+    /* Figma px, shrunk further when the screen is shorter than the 1110 frame */
+    --u: min(var(--px), 100vh / 1110);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* stamp 50→200, text at 220, bars 580→948, block 1110 tall */
-    padding-top: calc(50 * var(--px));
-    padding-bottom: calc(162 * var(--px));
     text-align: center;
   }
-  .home-philosophy__stamp {
-    width: calc(257 * var(--px));
+
+  /* ── Chapter layers: background + picture. The next one is uncovered from the bottom
+     over the current (slide-scrub.ts). Without JS: only the first shows ── */
+  .home-philosophy__layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--color-bg);
+  }
+  .home-philosophy__layer:not([data-chapter='0']) {
+    visibility: hidden;
+  }
+  .home-philosophy__layer--arrows {
+    background: var(--color-black);
+  }
+  .home-philosophy__layer--robot {
+    background: var(--color-white);
+  }
+  /* pictures sit on the frame's bottom: bars 580→948, arrows 611→935, robot 555→1110 */
+  .home-philosophy :global(.home-philosophy__bars),
+  .home-philosophy__arrows,
+  .home-philosophy :global(.home-philosophy__robot) {
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+    max-width: none;
     height: auto;
   }
-  .home-philosophy__text {
-    width: calc(818 * var(--px));
-    max-width: 100%;
-    margin-top: var(--space-20);
-  }
   .home-philosophy :global(.home-philosophy__bars) {
-    width: calc(681 * var(--px));
-    max-width: 100%;
+    width: calc(681 * var(--u));
     aspect-ratio: 681 / 368;
-    margin-top: auto;
+    bottom: calc(162 * var(--u));
   }
-  .home-philosophy {
-    min-height: calc(1110 * var(--px));
+  .home-philosophy__bars img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .home-philosophy__arrows {
+    width: calc(600 * var(--u));
+    bottom: calc(175 * var(--u));
+  }
+  .home-philosophy :global(.home-philosophy__robot) {
+    width: calc(896 * var(--u));
+    bottom: 0;
+    /* Figma: centred at 54.17% − 65 of 1728 = 871, 7 right of the middle */
+    margin-left: calc(14 * var(--u));
   }
 
-  /* ── Mobile: Figma 10101:7108 — stamp 123 wide, text 326 wide, bars 360×194 ── */
+  /* ── Stamp (50→200) and text (from 220), above the layers ── */
+  .home-philosophy__stamp {
+    position: relative;
+    z-index: 10;
+    width: calc(257 * var(--u));
+    height: auto;
+    margin-top: calc(50 * var(--u));
+  }
+  .home-philosophy__texts {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    width: calc(818 * var(--px));
+    max-width: 100%;
+    margin-top: calc(20 * var(--u));
+  }
+  .home-philosophy__text {
+    grid-area: 1 / 1;
+  }
+  .home-philosophy__text--dark {
+    color: var(--color-white);
+  }
+
+  /* ── Text motion, as in the Home showcase: each word sits in a mask and slides up
+     through it; the outgoing chapter's go up and out, the incoming chapter's come up after ── */
+  .mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    /* room on every side so no letter is clipped */
+    padding: 0.1em 0.06em 0.14em;
+    margin: -0.1em -0.06em -0.14em;
+  }
+  .mask > span {
+    display: inline-block;
+    transform: translateY(var(--y, 0));
+    transition: transform var(--duration-smooth) var(--ease-out);
+    transition-delay: calc(var(--d, 0) * var(--stagger));
+  }
+  [data-state='next'] .mask > span {
+    --y: 135%;
+  }
+  [data-state='past'] .mask > span {
+    --y: -135%;
+    transition-delay: 0s;
+  }
+  /* incoming words wait a beat so the outgoing ones clear first */
+  [data-state='current'] .mask > span {
+    transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mask > span {
+      transition: none;
+    }
+  }
+
+  /* ── Mobile: Figma 10101:7108 — stamp 123 wide at 208 from the top of the block, text
+     290 wide (Figma's line breaks), bars 360×194; the other chapters follow suit ── */
   @media (max-width: 1023px) {
     .home-philosophy {
-      min-height: 0;
-      padding: 208px 32px 0;
+      height: calc(var(--chapters) * 100svh);
+    }
+    .home-philosophy__stage {
+      height: 100svh;
+      padding-inline: 32px;
     }
     .home-philosophy__stamp {
       width: 123px;
+      margin-top: clamp(64px, 14svh, 140px);
     }
-    /* 290 reproduces Figma's line breaks */
-    .home-philosophy__text {
+    .home-philosophy__texts {
       width: 290px;
       margin-top: 44px;
     }
+    /* above the fixed nav pill (20 + 64) */
     .home-philosophy :global(.home-philosophy__bars) {
-      /* 360 wide as in Figma, never wider than a narrow phone's screen */
       width: min(360px, 100vw);
-      max-width: none;
-      margin-top: 149px;
+      bottom: calc(20px + var(--nav-height) + 40px);
+    }
+    .home-philosophy__arrows {
+      width: min(317px, 84vw);
+      bottom: calc(20px + var(--nav-height) + 40px);
+    }
+    .home-philosophy :global(.home-philosophy__robot) {
+      width: min(400px, 105vw);
+      margin-left: 0;
     }
   }
 </style>

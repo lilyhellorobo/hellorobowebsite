@@ -16,8 +16,10 @@
  * one project = 70% of a screen of scrolling. A 70% black layer sits over the backgrounds.
  * Figma's CRT screen shader (CrtScreen overlay, as on the Robo Radio player) sits on top,
  * with the Work frame's values. Home and the Work page behave the same, except:
- * `framed` (Home): starts inside the page margins, as in Figma; when it pins, the first
- * half screen of scrolling widens it to full screen, then the wheel turns with the page.
+ * `framed` (Home): starts as Figma's 1648×1117 window inside the page margins, the page
+ * around it; when it pins, the first half screen of scrolling opens it to the full screen
+ * as the Home showreel does (a clip around it widens, nothing is resized), then the wheel
+ * turns with the page.
  * `infinite` (Work page): full screen, and the wheel takes the scroll input itself.
  * Services and the project's mark change as on the Services page: the lines slide out of
  * their masks one after another and the mark slides through its own a beat later, in the
@@ -499,23 +501,25 @@ const crt = { flicker: 22, noise: 8, rollSpeed: 0.35 };
     overflow: hidden;
     background: var(--color-black);
   }
-  /* Framed: margins at first, opening to full width as --enter goes 0 → 1 */
+  /* Framed: opens like the Home showreel — the wheel fills the screen underneath and a clip
+     around it widens from the Figma window (page margins at the sides, 1648×1117 in shape,
+     centred) to the full screen as --enter goes 0 → 1. The page shows around it (no black
+     section behind) */
   .project-wheel--framed {
     --expand: 0.5;
+    background: none;
   }
   .project-wheel--framed .project-wheel__frame {
-    left: calc(var(--page-margin) * (1 - var(--enter, 0)));
-    right: calc(var(--page-margin) * (1 - var(--enter, 0)));
+    /* eased, as the showreel */
+    --e: calc(1 - (1 - var(--enter, 0)) * (1 - var(--enter, 0)) * (1 - var(--enter, 0)));
+    --ix: var(--page-margin);
+    --iy: max(0px, calc((100vh - (100vw - 2 * var(--page-margin)) * 1117 / 1648) / 2));
+    clip-path: inset(calc((1 - var(--e)) * var(--iy)) calc((1 - var(--e)) * var(--ix)));
   }
   /* Everything inside is placed in the 1728×1117 Figma frame (% of this box) */
   .project-wheel__canvas {
     position: absolute;
     inset: 0;
-  }
-  /* The canvas stays put on screen while the frame opens around it */
-  .project-wheel--framed .project-wheel__canvas {
-    left: calc(-1 * var(--page-margin) * (1 - var(--enter, 0)));
-    right: calc(-1 * var(--page-margin) * (1 - var(--enter, 0)));
   }
 
   /* Backgrounds: the Figma crop (2406×1555 at -339, -235), sliding in per project; in a

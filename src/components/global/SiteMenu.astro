@@ -4,7 +4,7 @@
  * https://www.figma.com/design/9SsfbCUY7KcxjZpCuRpDxf/Hello-Robo-Website-2026?node-id=10194-165
  *
  * Blurred backdrop (black 20% + 100px blur) and a 1094-wide block centred above
- * the nav pill: links panel (541×837) | Let's talk bar, photo card, Say hello card.
+ * the nav pill: links panel (541×837) | Get in touch bar, photo card, Say hello card.
  * Opened/closed by NavPill (html[data-menu="open"]). Motion, kept minimal: the blocks rise
  * into place a beat apart (a wipe up from their bottom edge and a fade), then their contents
  * fade in together; closing, everything fades out quickly.
@@ -53,7 +53,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
 
     <div class="site-menu__side">
       <a class="site-menu__talk" href="/contact">
-        <span class="t-button">Let’s talk</span>
+        <span class="t-button">Get in touch</span>
         <Icon name="corners" />
       </a>
       <div class="site-menu__panel site-menu__photo" data-menu-photos>
@@ -269,7 +269,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     }
   }
 
-  /* ── Right column: Let's talk 64 · photo 337 · Say hello 412 (12 gaps) ── */
+  /* ── Right column: Get in touch 64 · photo 337 · Say hello 412 (12 gaps) ── */
   .site-menu__side {
     display: grid;
     grid-template-rows: auto 337fr 412fr;
@@ -333,7 +333,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
   }
 
   /* ── Mobile: Figma "menu" (10112:25477), 390×756 ──────────
-     Let's talk (64) · links panel · Say hello card, then the bottom bar. The same 16 margin
+     Get in touch (64) · links panel · Say hello card, then the bottom bar. The same 16 margin
      on all four sides and 8 between everything, on every phone height: the two panels
      share the room left (Figma's 335 : 206) and the links scale with their panel, so
      nothing is cut on short screens. No logo, Japanese line or photo. */
@@ -353,7 +353,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     .site-menu__side {
       display: contents;
     }
-    /* Phones: the blocks rise from the bottom up (Say hello, links, Let's talk), towards
+    /* Phones: the blocks rise from the bottom up (Say hello, links, Get in touch), towards
        the menu bar; closing goes the other way */
     .site-menu__hello { --p: 0; }
     .site-menu__links { --p: 1; }

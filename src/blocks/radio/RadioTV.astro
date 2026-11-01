@@ -21,6 +21,14 @@
  * the middle) never show; while the video isn't playing the TV's own dark screen covers
  * it. If a phone doesn't start the video on the first Play (the player was still
  * loading), the next Play starts it straight from the tap.
+ * The screen itself is a play / pause button too (over YouTube's frame, so its own buttons
+ * still never show): a click starts the episode when nothing plays and pauses it when it
+ * does. Its icon in the middle (the bar's play / pause) shows what a click
+ * will do — pause on hover while an episode plays, play while one is paused (also on
+ * phones, which have no hover). Before the first play there's no icon; a click still starts it.
+ * Side windows: the poster's two side screens are part of the same picture — the video is
+ * laid out across the TV's whole width and masked to the main screen and the two side
+ * screens, so they show the real left and right edges of the picture (one player).
  */
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
@@ -66,20 +74,32 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   <WebGLSlot name="radio-tv" class="radio-tv__scene">
     <Image src={poster} alt="" widths={[1730, 3460]} sizes="100vw" loading={variant === 'hero' ? 'eager' : 'lazy'} />
   </WebGLSlot>
-  <div class="radio-tv__screen" data-screen style={`left:${pct(103, 1730)};top:${pct(screenTop, h)};width:${pct(1522, 1730)};height:${pct(744, h)}`}>
+  <div class="radio-tv__screen" data-screen style={`left:0;top:${pct(screenTop, h)};width:100%;height:${pct(744, h)}`}>
     <div class="radio-tv__frame" data-frame><div class="radio-tv__video" data-video></div></div>
     <!-- The TV's own dark screen whenever the video isn't playing: YouTube's paused screen
          (title, logo, "More videos") never shows -->
     <div class="radio-tv__standby" aria-hidden="true"></div>
     <CrtScreen overlay settings={crt} />
   </div>
+  <!-- The screen as a play / pause button (the bar's play button is the one for keyboards
+       and screen readers); the robot in front lets clicks through to it -->
+  {playlist.length > 0 && (
+    <button type="button" class="radio-tv__toggle" tabindex="-1" aria-hidden="true" data-toggle style={`left:${pct(103, 1730)};top:${pct(screenTop, h)};width:${pct(1522, 1730)};height:${pct(744, h)}`}>
+      <span class="radio-tv__toggle-icon">
+        <!-- the bar's play / pause icons, at the same size -->
+        <svg class="radio-tv__icon-play" viewBox="46.4 9.8 60 60" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M85.38 41.55 70.4 50.34l-2.74-1.53V31.23l2.63-1.56 15.08 8.72z" /></svg>
+        <svg class="radio-tv__icon-pause" viewBox="46.4 9.8 60 60" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" d="M68.4 31.25h5v17.5h-5zm11 0h5v17.5h-5z" /></svg>
+      </span>
+    </button>
+  )}
   <!-- The robot stands in front of the screen, so the video plays behind it -->
   <Image class="radio-tv__robot" src={robot} alt="" widths={[442, 884]} sizes="26vw" loading={variant === 'hero' ? 'eager' : 'lazy'} style={`left:${pct(678, 1730)};top:${pct(robotTop, h)};width:${pct(442, 1730)}`} />
-  <!-- The screen's shape: its edges bow out a little (Figma's CRT curvature 10), measured
-       from the poster -->
+  <!-- The picture's shape, across the TV's width: the main screen (its edges bow out a
+       little, Figma's CRT curvature 10) and the two side screens (left 0–51, right
+       1669–1730; 27 below the main screen's top, 691 tall), measured from the poster -->
   <svg class="radio-tv__clip" width="0" height="0" aria-hidden="true" focusable="false">
     <clipPath id={`radio-tv-screen-${variant}`} clipPathUnits="objectBoundingBox">
-      <path d="M.0059 .0269Q.5 -.0215 .9941 .0269Q1.0033 .5 .9941 .9704Q.5 1.0216 .0059 .9704Q-.0045 .5 .0059 .0269Z" />
+      <path d="M.0647 .0269Q.4994 -.0215 .9341 .0269Q.9422 .5 .9341 .9704Q.4994 1.0216 .0647 .9704Q.0556 .5 .0647 .0269Z M0 .0363H.0295V.9651H0Z M.9647 .0363H1V.9651H.9647Z" />
     </clipPath>
   </svg>
   </div>
@@ -162,9 +182,12 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     let pendingSeek: number | null = null; // a spot picked on the line before the video had started
     let frame = 0;
 
+
     const setPlaying = (on: boolean) => {
       playing = on;
       root.classList.toggle('is-playing', on);
+      // paused by the visitor (not just loading): the screen shows its play icon
+      root.classList.toggle('is-paused', !on);
       playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play');
       cancelAnimationFrame(frame);
       if (on) frame = requestAnimationFrame(tick);
@@ -182,7 +205,8 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     const showProgress = () => seek.style.setProperty('--p', String(Number(seek.value) / 1000));
     const announce = () => (title.textContent = `Now playing: ${list[index].title}`);
 
-    // The picture: on a wide screen (desktop) it covers the screen; on a tall one (phones)
+    // The picture: across the TV's width (the side screens show its edges). On a wide
+    // screen (desktop) it covers that; on a tall one (phones)
     // the whole 16:9 video shows across the width, centred, the dark screen above and below.
     // Inside that box the YouTube frame is 15% bigger and clipped, so YouTube's title (top)
     // and logo (bottom right) fall outside it
@@ -261,11 +285,13 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
       announce();
     };
 
-    playBtn.addEventListener('click', async () => {
+    const toggle = () => {
       if (!player) return void start();
       if (playing) player.pauseVideo();
       else player.playVideo();
-    });
+    };
+    playBtn.addEventListener('click', toggle);
+    root.querySelector('[data-toggle]')!.addEventListener('click', toggle);
     root.querySelector('[data-prev]')!.addEventListener('click', () => go(-1));
     root.querySelector('[data-next]')!.addEventListener('click', () => go(1));
     function setSound(on: boolean) {
@@ -324,7 +350,8 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
   }
   /* The CRT screen inside the poster: 6.25–93.5% across, 2–86.3% down. Black until the
      first play, so the poster shows through; the video and the CRT layer fade in then */
-  /* Figma's screen rectangle (placed inline), clipped to the poster's curved screen */
+  /* The TV's width at the screen's height (placed inline), clipped to the main screen and
+     the two side screens */
   .radio-tv__screen {
     position: absolute;
     overflow: hidden;
@@ -350,6 +377,43 @@ const crt = { scanlines: 59, scanlineSize: 3, vignette: 24, curvature: 0, jitter
     z-index: 2;
     height: auto;
     pointer-events: none;
+  }
+  /* ── The screen as a button: the bar's icon in the middle, on its own ── */
+  .radio-tv__toggle {
+    position: absolute;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--color-white);
+    cursor: pointer;
+  }
+  .radio-tv__toggle-icon {
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    scale: 0.9;
+    transition:
+      opacity var(--duration-normal) var(--ease-out),
+      scale var(--duration-normal) var(--ease-out);
+  }
+  .radio-tv__toggle-icon svg {
+    width: max(30px, calc(60 * var(--px)));
+    height: max(30px, calc(60 * var(--px)));
+  }
+  /* what a click does: play while an episode is paused; pause on hover while it plays.
+     Nothing before the first play */
+  .radio-tv.is-paused .radio-tv__toggle-icon {
+    opacity: 1;
+    scale: 1;
+  }
+  @media (hover: hover) {
+    .radio-tv.is-playing .radio-tv__toggle:hover .radio-tv__toggle-icon {
+      opacity: 1;
+      scale: 1;
+    }
   }
   .radio-tv__frame {
     position: absolute;

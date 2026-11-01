@@ -453,7 +453,7 @@ export const CMS_COLLECTIONS: CmsCollection[] = [
       { kind: 'youtube', key: 'youtube', label: 'YouTube video', required: true },
       { kind: 'textarea', key: 'description', label: 'Description', required: true },
       { kind: 'text', key: 'portfolioUrl', label: 'Guest’s portfolio link' },
-      { kind: 'boolean', key: 'listed', label: 'Show in “All of the episodes”', default: true },
+      { kind: 'boolean', key: 'listed', label: 'Show in “All episodes”', default: true },
       {
         kind: 'boolean',
         key: 'featured',

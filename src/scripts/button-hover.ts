@@ -13,8 +13,9 @@
  * "Portfolio →", legal pages…), not the ones made of pictures or blocks of text. The button
  * keeps its own colours throughout. With a mouse it plays on hover (leaving early puts
  * everything back); on phones and tablets it plays on press. Off for reduced motion.
- * Other elements can take it too (hoverFx): a label, and a picture that pixelates like the
- * icons (the Team page objects and their file-name labels).
+ * Other elements can take it too (hoverFx): a label, and a picture that goes to the label's
+ * pixels — in blocks of the label's size, with its flicker (the Team page objects and their
+ * file names).
  */
 
 import { makeCanvas, pixelFrame } from './pixel';
@@ -321,8 +322,12 @@ function setup(btn: HTMLElement, labelSelector?: string, opts: Options = {}) {
   };
 
   /** the icon pixelates and flickers with the label, then snaps back as the letters start */
-  /** a picture (opts.picture): its canvas goes in the picture's own box (its parent), placed
-   *  in that box's own units, so it moves and scales with whatever moves the picture */
+  /** a picture (opts.picture): the label's pixels, on the picture — the picture in blocks of
+   *  the label's size, with the label's flicker (the same share left out, frame by frame),
+   *  then it comes back as the letters start. In its own colours: the Team objects have their
+   *  background baked in, so there's no shape to fill with the label's colour. Its canvas goes
+   *  in the picture's own box (its parent), placed in that box's own units, so it moves and
+   *  scales with whatever moves the picture */
   const playPicture = (look: ReturnType<typeof variation>) => {
     const pic = btn.querySelector<HTMLImageElement>(opts.picture!);
     const host = pic?.parentElement;
@@ -335,16 +340,17 @@ function setup(btn: HTMLElement, labelSelector?: string, opts: Options = {}) {
     canvas.style.inset = 'auto';
     canvas.style.left = `${pic.offsetLeft}px`;
     canvas.style.top = `${pic.offsetTop}px`;
+    // the label's block size (as the letters')
+    const fontSize = parseFloat(getComputedStyle(label ?? btn).fontSize);
+    const shape = (s: CanvasRenderingContext2D, cw: number, ch: number) => s.drawImage(pic, 0, 0, cw, ch);
     for (const { at: t, block, holes } of look.pixels) {
-      // the icons' blocks (below), in proportion to the picture's height: the same few
-      // chunky blocks across it, whatever its size
-      const px = Math.max(2, h * block * ICON_SCALE);
+      const px = Math.max(2, fontSize * block);
       at(START + t, () => {
         if (!canvas.isConnected) {
           pic.style.visibility = 'hidden';
           host.append(canvas);
         }
-        pixelFrame(canvas, px, holes * 0.6, (s, cw, ch) => s.drawImage(pic, 0, 0, cw, ch));
+        pixelFrame(canvas, px, holes, shape);
       });
     }
     at(START + look.pixelEnd, () => {

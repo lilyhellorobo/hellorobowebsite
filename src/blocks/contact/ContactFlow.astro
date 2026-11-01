@@ -8,8 +8,10 @@
  * Screens switch in place (data-step on the block); the printers move and the faint mono
  * "system log" behind them retypes itself with new words on every screen — partly built
  * from the site's projects / episodes, partly from what the visitor has typed so far.
- * `embedded` = the pre-footer block on every page: opens on the cover, never touches the URL.
- * On /contact it starts at "start" and keeps the step in the URL hash (so Back works).
+ * `embedded` = the pre-footer block on every page: opens straight on the start screen (the
+ * three ways in show right away), never touches the URL.
+ * On /contact it starts there too and keeps the step in the URL hash (so Back works).
+ * Titles only: no lead lines under them, except on the two "sent" screens.
  * Send posts the answers to /api/contact (saved for the CMS "Contact form responses").
  */
 import { getCollection } from 'astro:content';
@@ -17,7 +19,7 @@ import Icon from '../../components/icons/Icon.astro';
 import { studio } from '../../data/site';
 
 interface Props {
-  /** The pre-footer block: opens on the cover; steps don't change the URL */
+  /** The pre-footer block: steps don't change the URL */
   embedded?: boolean;
 }
 const { embedded = false } = Astro.props;
@@ -73,16 +75,6 @@ const groups = (s: Slots): Group[] =>
 
 // {name} {email} {company} {services} are filled in from the form as the visitor goes
 const logs: Record<string, { a: Group[]; b?: Group[] }> = {
-  cover: {
-    a: groups({
-      h1: ['[ HR'], h2: ['HELLO ROBO®'], h3: ['02 ]'], h4: [`HELLO ROBO, INC. © ${now.getFullYear()}`],
-      intro: ['HELLO ROBO®', 'SYSTEM LOG INTERVIEW', stamp],
-      st: ['A studio for the human side of robotics —', 'shaping brands, interfaces and films for machines.'],
-      a: ['WORK_', ...project(0)], b: project(1), c: episode(0), d: episode(1), e: project(2), f: project(3),
-      g: role ? [`> ${up(role.data.title)}_`, up(role.data.location), up(role.data.type)] : ['> WE ARE HIRING_'],
-      r1: project(4), r2: project(5), r3: episode(2), r4: ['> SERVICES_', 'BRANDING', 'INTERFACE', 'VIDEO PRODUCTION'],
-    }),
-  },
   start: {
     a: groups({
       h1: ['[ HR'], h2: ['INCOMING SIGNAL'], h3: ['03 ]'], h4: ['CHANNELS: OPEN'],
@@ -126,7 +118,7 @@ const logs: Record<string, { a: Group[]; b?: Group[] }> = {
       h1: ['[ 04'], h2: ['MISSION BRIEF'], h3: ['04 ]'], h4: ['STEP 4 / 4'],
       intro: ['{company}', 'PRIORITY: HIGH', stamp],
       st: ['Pick as many as you like —', 'all three live under one roof.'],
-      a: ['> BRANDING_', 'NAMING', 'IDENTITY', 'TONE OF VOICE'], b: ['> INTERFACE_', 'HRI', 'FLEET UI', 'DASHBOARDS'],
+      a: ['> BRAND IDENTITY_', 'NAMING', 'IDENTITY', 'TONE OF VOICE'], b: ['> UI/UX_', 'HRI', 'FLEET UI', 'DASHBOARDS'],
       c: ['> VIDEO PRODUCTION_', 'LAUNCH FILMS', 'DEMOS'], d: ['SELECTED: {services}'], e: ['BUDGET_', "LET'S TALK"],
       f: ['TIMELINE_', 'YESTERDAY?'], g: ['> READY TO SUBMIT_'],
     }),
@@ -170,22 +162,21 @@ logs.sent = {
 };
 
 const steps = [
-  { id: 'name', n: '01', title: 'Who’s on the other side?', lead: 'Before we connect the dots, let’s identify the human.', field: 'Your name', type: 'text', auto: 'name', cap: 'words', back: 'start' },
-  { id: 'email', n: '02', title: 'Where should we say hello?', lead: 'Every good connection needs a destination. Drop your coordinates.', field: 'Your email', type: 'email', auto: 'email', cap: 'off', back: 'name' },
-  { id: 'company', n: '03', title: 'Who are we teaming up with?', lead: 'Startup, spaceship, or secret laboratory. We don’t judge.', field: 'Company name', type: 'text', auto: 'organization', cap: 'words', back: 'email' },
+  { id: 'name', n: '01', title: 'Who’s on the other side?', field: 'Your name', type: 'text', auto: 'name', cap: 'words', back: 'start' },
+  { id: 'email', n: '02', title: 'What’s your email?', field: 'Your email', type: 'email', auto: 'email', cap: 'off', back: 'name' },
+  { id: 'company', n: '03', title: 'Who are we teaming up with?', field: 'Company name', type: 'text', auto: 'organization', cap: 'words', back: 'email' },
 ];
 const services = [
-  { label: 'Branding', sticker: 'mission-branding', w: 74, h: 75, x: 309, y: 50 },
-  { label: 'Interface', sticker: 'mission-interface', w: 76, h: 68, x: 307, y: 53 },
+  { label: 'Brand identity', sticker: 'mission-branding', w: 74, h: 75, x: 309, y: 50 },
+  { label: 'UI/UX', sticker: 'mission-interface', w: 76, h: 68, x: 307, y: 53 },
   { label: 'Video production', sticker: 'mission-video', w: 87, h: 52, x: 295, y: 68 },
 ];
-const first = embedded ? 'cover' : 'start';
 ---
 <section
   class:list={['contact', embedded && 'contact--embedded']}
   aria-label="Contact"
   data-contact={embedded ? 'embedded' : 'page'}
-  data-step={first}
+  data-step="start"
 >
   <!-- Background: printers and the system log; each screen moves / swaps them in CSS -->
   <div class="contact__bg" aria-hidden="true">
@@ -206,18 +197,9 @@ const first = embedded ? 'cover' : 'start';
     </div>
   </div>
 
-  <!-- Cover (pre-footer only): the whole block opens the start screen -->
-  {embedded && (
-    <a class="contact__screen contact__screen--cover" data-step="cover" href="/contact" data-go="start" data-active>
-      <h2 class="contact__title t-h2">The future is calling. We think it’s you.</h2>
-      <p class="contact__lead t-body">Got something brilliant, weird, or impossible in mind? We're listening. Click anywhere to break the ice.</p>
-    </a>
-  )}
-
   <!-- Start: three ways in -->
-  <div class="contact__screen contact__screen--start" data-step="start" data-active={!embedded || undefined}>
-    <Title class="contact__title t-h2">Welcome! Okay, we're listening. So, what's on your mind?</Title>
-    <p class="contact__lead t-body">Big ideas, tiny questions, weird requests. Our circuits are open.</p>
+  <div class="contact__screen contact__screen--start" data-step="start" data-active>
+    <Title class="contact__title t-h2">Are you ready for the world to say yes to your robot?</Title>
     <div class="contact__cards">
       <a class="contact__card contact__card--light" href="#name" data-go="name">
         <span class="t-body">Start a project</span>
@@ -229,6 +211,7 @@ const first = embedded ? 'cover' : 'start';
       </a>
       <button class="contact__card contact__card--copy" type="button" data-copy={studio.email}>
         <span class="t-body"><span data-copy-label>Just wanna copy email</span><img class="contact__smiley" src="/images/contact/start-email-smiley.svg" alt="" width="36" height="27" loading="lazy" /></span>
+        <span class="contact__card-email t-body">{studio.email}</span>
         <img class="contact__card-sticker" src="/images/contact/start-email.svg" alt="" width="152" height="66" style="--x: 244; --y: 65; --w: 152; --mx: 223; --my: 49; --mw: 132" loading="lazy" />
         <!-- "Email copied" (10419:6147): a pixel dinosaur runs along the card -->
         <span class="contact__dino" aria-hidden="true"><img src="/images/contact/dino.svg" alt="" width="22" height="28" /></span>
@@ -241,7 +224,6 @@ const first = embedded ? 'cover' : 'start';
     <form class="contact__screen contact__screen--step" data-step={s.id} action="#" novalidate>
       <p class="contact__count t-body">[{s.n}]</p>
       <h2 class="contact__title t-h2">{s.title}</h2>
-      <p class="contact__lead t-body">{s.lead}</p>
       <div class="contact__field">
         <label class="visually-hidden" for={`contact-${s.id}`}>{s.field}</label>
         <input class="contact__input t-body" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.auto} autocapitalize={s.cap} autocorrect="off" spellcheck="false" enterkeyhint="next" />
@@ -257,7 +239,6 @@ const first = embedded ? 'cover' : 'start';
   <form class="contact__screen contact__screen--step contact__screen--mission" data-step="mission" action="#" novalidate>
     <p class="contact__count t-body">[04]</p>
     <h2 class="contact__title t-h2">What’s the mission?</h2>
-    <p class="contact__lead t-body">Select what you need. Pick as many as you like.</p>
     <fieldset class="contact__cards">
       <legend class="visually-hidden">Services</legend>
       {services.map((s) => (
@@ -275,10 +256,9 @@ const first = embedded ? 'cover' : 'start';
   </form>
 
   <!-- Quick word -->
-  <!-- Quick word (10419:6404): title, lead, the field with Submit under its right end -->
+  <!-- Quick word (10419:6404): title, the field with Submit under its right end -->
   <form class="contact__screen contact__screen--message" data-step="message" action="#" novalidate>
     <h2 class="contact__title t-h2">We’re all ears. Well, sort of. Drop your message below</h2>
-    <p class="contact__lead t-body">Big idea, random thought, or just a hello? We’re programmed to care.</p>
     <div class="contact__field">
       <label class="visually-hidden" for="contact-message">Your message</label>
       <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" autocapitalize="sentences" placeholder="Don’t overthink it. Just type away..."></textarea>
@@ -337,8 +317,10 @@ const first = embedded ? 'cover' : 'start';
     }
   }
 
-  /** Each time a screen opens: its title rises word by word (like the headlines), its lead
-   *  lights up word by word (like the reading text) */
+  /** Titles move as on the Services scroller and the works wheel: every word sits in a mask;
+   *  on a screen change the old title's words slide out of their masks and the new one's
+   *  slide in after them — up when going on, down when going back (data-state next /
+   *  current / past). The lead lights up word by word (like the reading text) */
   function prepareText(root: HTMLElement) {
     if (reduced) return;
     root.querySelectorAll<HTMLElement>('.contact__title').forEach((t) => {
@@ -347,20 +329,35 @@ const first = embedded ? 'cover' : 'start';
         mask.className = 'hl-mask';
         mask.append(w);
         return mask;
-      }, 'hl-word');
-      t.classList.add('hl-ready');
+      }, 'ct-word');
+      t.classList.add('ct-ready');
+      t.dataset.state = 'next';
     });
     root.querySelectorAll<HTMLElement>('.contact__lead').forEach((l) => {
       splitWords(l, (w) => w, 'cr-word');
       l.classList.add('cr-ready');
     });
   }
-  function playText(screen: HTMLElement) {
-    const parts = screen.querySelectorAll<HTMLElement>('.contact__title.hl-ready, .contact__lead.cr-ready');
-    parts.forEach((p) => p.classList.remove('is-in'));
+  /** `screen`'s title comes in from below (dir 1) or above (-1); `from`'s goes out the other way */
+  function playText(screen: HTMLElement, from?: HTMLElement | null, dir = 1) {
+    const out = from?.querySelector<HTMLElement>('.contact__title.ct-ready');
+    if (out && from !== screen) out.dataset.state = dir > 0 ? 'past' : 'next';
+    const title = screen.querySelector<HTMLElement>('.contact__title.ct-ready');
+    if (title) {
+      // start on the side it comes from, without moving there
+      title.classList.add('is-placing');
+      title.dataset.state = dir > 0 ? 'next' : 'past';
+      void title.offsetWidth;
+      title.classList.remove('is-placing');
+      title.dataset.state = 'current';
+    }
+    const leads = screen.querySelectorAll<HTMLElement>('.contact__lead.cr-ready');
+    leads.forEach((p) => p.classList.remove('is-in'));
     void screen.offsetWidth;
-    parts.forEach((p) => p.classList.add('is-in'));
+    leads.forEach((p) => p.classList.add('is-in'));
   }
+  /** how deep each screen is: going to a deeper one moves the titles up, back moves them down */
+  const DEPTH: Record<string, number> = { start: 0, name: 1, message: 1, email: 2, sent: 2, company: 3, mission: 4, done: 5 };
   const phone = matchMedia('(max-width: 1023px)');
 
   /** The faint mono log in one box: shows a screen's groups and types them out line by
@@ -529,6 +526,8 @@ const first = embedded ? 'cover' : 'start';
     function show(step: string, focus = true) {
       const target = screens.find((s) => s.dataset.step === step) ?? screens[0];
       const id = target.dataset.step!;
+      const prev = root.dataset.shown ? screens.find((s) => s.dataset.step === root.dataset.step) : null;
+      const dir = (DEPTH[id] ?? 0) >= (DEPTH[prev?.dataset.step ?? ''] ?? 0) ? 1 : -1;
       if (root.dataset.step !== id || !root.dataset.shown) {
         root.dataset.step = id;
         root.dataset.shown = 'true';
@@ -539,10 +538,10 @@ const first = embedded ? 'cover' : 'start';
         write.a(fill(logs[id]?.a));
         write.b(fill(logs[id]?.b));
         typeCount(target);
-        if (seen) playText(target);
+        if (seen) playText(target, prev, dir);
         // after "Beep boop" / "thanks for saying hi", the block goes back to its first screen
         clearTimeout(homeTimer);
-        if (id === 'done' || id === 'sent') homeTimer = window.setTimeout(() => go(embedded ? 'cover' : 'start'), 6000);
+        if (id === 'done' || id === 'sent') homeTimer = window.setTimeout(() => go('start'), 6000);
       }
       if (focus) target.querySelector<HTMLElement>('.contact__input')?.focus({ preventScroll: true });
     }
@@ -556,10 +555,10 @@ const first = embedded ? 'cover' : 'start';
     }
 
     if (embedded) {
-      show('cover', false);
+      show('start', false);
       // other places on the page can open a step: dispatch "contact:show" with its name
       root.addEventListener('contact:show', (e) => show((e as CustomEvent<string>).detail));
-      // "Get in touch" and the menu's "Let's talk" don't leave the page when it has this
+      // "Get in touch" and the menu's "Get in touch" don't leave the page when it has this
       // block: the menu closes, the page glides down to the block and it opens on the start
       document.addEventListener('click', (e) => {
         const link = (e.target as Element).closest<HTMLAnchorElement>('a[href="/contact"]');
@@ -574,7 +573,7 @@ const first = embedded ? 'cover' : 'start';
       addEventListener('hashchange', () => show(location.hash.slice(1)));
     }
 
-    // Cover, cards, Go back: data-go switches screens
+    // Cards, Go back: data-go switches screens
     root.addEventListener('click', (e) => {
       const link = (e.target as Element).closest<HTMLElement>('[data-go]');
       if (!link) return;
@@ -586,7 +585,6 @@ const first = embedded ? 'cover' : 'start';
       if (e.key !== 'Escape') return;
       const back = root.querySelector<HTMLElement>('.contact__screen[data-active] .contact__back');
       if (back) go(back.dataset.go!);
-      else if (embedded && root.dataset.step === 'start') go('cover');
     });
 
     // Errors: orange line and message under the field, cleared as soon as they type
@@ -660,11 +658,60 @@ const first = embedded ? 'cover' : 'start';
     );
 
     // "Just wanna copy email": puts the address on the clipboard, the card says "Email
-    // copied" while the pixel dinosaur runs across it once (1.4s), then the card is back
+    // copied" while the pixel dinosaur runs across it once — on the way it jumps and bumps
+    // the address from below (Mario and the block): the address hops and turns orange, the
+    // dinosaur lands and runs on, out past the card's edge. Then the card is back
+    const RUN = 1800;
     root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
       const label = btn.querySelector<HTMLElement>('[data-copy-label]');
       const text = label?.textContent;
+      const dino = btn.querySelector<HTMLElement>('.contact__dino');
+      const address = btn.querySelector<HTMLElement>('.contact__card-email');
       let timer = 0;
+      let bumpTimer = 0;
+      let moves: Animation[] = [];
+      const run = () => {
+        moves.forEach((a) => a.cancel());
+        moves = [];
+        clearTimeout(bumpTimer);
+        address?.classList.remove('is-bumped');
+        if (!dino || !address) return;
+        if (reduced) return address.classList.add('is-bumped');
+        // measured from where the dinosaur starts (bottom left): how far it runs, where the
+        // address's middle is along the way, and how high it jumps to touch its underside
+        const card = btn.getBoundingClientRect();
+        const d = dino.getBoundingClientRect();
+        const a = address.getBoundingClientRect();
+        // all the way out past the card's right edge: the card clips it, so it runs off and hides
+        const dist = card.right - d.left;
+        const hit = Math.min(0.8, Math.max(0.1, (a.left + a.width * 0.45 - (d.left + d.width / 2)) / dist));
+        const jump = a.bottom - d.top + 1; // px, negative: up
+        // pixel steps, like the sprite
+        moves.push(dino.animate([{ translate: '0 0' }, { translate: `${dist}px 0` }], { duration: RUN, easing: 'steps(24)', fill: 'both' }));
+        moves.push(
+          dino.animate(
+            [
+              { offset: 0, transform: 'none', easing: 'steps(1)' },
+              { offset: hit - 0.09, transform: 'none', easing: 'steps(1)' },
+              { offset: hit - 0.045, transform: `translateY(${jump * 0.6}px)`, easing: 'steps(1)' },
+              { offset: hit, transform: `translateY(${jump}px)`, easing: 'steps(1)' },
+              { offset: hit + 0.045, transform: `translateY(${jump * 0.6}px)`, easing: 'steps(1)' },
+              { offset: hit + 0.09, transform: 'none', easing: 'steps(1)' },
+              { offset: 1, transform: 'none' },
+            ],
+            // the pixel steps inside each part of the jump (an easing here would step the whole run)
+            { duration: RUN, fill: 'both' },
+          ),
+        );
+        // the bump: the address hops up a little as the head hits it, and stays orange
+        moves.push(
+          address.animate(
+            [{ transform: 'none', easing: 'steps(1)' }, { transform: 'translateY(-0.22em)', easing: 'steps(1)' }, { transform: 'none' }],
+            { duration: 240, delay: RUN * hit },
+          ),
+        );
+        bumpTimer = window.setTimeout(() => address.classList.add('is-bumped'), RUN * hit);
+      };
       btn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(btn.dataset.copy!);
@@ -678,11 +725,14 @@ const first = embedded ? 'cover' : 'start';
         btn.classList.remove('is-copied');
         void btn.offsetWidth;
         btn.classList.add('is-copied');
+        run();
         clearTimeout(timer);
         timer = window.setTimeout(() => {
           if (label) label.textContent = text!;
           btn.classList.remove('is-copied');
-        }, 1500);
+          address?.classList.remove('is-bumped');
+          moves.forEach((a) => a.cancel());
+        }, RUN + 300);
       });
     });
 
@@ -784,7 +834,7 @@ const first = embedded ? 'cover' : 'start';
       top 0.9s var(--ease-move),
       opacity 0.5s ease;
   }
-  /* cover and start: Figma 338, 376; the form screens: 800, 321 */
+  /* start: Figma 338, 376; the form screens: 800, 321 */
   .contact__log--a {
     --lx: 338;
     --ly: 376;
@@ -875,13 +925,13 @@ const first = embedded ? 'cover' : 'start';
     translate: 0 calc(-80 * var(--px));
   }
   /* the form screens swap the printers for the kiosk printing the receipt */
-  .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__printer {
+  .contact:not([data-step='start'], [data-step='message']) .contact__printer {
     opacity: 0;
   }
-  .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__printer--front {
+  .contact:not([data-step='start'], [data-step='message']) .contact__printer--front {
     translate: 0 calc(-80 * var(--px));
   }
-  .contact:not([data-step='cover'], [data-step='start'], [data-step='message']) .contact__kiosk {
+  .contact:not([data-step='start'], [data-step='message']) .contact__kiosk {
     opacity: 1;
     translate: none;
   }
@@ -1025,8 +1075,33 @@ const first = embedded ? 'cover' : 'start';
     margin-top: calc(30 * var(--px));
   }
 
-  /* Lead text: words light up dim → full one after another as the screen opens (the
-     title's rise uses the global .hl-ready / .is-in styles) */
+  /* ── Titles: as the Services scroller / works wheel — each word slides through its mask;
+     the outgoing title's words leave at once, the incoming ones follow a beat later ── */
+  .ct-ready :global(.ct-word) {
+    display: inline-block;
+    translate: 0 var(--y, 0);
+    transition: translate var(--duration-smooth) var(--ease-out);
+    transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
+  }
+  .ct-ready[data-state='next'] :global(.ct-word) {
+    --y: 135%;
+    transition-delay: 0s;
+  }
+  .ct-ready[data-state='past'] :global(.ct-word) {
+    --y: -135%;
+    transition-delay: 0s;
+  }
+  .ct-ready.is-placing :global(.ct-word) {
+    transition: none;
+  }
+  /* the outgoing screen stays up while its words slide out, then goes */
+  .contact__screen:not([data-active]) {
+    transition:
+      opacity 0.35s ease 0.25s,
+      visibility 0s linear 0.6s;
+  }
+
+  /* Lead text: words light up dim → full one after another as the screen opens */
   .cr-ready :global(.cr-word) {
     opacity: 0.15;
   }
@@ -1068,7 +1143,8 @@ const first = embedded ? 'cover' : 'start';
     text-align: left;
     font: inherit;
     border: 0;
-    border-radius: 0;
+    /* the site's button corners */
+    border-radius: var(--radius-ui);
     cursor: pointer;
     transition:
       background-color 0.25s ease,
@@ -1115,7 +1191,7 @@ const first = embedded ? 'cover' : 'start';
     -webkit-appearance: none;
     appearance: none;
   }
-  .contact :is(.contact__card, .contact__back, .contact__submit, .contact__next, .contact__screen--cover) {
+  .contact :is(.contact__card, .contact__back, .contact__submit, .contact__next) {
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -1145,7 +1221,7 @@ const first = embedded ? 'cover' : 'start';
     filter: invert(1);
   }
   /* Email copied: the stickers step aside and the dinosaur runs along the bottom of the card,
-     in pixel steps with a hop */
+     in pixel steps, jumping to bump the address (the run and the jump: the script) */
   .contact__card--copy.is-copied :is(.contact__card-sticker, .contact__smiley) {
     opacity: 0;
   }
@@ -1165,18 +1241,9 @@ const first = embedded ? 'cover' : 'start';
   }
   .contact__card--copy.is-copied .contact__dino {
     opacity: 1;
-    animation: contact-dino-run 1.4s steps(18) both;
   }
   .contact__card--copy.is-copied .contact__dino img {
-    animation: contact-dino-legs 0.16s steps(1) infinite, contact-dino-hop 1.4s steps(9) both;
-  }
-  @keyframes contact-dino-run {
-    from {
-      translate: 0 0;
-    }
-    to {
-      translate: var(--dino-run, calc(330 * var(--px))) 0;
-    }
+    animation: contact-dino-legs 0.16s steps(1) infinite;
   }
   /* a 1px bob every other step reads as running legs */
   @keyframes contact-dino-legs {
@@ -1184,18 +1251,23 @@ const first = embedded ? 'cover' : 'start';
       translate: 0 -1px;
     }
   }
-  /* one jump in the middle of each run */
-  @keyframes contact-dino-hop {
-    0%, 38%, 62%, 100% {
-      margin-top: 0;
-    }
-    46%, 54% {
-      margin-top: calc(-22 * var(--px));
-    }
-  }
   .contact__card--copy .contact__card-sticker,
   .contact__card--copy .contact__smiley {
     transition: opacity 0.25s ease;
+  }
+  /* the address on the second line, a step quieter than the label (opacity, so it follows the
+     card's text colour on hover) */
+  .contact__card-email {
+    display: inline-block;
+    opacity: 0.6;
+    transition:
+      color 0.15s steps(2),
+      opacity 0.15s steps(2);
+  }
+  /* bumped by the dinosaur */
+  .contact__card-email.is-bumped {
+    color: var(--color-orange);
+    opacity: 1;
   }
   .contact__smiley {
     display: inline-block;
@@ -1371,10 +1443,6 @@ const first = embedded ? 'cover' : 'start';
     pointer-events: none;
   }
 
-  .contact__screen--cover {
-    cursor: pointer;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .contact *,
     .contact {
@@ -1526,7 +1594,6 @@ const first = embedded ? 'cover' : 'start';
       width: calc(var(--w) * 0.72px);
     }
     .contact__dino {
-      --dino-run: calc(100vw - 2 * var(--page-margin) - 64px);
       left: 16px;
       bottom: 16px;
     }
