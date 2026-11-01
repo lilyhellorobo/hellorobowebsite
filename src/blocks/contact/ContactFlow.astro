@@ -228,9 +228,9 @@ const services = [
         <label class="visually-hidden" for={`contact-${s.id}`}>{s.field}</label>
         <input class="contact__input t-body" id={`contact-${s.id}`} type={s.type} name={s.id} placeholder={s.field} autocomplete={s.auto} autocapitalize={s.cap} autocorrect="off" spellcheck="false" enterkeyhint="next" />
         <p class="contact__error" role="alert" data-error></p>
-        <button class="contact__next" type="submit" aria-label="Next"><Icon name="next" /></button>
       </div>
       <a class="contact__back t-button" href={`#${s.back}`} data-go={s.back}>Go back <Icon name="undo" /></a>
+      <button class="contact__submit contact__submit--next t-button" type="submit">Next <Icon name="next" /></button>
       <img class="contact__sticker" src="/images/contact/step-globe.svg" alt="" width="277" height="277" loading="lazy" />
     </form>
   ))}
@@ -256,17 +256,17 @@ const services = [
   </form>
 
   <!-- Quick word -->
-  <!-- Quick word (10419:6404): title, the field with Submit under its right end -->
+  <!-- Quick word (10419:6404): title, the field; Go back + Submit along the bottom -->
   <form class="contact__screen contact__screen--message" data-step="message" action="#" novalidate>
     <h2 class="contact__title t-h2">We’re all ears. Well, sort of. Drop your message below</h2>
     <div class="contact__field">
       <label class="visually-hidden" for="contact-message">Your message</label>
       <textarea class="contact__input contact__textarea t-body" id="contact-message" name="message" rows="1" autocapitalize="sentences" placeholder="Don’t overthink it. Just type away..."></textarea>
       <p class="contact__error" role="alert" data-error></p>
-      <button class="contact__next contact__next--submit t-button" type="submit" data-send="message">Submit <Icon name="hex" /></button>
     </div>
     <input class="contact__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <a class="contact__back t-button" href="#start" data-go="start">Go back <Icon name="undo" /></a>
+    <button class="contact__submit contact__submit--next t-button" type="submit" data-send="message">Submit <Icon name="hex" /></button>
   </form>
 
   <!-- Done -->
@@ -1168,8 +1168,7 @@ const services = [
     .contact__back:hover {
       background: var(--color-grey-600);
     }
-    .contact__submit:hover,
-    .is-filled .contact__next:hover {
+    .contact__submit:hover {
       background: var(--color-grey-100);
     }
   }
@@ -1191,7 +1190,7 @@ const services = [
     -webkit-appearance: none;
     appearance: none;
   }
-  .contact :is(.contact__card, .contact__back, .contact__submit, .contact__next) {
+  .contact :is(.contact__card, .contact__back, .contact__submit) {
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -1348,36 +1347,6 @@ const services = [
     width: calc(680 * var(--px));
     line-height: 1.2;
   }
-  .contact__next {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: calc(126 * var(--px));
-    height: var(--button-height);
-    margin-top: calc(19 * var(--px));
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-ui);
-    background: var(--color-white);
-    color: var(--color-black);
-    opacity: 0.3;
-    cursor: pointer;
-    transition: opacity 0.25s ease;
-  }
-  .is-filled .contact__next {
-    opacity: 1;
-  }
-  /* Quick word: "Submit" under the field's right end (x 530, 190×60), dimmed until typed */
-  .contact__next--submit {
-    justify-content: space-between;
-    width: calc(190 * var(--px));
-    min-width: 150px;
-    padding: 0 var(--space-16);
-    font: inherit;
-  }
-  .contact__next--submit[aria-busy='true'] {
-    cursor: progress;
-  }
   .contact__screen--message .contact__title {
     width: calc(1009 * var(--px));
   }
@@ -1389,7 +1358,7 @@ const services = [
     opacity: 0;
   }
 
-  /* ── Buttons along the bottom: Go back (left), Submit right beside it (196 wide, x 247) ── */
+  /* ── Buttons along the bottom: Go back (left), Submit / Next right beside it (196 wide, x 247) ── */
   .contact__back,
   .contact__submit {
     position: absolute;
@@ -1427,9 +1396,21 @@ const services = [
     opacity: 0.5;
     cursor: progress;
   }
+  /* Steps 01–03 (Next) and Quick word (Submit): beside Go back, dimmed until the field is filled */
+  .contact__submit--next {
+    opacity: 0.3;
+    transition:
+      opacity 0.25s ease,
+      background-color 0.2s ease;
+  }
+  .is-filled .contact__submit--next {
+    opacity: 1;
+  }
+  .contact__submit--next[aria-busy='true'] {
+    opacity: 0.5;
+  }
   .contact__back :global(.icon),
-  .contact__submit :global(.icon),
-  .contact__next :global(.icon) {
+  .contact__submit :global(.icon) {
     flex: none;
   }
 
@@ -1606,11 +1587,6 @@ const services = [
       position: static;
       width: 100%;
       margin-top: 40px;
-    }
-    .contact__next {
-      width: 96px;
-      height: 52px;
-      margin-top: 16px;
     }
     .contact__textarea {
       max-height: 180px;

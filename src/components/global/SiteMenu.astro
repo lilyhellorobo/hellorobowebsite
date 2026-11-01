@@ -38,13 +38,15 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
         <p class="site-menu__ja t-body" lang="ja">私たちはHello Roboです。</p>
       </div>
       <ul class="site-menu__list">
-        {mainNav.map((item) => (
+        {mainNav.map((item, i) => (
           <li>
             <a class:list={['site-menu__link', 't-h3', { 'is-active': isActive(item.href) }]} href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
-              <span>{item.label}</span>
-              <svg class="site-menu__arrow" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                <path d="M6 20h27M23 10l10 10-10 10" stroke="currentColor" stroke-width="1.5" />
-              </svg>
+              <span class="site-menu__mask"><span style={`--d: ${i}`}>{item.label}</span></span>
+              <span class="site-menu__mask" style={`--d: ${i}`}>
+                <svg class="site-menu__arrow" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                  <path d="M6 20h27M23 10l10 10-10 10" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </span>
             </a>
           </li>
         ))}
@@ -67,7 +69,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
         <img class="site-menu__micro" src="/images/menu/menu-micrographic.svg" alt="" width="380" height="224" />
         <p class="site-menu__hello-title t-body">Say hello</p>
         <ul class="site-menu__socials t-body">
-          {socials.map((s) => <li><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>)}
+          {socials.map((s, i) => <li><a href={s.href} target="_blank" rel="noopener"><span class="site-menu__mask"><span style={`--d: ${i}`}>{s.label}</span></span></a></li>)}
         </ul>
       </section>
     </div>
@@ -197,13 +199,37 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
       opacity 0.3s ease;
     transition-delay: calc(var(--p) * 0.04s);
   }
-  .site-menu :is(.site-menu__head, .site-menu__list, .site-menu__talk > *, .site-menu__micro, .site-menu__hello-title, .site-menu__socials) {
+  .site-menu :is(.site-menu__head, .site-menu__talk > *, .site-menu__micro, .site-menu__hello-title) {
     opacity: 0;
     transition: opacity 0.22s ease;
   }
-  :global(html[data-menu='open']) .site-menu :is(.site-menu__head, .site-menu__list, .site-menu__talk > *, .site-menu__micro, .site-menu__hello-title, .site-menu__socials) {
+  :global(html[data-menu='open']) .site-menu :is(.site-menu__head, .site-menu__talk > *, .site-menu__micro, .site-menu__hello-title) {
     opacity: 1;
     transition: opacity 0.4s ease 0.22s;
+  }
+
+  /* Links and socials: each one slides up through a mask, one after another — the Services
+     list's reveal (same distance, timing and stagger); closing, they drop back down together */
+  .site-menu__mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    /* room on every side so no letter is clipped */
+    padding: 0.1em 0.06em 0.14em;
+    margin: -0.1em -0.06em -0.14em;
+  }
+  .site-menu__mask > * {
+    display: inline-block;
+    transform: translateY(135%);
+    transition: transform 0.3s ease;
+  }
+  :global(html[data-menu='open']) .site-menu__mask > * {
+    transform: none;
+    transition: transform var(--duration-smooth) var(--ease-out);
+    transition-delay: calc(0.12s + var(--d, 0) * var(--stagger));
+  }
+  .site-menu__mask > svg {
+    display: block;
   }
 
   /* ── Links panel ─────────────────────────────── */
@@ -240,9 +266,10 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
     color: var(--color-grey-350);
     transition: color 0.2s ease;
   }
+  /* the current page and the hovered link: brand orange (the arrow follows) */
   .site-menu__link.is-active,
   .site-menu__link:focus-visible {
-    color: var(--color-black);
+    color: var(--color-orange);
   }
   .site-menu__arrow {
     width: calc(40 * var(--px));
@@ -259,7 +286,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path === href 
      selected like the current page */
   @media (hover: hover) and (pointer: fine) {
     .site-menu__link:hover {
-      color: var(--color-black);
+      color: var(--color-orange);
     }
     .site-menu__link:hover .site-menu__arrow {
       opacity: 1;
