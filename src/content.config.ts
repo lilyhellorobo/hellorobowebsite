@@ -123,11 +123,11 @@ const episodes = defineCollection({
     /** YouTube video id (the 11 characters after watch?v=) */
     youtube: z.string().regex(/^[\w-]{11}$/).optional(),
     portfolioUrl: z.string().optional(),
-    /** 16:9-ish cover used in "All of the episodes" */
+    /** 16:9-ish cover used in "All episodes" */
     cover: image().optional(),
     /** Tall poster used on the episode page */
     poster: image().optional(),
-    /** Show in the "All of the episodes" list */
+    /** Show in the "All episodes" list */
     listed: z.boolean().default(true),
     /** Poster in the "One talk. One future" collage (up to 6, in `order`) */
     featured: z.boolean().default(false),

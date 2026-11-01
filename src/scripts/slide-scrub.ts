@@ -35,11 +35,13 @@ type Options = {
   wrap?: boolean;
   /** ease the position after the input (off when the input is already eased, e.g. the wheels) */
   smooth?: boolean;
+  /** the slow drift and zoom of the picture inside (off for artwork that must stay put, e.g. the Home philosophy chapters) */
+  drift?: boolean;
 };
 
-export function slideScrub(layers: HTMLElement[], { frame = null, wrap = false, smooth = true }: Options = {}) {
+export function slideScrub(layers: HTMLElement[], { frame = null, wrap = false, smooth = true, drift = true }: Options = {}) {
   const n = layers.length;
-  const inners = layers.map((l) => l.querySelector<HTMLElement>('img, video'));
+  const inners = layers.map((l) => (drift ? l.querySelector<HTMLElement>('img, video') : null));
   layers.forEach((l, i) => {
     l.style.transition = 'none';
     l.style.translate = 'none';

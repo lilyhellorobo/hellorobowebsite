@@ -5,7 +5,7 @@
  * e.g. the big statement paragraphs) on the site — body text has the reading reveal
  * (text-reveal.ts) instead — except blocks that
  * already move their titles (Services scroller, Robo Radio clips, Careers values, the
- * contact block, the Home showcase slides, the wheels, the menu) and labels that run the
+ * contact block, the Home showcase slides and philosophy chapters, the wheels, the menu) and labels that run the
  * hover scramble. Runs once per headline; off for reduced motion. Without JS, headlines
  * simply show.
  *
@@ -25,6 +25,7 @@ const SKIP = [
   '.careers-values__scroller',
   '.contact',
   '.home-showcase__titles',
+  '.home-philosophy__texts',
   '.project-wheel',
   '.work-wheel',
   '.project-cards',
@@ -99,7 +100,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
   // first slides of the slide blocks: in when they come into view
   const firsts = document.querySelectorAll<HTMLElement>(
-    ':is(.services-scroller__slide, .radio-clips__slide, .careers-values__copy, .home-showcase__title, .home-showcase__services, .home-showcase__stamp, .project-wheel__services, .project-wheel__mark)[data-index="0"][data-state="current"]',
+    ':is(.services-scroller__slide, .radio-clips__slide, .careers-values__copy, .home-showcase__title, .home-showcase__services, .home-showcase__stamp, .home-philosophy__text, .project-wheel__services, .project-wheel__mark)[data-index="0"][data-state="current"]',
   );
   const slideSeen = new IntersectionObserver(
     (entries) => {
